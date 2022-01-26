@@ -9,6 +9,7 @@
 #define LF_MFT_H
 
 #include <lf/mesh/hybrid2d/hybrid2d.h>
+#include <lf/mesh/polytopic2d/polytopic2d.h>
 #include <lf/mesh/mesh.h>
 #include <lf/mesh/utils/utils.h>
 
@@ -52,6 +53,26 @@ namespace lf::mesh::test_utils {
  * @image html testmesh8.png
  */
 std::shared_ptr<lf::mesh::Mesh> GenerateHybrid2DTestMesh(int selector = 0,
+                                                         double scale = 1.0);
+
+/**
+ * @brief Generates a simple 2D polytopic test mesh
+ *
+ * @param selector integer parameter for the selection of test meshes
+ * @param scale factor for scaling all the coordinates in the meshes
+ *
+ * The following line of code provides a pointer to the default test mesh:
+ * ~~~
+ *   #include "lf/mesh/test_utils/test_meshes.h"
+ *   ...
+ *   auto mesh_p =
+ *       lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+ * ~~~
+ * 
+ * - Test mesh selected with selector = 0: domain \f$[1.0]^2\f$*scale
+ * @image html polytopic_testmesh.png
+ */
+std::shared_ptr<lf::mesh::Mesh> GeneratePolytopic2DTestMesh(int selector = 0,
                                                          double scale = 1.0);
 
 static const lf::base::size_type GenerateHybrid2DTestMesh_maxsel = 8;

@@ -46,8 +46,9 @@ void AssertionFailed(const std::string& expr, const std::string& file,
 #else
 #define LF_ASSERT_MSG_CONSTEXPR(expr, msg)      \
   {                                             \
-    if (!(expr)) throw std::runtime_error(msg); \
-  }
+    BOOST_ASSERT(expr && msg);                  \
+  } //used to be      if (!(expr)) throw std::runtime_error(msg);
+  
 
 #define LF_ASSERT_MSG(expr, msg)                                        \
   {                                                                     \

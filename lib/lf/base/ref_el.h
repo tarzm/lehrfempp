@@ -11,6 +11,8 @@
 #include "base.h"
 #include "lf_assert.h"
 
+#include <iostream>
+
 namespace lf::base {
 
 /**
@@ -34,6 +36,8 @@ enum class RefElType : unsigned char {
   //!< @copydoc RefEl::kTria()
   kQuad = 4,
   //!< @copydoc RefEl::kQuad()
+  kPolygon = 5,
+  //!< @copydoc RefEl::kPolygon()
 };
 
 namespace internal {
@@ -46,6 +50,7 @@ constexpr dim_t DimensionImpl(RefElType type) {
       return 1;
     case RefElType::kTria:
     case RefElType::kQuad:
+    case RefElType::kPolygon:
       return 2;
     default:
       throw std::runtime_error(
@@ -89,6 +94,10 @@ constexpr dim_t DimensionImpl(RefElType type) {
  * - `RefEl::kQuad()` is the reference element of every quadrilateral element in
  *   the mesh. It has four segments (codim=1) and four points (codim=2) as
  *   sub-entities.
+ * -`RefEl::kPolygon()` is the reference element of all Polygons in the polytopic mesh setting. This reference element is 'disabled': It has no
+ *   functionalities other than lf::mesh::polytpic2d::Polygon being able to inherit from lf::mesh::Entity due to `RefEl::kQuad()`'s existence. There is no generic reference element
+ *   for polygons as the number of nodes and edges of them varies. Also, a geometry object makes no sense because there is no affine mapping possible from a
+ *   reference element to the element in the mesh.
  *
  *
  * #### Usage of this class
@@ -166,6 +175,11 @@ class RefEl {
   static constexpr RefEl kQuad() { return RefEl(RefElType::kQuad); }
 
   /**
+   * @brief Returns the "disabled reference polygon"
+   */
+  static constexpr RefEl kPolygon() {return RefEl(RefElType::kPolygon); }
+
+  /**
    * @brief Create a RefEl from a lf::base::RefElType enum.
    * @param type The type of the Reference Element
    */
@@ -197,6 +211,7 @@ class RefEl {
    * - 1 for a RefEl::kSegment()
    * - 2 for a RefEl::kTria()
    * - 2 for a RefEl::kQuad()
+   * - 2 for a RefEl::kPolygon()
    */
   [[nodiscard]] constexpr dim_t Dimension() const {
     return internal::DimensionImpl(type_);
@@ -217,9 +232,12 @@ class RefEl {
         return 3;
       case RefElType::kQuad:
         return 4;
+      case RefElType::kPolygon:
+        LF_ASSERT_MSG_CONSTEXPR(
+          false,
+          "There is no generic reference Polygon, the RefEl of type kPolygon is 'disabled'. The number of nodes of the polygon is unknown at this level.");
       default:
-        throw std::runtime_error(
-            "RefEl::NumNodes() not implemented for this RefEl type.");
+        throw std::runtime_error("RefEl::NumNodes() not implemented for this RefEl type.");
     }
   }
 
@@ -245,9 +263,10 @@ class RefEl {
         return ncoords_tria_dynamic_;
       case RefElType::kQuad:
         return ncoords_quad_dynamic_;
+      case RefElType::kPolygon:
+        LF_ASSERT_MSG(false, "There is no generic reference Polygon, the RefEl of type kPolygon is 'disabled'. The nodes of the polygon are unknown at this level.");
       default:
-        LF_VERIFY_MSG(
-            false, "RefEl::NodeCoords() not implemented for this RefEl type.");
+        LF_VERIFY_MSG(false, "RefEl::NodeCoords() not implemented for this RefEl type.");
     }
   }
 
@@ -285,9 +304,14 @@ class RefEl {
     if constexpr (type == RefElType::kQuad) {
       return ncoords_quad_static_;
     }
+    // NOLINTNEXTLINE
+    if constexpr (type == RefElType::kPolygon) {
+      LF_ASSERT_MSG(false, "There is no generic reference Polygon, the RefEl of type kPolygon is 'disabled'. The nodes of the polygon are unknown at this level.");
+    }
     LF_VERIFY_MSG(false,
                   "RefEl::NodeCoords<>() not implemented for this RefEl type.");
   }
+
 
   /**
    * @brief Get the number of sub-entities of this RefEl with the given
@@ -316,6 +340,10 @@ class RefEl {
         return 3;  // sub_codim=1,2
       case RefElType::kQuad:
         return 4;  // sub_codim=1,2
+      case RefElType::kPolygon:
+        LF_ASSERT_MSG_CONSTEXPR(
+            false,
+            "There is no generic reference Polygon, the RefEl of type kPolygon is 'disabled'. The nodes and segments of the polygon are unknown at this level.");
       default:
         LF_ASSERT_MSG_CONSTEXPR(
             false,
@@ -351,7 +379,7 @@ class RefEl {
     LF_ASSERT_MSG_CONSTEXPR(sub_codim <= Dimension(),
                             "sub_codim > Dimension()");
     LF_ASSERT_MSG_CONSTEXPR(sub_index >= 0, "sub_index is negative");
-    LF_ASSERT_MSG_CONSTEXPR(sub_index < NumSubEntities(sub_codim),
+    LF_ASSERT_MSG_CONSTEXPR(type_ == RefElType::kPolygon || sub_index < NumSubEntities(sub_codim),
                             "sub_index >= NumSubEntities");
 
     if (sub_codim == 0) {
@@ -422,6 +450,7 @@ class RefEl {
         sub_rel_index <
             SubType(sub_codim, sub_index).NumSubEntities(sub_rel_codim),
         "sub_sub_index out of bounds.");
+    LF_ASSERT_MSG_CONSTEXPR(type_ != RefElType::kPolygon, "There is no generic reference Polygon, the RefEl of type kPolygon is \"disabled\". The nodes and segments of the polygon are unknown at this level. ");
 
     if (type_ == RefElType::kPoint) {
       return 0;
@@ -462,6 +491,8 @@ class RefEl {
         return "TRIA";
       case RefElType::kQuad:
         return "QUAD";
+      case RefElType::kPolygon:
+        return "POLYGON";
       default:
         LF_VERIFY_MSG(false, "ToString() not implemented for this RefElType");
     }
