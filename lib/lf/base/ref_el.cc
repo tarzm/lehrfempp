@@ -15,6 +15,7 @@ const Eigen::MatrixXd RefEl::ncoords_quad_dynamic_ =
 
 // Print function
 void PrintInfo(std::ostream &o, const RefEl &ref_el, int output_ctrl) {
+  LF_ASSERT_MSG(RefElType(ref_el) == RefElType::kPolygon, "There is no generic reference Polygon, the RefEl of type kPolygon is \"disabled\". The nodes and segments of the polygon are unknown at this level. ");
   int dim_ref_el = ref_el.Dimension();
   int no_nodes = ref_el.NumNodes();
   o << "Type of reference element: " << ref_el.ToString() << std::endl;

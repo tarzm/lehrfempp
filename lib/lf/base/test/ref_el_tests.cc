@@ -29,4 +29,16 @@ TEST(RefEl, numSubEntitiesCorrect) {
   EXPECT_EQ(RefEl::kQuad().NumSubEntities(2), 4);  // Points for quadrilateral
 }
 
+TEST(RefEl, disabledPolygonCorrect) {
+  EXPECT_EQ(RefEl::kPolygon().Dimension(), 2);
+  EXPECT_DEATH(auto a = RefEl::kPolygon().NumNodes(), "");
+  EXPECT_DEATH(auto a = RefEl::kPolygon().NodeCoords(), "");
+  EXPECT_DEATH(auto a = RefEl::kPolygon().NodeCoords(), "");
+  EXPECT_DEATH(auto a = RefEl::kPolygon().NumSubEntities(1), "");
+  EXPECT_EQ(RefEl::kPolygon().SubType(1,1), RefEl::kSegment());
+  EXPECT_EQ(RefEl::kPolygon().SubType(2,1), RefEl::kPoint());
+  EXPECT_DEATH(auto a = RefEl::kPolygon().SubSubEntity2SubEntity(1, 1, 1, 1), "");
+  EXPECT_EQ(RefEl::kPolygon().ToString(), "POLYGON");
+}
+
 }  // namespace lf::base::test
