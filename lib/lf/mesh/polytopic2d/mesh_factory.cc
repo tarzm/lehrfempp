@@ -27,7 +27,8 @@ size_type MeshFactory::AddPoint(std::unique_ptr<geometry::Geometry>&& geometry){
     return 0;
 }
 
-size_type MeshFactory::AddEntity(base::RefEl ref_el, const nonstd::span<const size_type>& nodes, std::unique_ptr<geometry::Geometry>&& geometry){
+size_type MeshFactory::AddEntity(base::RefEl ref_el, const nonstd::span<const size_type>& nodes,
+                                 std::unique_ptr<geometry::Geometry>&& geometry){
     LF_ASSERT_MSG(ref_el == lf::base::RefEl::kPolygon(), "RefEl must be of type kPolygon");
     std::vector<size_type> nodes_vec;
     for (const auto &node : nodes){
@@ -43,7 +44,7 @@ std::shared_ptr<mesh::Mesh> MeshFactory::Build(){
     //Actual construction is done by Mesh object
     polytopic2d::Mesh::EdgeList edges_{};
     lf::mesh::polytopic2d::Mesh* mesh_ptr = new lf::mesh::polytopic2d::Mesh(dim_world_,
-                         std::move(nodes_), edges_, std::move(elements_), check_completeness_);
+                         std::move(nodes_), std::move(edges_), std::move(elements_), check_completeness_);
     
     // Clear all information supplied to the MeshFactory object
     nodes_ = polytopic2d::Mesh::NodeCoordList{};  // .clear();

@@ -56,6 +56,31 @@ class Polygon : public mesh::Entity {
          */
         Eigen::MatrixXd Corners();
 
+        [[nodiscard]] nonstd::span<const Entity* const> SubEntities(unsigned rel_codim) const override;
+
+        /** @brief Access to relative orientations of edges
+         * @sa mesh::Orientation
+         */
+        [[nodiscard]] nonstd::span<const lf::mesh::Orientation> RelativeOrientations()
+            const override {
+            return edge_ori_;
+        }
+
+        /** @name Standard methods of an Entity object
+         * @sa mesh::Entity
+         * @{
+         */
+        [[nodiscard]] const geometry::Geometry* Geometry() const override {
+            return geometry_.get();
+        }
+        [[nodiscard]] base::RefEl RefEl() const override {
+            return base::RefEl::kTria();
+        }
+        [[nodiscard]] bool operator==(const mesh::Entity& rhs) const override {
+            return this == &rhs;
+        }
+        /** @} */
+
 
 
     private:

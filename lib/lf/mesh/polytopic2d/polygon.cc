@@ -55,4 +55,22 @@ namespace lf::mesh::polytopic2d {
         return corners_;
     }
 
+    nonstd::span<const Entity* const> Polygon::SubEntities(unsigned rel_codim) const {
+        auto l = [&](auto i) -> const mesh::Entity& { return **i; };
+        switch (rel_codim){
+            case 2:
+                return {reinterpret_cast<const Entity* const*>(&corners_[0]), NumNodes();}
+            case 1:
+                return {reinterpret_cast<const Entity* const*>(&edges_[0]), NumNodes();}
+            case 0:
+                return {&this_, 1};
+            default:
+                LF_VERIFY_MSG(false, "Triangle: rel_codim out of range");
+        }
+    }
+
+
+
+
+
 }   //  namespace lf::mesh::polytopic2d

@@ -10,7 +10,7 @@ set(sources
 
 
 lf_add_library(lf.mesh.polytopic2d ${sources})
-target_link_libraries(lf.mesh.polytopic2d PUBLIC Eigen3::Eigen lf.base lf.mesh lf.mesh.hybrid2d lf.mesh.utils)
+target_link_libraries(lf.mesh.polytopic2d PUBLIC Boost::boost Eigen3::Eigen lf.base lf.mesh lf.mesh.hybrid2d lf.mesh.utils)
 set_target_properties(lf.mesh.polytopic2d PROPERTIES FOLDER "lib")
 
 if(LF_ENABLE_TESTING)

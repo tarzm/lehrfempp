@@ -7,14 +7,18 @@
  */
 
 #include <gtest/gtest.h>
-#include <lf/io/io.h>
+// #include <lf/io/io.h>
 #include <lf/mesh/polytopic2d/polytopic2d.h>
 #include <lf/mesh/mesh.h>
 #include <lf/mesh/utils/utils.h>
+#include <map>
+#include <boost/bimap.hpp>
+#include <iostream>
 
 #include "polygon_test.h"
 
 namespace lf::mesh::polytopic2d::test{
+
 
 TEST(lf_polygon, constructor){
     using vec = Eigen::Vector2d;
@@ -29,14 +33,39 @@ TEST(lf_polygon, constructor){
         Eigen::Vector2d coords_point = coords.col(i);
         factory->AddPoint(coords_point);
     }
+
+    factory->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{0,1,2,3,4}}, nullptr);
+
+
+    std::map<const std::pair<size_type, size_type>, const size_type> the_map;
+    using EdgeIdxMap = std::map<const std::pair<size_type, size_type>, const size_type>::value_type;
+
+    the_map.insert(EdgeIdxMap({2,3}, 0));
+
+    auto finder = the_map.find({2,3});
+    if (finder != the_map.end()){
+        std::cout << "The edges pair (" << 3 << "," << 7 << ") is at position " << the_map[{2,3}] << "\n";
+    }
+
     
-    
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+    // OLD STUFF BELOW |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 
     //Constructing a pentagon by hand
