@@ -119,44 +119,62 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, EdgeList edges, CellList cells,
 
         //vectors to be filled for construction of each Polygon
         std::vector<const mesh::hybrid2d::Point*> corners;
-        std::vector<const mesh::hybrid2d::Segment*> edges;
+        std::vector<size_type> edge_indexes;
 
         //loop over nodes of the Polygon to construct Edges first, then Polygons
         for(int node_idx = 0; node_idx < n_nodes; node_idx++){
             size_type current_node = cell_nodes_idx.at(node_idx);
             size_type next_node = cell_nodes_idx.at((node_idx + 1) % n_nodes);
 
-            //add node to corners vector
-            lf::mesh::hybrid2d::Point *node_ptr = &points_.at(current_node);
+            //add Point to corners vector
+            const lf::mesh::hybrid2d::Point *node_ptr = &points_.at(current_node);
             LF_ASSERT_MSG(node_ptr->index() == current_node, "Node index does not coincide with its position in the points_ vector");
             corners.push_back(node_ptr);
 
+            //index of the next edge that will later be added to edge_indexes;
+            size_type next_segment_idx;
+
             //check whether edge already exists, construct it if necessary
-            //and add it to edges
+            //and set next_segment_idx correctly
             if (EdgeIdxMap.find({current_node, next_node}) != EdgeIdxMap.end()){
                 //edge exists in the order {current_node, next_node} => add it to edges
                 auto edge_idx = EdgeIdxMap[{current_node, next_node}];
-                lf::mesh::hybrid2d::Segment *edge_ptr = &segments_.at(edge_idx);
-                edges.push_back(edge_ptr);
+                next_segment_idx = edge_idx;
             } else if (EdgeIdxMap.find({next_node, current_node}) != EdgeIdxMap.end()){
                 //edge exists in the order {next_node, current_node} => add it to edges
                 auto edge_idx = EdgeIdxMap[{next_node, current_node}];
-                lf::mesh::hybrid2d::Segment *edge_ptr = &segments_.at(edge_idx);
-                edges.push_back(edge_ptr);
+                next_segment_idx = edge_idx;
             } else { //edge does not exist yet => construct it, add it to segments_ and edges
                 //retrieve pointer to next node (current node is defined above as node_ptr)
-                lf::mesh::hybrid2d::Point *next_node_ptr = &points_.at(next_node);
+                const lf::mesh::hybrid2d::Point *next_node_ptr = &points_[next_node];
                 //construct Geometry of Segment
                 Eigen::Matrix<double, 2, 2> straight_edge_coords;
                 const Eigen::MatrixXd zero_point = base::RefEl::kPoint().NodeCoords();
                 straight_edge_coords.block<2, 1>(0, 0) = node_ptr->Geometry()->Global(zero_point);
                 straight_edge_coords.block<2, 1>(0, 1) = next_node_ptr->Geometry()->Global(zero_point);
                 GeometryPtr edge_geo_ptr = std::make_unique<geometry::SegmentO1>(straight_edge_coords);
+                //Construct Segment and add it to segments_ vector
                 segments_.emplace_back(segment_index, std::move(edge_geo_ptr), node_ptr, next_node_ptr);
+                //Add it to the EdgeIdxMap
+                EdgeIdxMap.insert(EdgePairAndIdx({current_node, next_node}, segment_index));
+                //Set next_segment_idx to current one
+                next_segment_idx = segment_index;
                 segment_index++;
+
             }
+            //Add next_segment_idx to edge_indexes
+            edge_indexes.push_back(next_segment_idx);
+
         } //now all nodes and edges of the Polygon exist => construct the Polygon
 
+        //vector of Segments that will be passed to constructor of Polygon
+        std::vector<const mesh::hybrid2d::Segment*> edges;
+        for (int i = 0; i < edge_indexes.size(); i++){
+            const lf::mesh::hybrid2d::Segment *edge_ptr = &(segments_[edge_indexes[i]]);
+            edges.push_back(std::move(edge_ptr));
+        }
+
+        //construct Polygon
         polygons_.emplace_back(polygon_index, std::move(corners), std::move(edges));
         polygon_index++;
     }

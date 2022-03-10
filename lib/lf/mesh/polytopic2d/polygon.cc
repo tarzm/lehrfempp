@@ -30,17 +30,23 @@ namespace lf::mesh::polytopic2d {
         
         size_type num_nodes = nodes.size();
 
-        //constrution of corners_
-        corners_.resize((nodes.at(0)->RefEl()).Dimension(), num_nodes);
+
+        //constrution of corners_ => TODO: get rid of hardcoded 2 dimensions
+        Eigen::MatrixXd corners(2, num_nodes);
         for (int node_loc_idx = 0; node_loc_idx < num_nodes; node_loc_idx++){
-            corners_.col(node_loc_idx) = lf::geometry::Corners(*(nodes.at(node_loc_idx)->Geometry()));
+            Eigen::MatrixXd this_col= lf::geometry::Corners(*(nodes.at(node_loc_idx)->Geometry()));
+            corners.col(node_loc_idx) = this_col;
         }
-        
-        // Finally set relative orientations for the edges. Edge i has positive
-        // orientation, if its first node agrees with vertex i
+        corners_ = corners;
+
+
+        //Finally set relative orientations for the edges. Edge i has positive
+        //orientation, if its first node agrees with vertex i
+        edge_ori_ = std::vector<lf::mesh::Orientation>(num_nodes); 
         for (int ed_loc_idx = 0; ed_loc_idx < num_nodes; ed_loc_idx++) {
             // Fetch nodes of current edge
             auto ed_nodes = edges_.at(ed_loc_idx)->SubEntities(1);
+            std::cout << "First fetch worked\n";
             edge_ori_.at(ed_loc_idx) = (ed_nodes[0] == nodes_.at(ed_loc_idx))
                                         ? lf::mesh::Orientation::positive
                                         : lf::mesh::Orientation::negative;
@@ -59,9 +65,9 @@ namespace lf::mesh::polytopic2d {
         auto l = [&](auto i) -> const mesh::Entity& { return **i; };
         switch (rel_codim){
             case 2:
-                return {reinterpret_cast<const Entity* const*>(&corners_[0]), NumNodes();}
+                return {reinterpret_cast<const Entity* const*>(&nodes_[0]), (long int)nodes_.size()};
             case 1:
-                return {reinterpret_cast<const Entity* const*>(&edges_[0]), NumNodes();}
+                return {reinterpret_cast<const Entity* const*>(&edges_[0]), (long int)nodes_.size()};
             case 0:
                 return {&this_, 1};
             default:
