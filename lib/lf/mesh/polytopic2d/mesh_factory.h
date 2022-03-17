@@ -23,7 +23,7 @@ class MeshFactory : public mesh::MeshFactory{
         MeshFactory& operator=(MeshFactory&&) = delete;
 
         /**
-         * @brief Construct a new builder that can be used to construct a new hybrid2d
+         * @brief Construct a new builder that can be used to construct a new polytopic2d
          *        mesh.
          * @param dim_world The dimension of the euclidean space in which the
          *                  mesh is embedded.

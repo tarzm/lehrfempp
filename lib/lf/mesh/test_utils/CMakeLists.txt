@@ -13,5 +13,5 @@ set(sources
 )
 
 lf_add_library(lf.mesh.test_utils ${sources})
-target_link_libraries(lf.mesh.test_utils PUBLIC Eigen3::Eigen Boost::boost GTest::gtest_main lf.mesh lf.mesh.hybrid2d)
+target_link_libraries(lf.mesh.test_utils PUBLIC Eigen3::Eigen Boost::boost GTest::gtest_main lf.mesh lf.mesh.hybrid2d lf.mesh.polytopic2d)
 set_target_properties(lf.mesh.test_utils PROPERTIES FOLDER "lib")

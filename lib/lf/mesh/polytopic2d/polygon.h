@@ -54,7 +54,7 @@ class Polygon : public mesh::Entity {
         /**
          * @brief returns the nodes of the polygion in matrix format
          */
-        Eigen::MatrixXd Corners();
+        Eigen::MatrixXd Corners() const;
 
         [[nodiscard]] nonstd::span<const Entity* const> SubEntities(unsigned rel_codim) const override;
 
@@ -74,7 +74,7 @@ class Polygon : public mesh::Entity {
             return geometry_.get();
         }
         [[nodiscard]] base::RefEl RefEl() const override {
-            return base::RefEl::kTria();
+            return base::RefEl::kPolygon();
         }
         [[nodiscard]] bool operator==(const mesh::Entity& rhs) const override {
             return this == &rhs;
@@ -92,6 +92,8 @@ class Polygon : public mesh::Entity {
         Entity* this_ = nullptr;                                    // needed for SubEntity()
         Eigen::MatrixXd corners_;
 };
+
+Eigen::MatrixXd Corners(const lf::mesh::Entity* ent);
 
 } //namespace lf::mesh::hybrid2d
 

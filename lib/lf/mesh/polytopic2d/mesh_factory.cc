@@ -42,16 +42,14 @@ size_type MeshFactory::AddEntity(base::RefEl ref_el, const nonstd::span<const si
 
 std::shared_ptr<mesh::Mesh> MeshFactory::Build(){
     //Actual construction is done by Mesh object
-    polytopic2d::Mesh::EdgeList edges_{};
-    lf::mesh::polytopic2d::Mesh* mesh_ptr = new lf::mesh::polytopic2d::Mesh(dim_world_,
-                         std::move(nodes_), std::move(edges_), std::move(elements_), check_completeness_);
+    mesh::Mesh* mesh_ptr = new lf::mesh::polytopic2d::Mesh(dim_world_,
+                         std::move(nodes_), std::move(elements_), check_completeness_);
     
     // Clear all information supplied to the MeshFactory object
     nodes_ = polytopic2d::Mesh::NodeCoordList{};  // .clear();
-    edges_ = polytopic2d::Mesh::EdgeList{};       // .clear();
     elements_ = polytopic2d::Mesh::CellList{};    // clear();
 
-    return std::shared_ptr<lf::mesh::polytopic2d::Mesh>(mesh_ptr);
+    return std::shared_ptr<mesh::Mesh>(mesh_ptr);
 }
 
 } //namespace lf::mesh::polytopic2d

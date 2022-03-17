@@ -1,8 +1,8 @@
 include(GoogleTest)
 
 set(sources
-    polygon_test.cc
-    polygon_test.h)
+    mesh_factory_tests.cc
+    mesh_factory_tests.h)
 
 add_executable(lf.mesh.polytopic2d.test ${sources})
 target_link_libraries(lf.mesh.polytopic2d.test PUBLIC Eigen3::Eigen Boost::boost GTest::gtest_main

@@ -93,14 +93,25 @@ bool Mesh::Contains(const Entity &e) const {
 
 enum class EdgeExistence : int {positive = 1, negative = -1, inexistent = 0};
 
-Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, EdgeList edges, CellList cells, bool check_completeness){
+Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_completeness) : dim_world_(dim_world){
 
     //edges are not used at all! They are constructed from cells
+
+    //if check_completenes == TRUE, we check for all Points to belong to a Segment. It is impossible
+    //for Segments to not belong to a Polygon as they are only constructed in relation to a Polygon
+    std::vector<bool> nodeHasSuperEntity;
+    if (check_completeness) {
+      nodeHasSuperEntity.resize(nodes.size(), false);
+    }
+
+    points_.reserve(nodes.size());
+    polygons_.reserve(cells.size());
     
     //First fill the points_ vector of the mesh
     size_type node_index = 0;
     for (polytopic2d::Mesh::GeometryPtr &point_geo_ptr : nodes){
         points_.emplace_back(node_index, std::move(point_geo_ptr));
+        //DEGBUGGING:
         node_index++;
     }
 
@@ -120,6 +131,10 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, EdgeList edges, CellList cells,
         //vectors to be filled for construction of each Polygon
         std::vector<const mesh::hybrid2d::Point*> corners;
         std::vector<size_type> edge_indexes;
+
+        size_type edges_current_size = segments_.size();
+        segments_.reserve(edges_current_size + n_nodes);
+
 
         //loop over nodes of the Polygon to construct Edges first, then Polygons
         for(int node_idx = 0; node_idx < n_nodes; node_idx++){
@@ -162,6 +177,11 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, EdgeList edges, CellList cells,
                 segment_index++;
 
             }
+            if(check_completeness){
+              nodeHasSuperEntity[current_node] = true;
+              nodeHasSuperEntity[next_node] = true;
+            }
+
             //Add next_segment_idx to edge_indexes
             edge_indexes.push_back(next_segment_idx);
 
@@ -176,10 +196,36 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, EdgeList edges, CellList cells,
 
         //construct Polygon
         polygons_.emplace_back(polygon_index, std::move(corners), std::move(edges));
+
         polygon_index++;
     }
+    
+    //Fill the entity_pointers_ array
+    entity_pointers_[0] = std::vector<const lf::mesh::Entity *>(polygons_.size(), nullptr);
+    entity_pointers_[1] = std::vector<const lf::mesh::Entity *>(segments_.size(), nullptr);
+    entity_pointers_[2] = std::vector<const lf::mesh::Entity *>(points_.size(), nullptr);
+    
+    
+    for (auto &pol : polygons_) {
+        entity_pointers_[0].at(pol.index()) = &pol;
+    }
+    for (auto &s : segments_) {
+        entity_pointers_[1].at(s.index()) = &s;
+    }
+    for (auto &p : points_) {
+        entity_pointers_[2].at(p.index()) = &p;
+    }
+    
+    
+    if (check_completeness) {
+        // Check that all nodes have a super entity:
+        for (std::size_t i = 0; i < nodes.size(); ++i) {
+        LF_VERIFY_MSG(nodeHasSuperEntity[i],
+                        "Mesh is incomplete: Node with global index "
+                            << i << " is not part of any edge.");
+        }
+    }
 }
-
 
 } // namespace polytopic2d
 

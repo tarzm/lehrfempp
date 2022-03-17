@@ -46,7 +46,6 @@ namespace lf::mesh::polytopic2d {
         for (int ed_loc_idx = 0; ed_loc_idx < num_nodes; ed_loc_idx++) {
             // Fetch nodes of current edge
             auto ed_nodes = edges_.at(ed_loc_idx)->SubEntities(1);
-            std::cout << "First fetch worked\n";
             edge_ori_.at(ed_loc_idx) = (ed_nodes[0] == nodes_.at(ed_loc_idx))
                                         ? lf::mesh::Orientation::positive
                                         : lf::mesh::Orientation::negative;
@@ -57,7 +56,7 @@ namespace lf::mesh::polytopic2d {
         return nodes_.size();
     }
 
-    Eigen::MatrixXd Polygon::Corners(){
+    Eigen::MatrixXd Polygon::Corners() const {
         return corners_;
     }
 
@@ -75,8 +74,10 @@ namespace lf::mesh::polytopic2d {
         }
     }
 
-
-
+    Eigen::MatrixXd Corners(const lf::mesh::Entity* ent){
+        LF_VERIFY_MSG(ent->RefEl() == lf::base::RefEl::kPolygon(), "This method is only implemented for Polygons");
+        return dynamic_cast<const lf::mesh::polytopic2d::Polygon*>(ent)->Corners();
+    }
 
 
 }   //  namespace lf::mesh::polytopic2d
