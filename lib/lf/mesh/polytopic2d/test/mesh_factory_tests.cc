@@ -98,4 +98,48 @@ TEST(lf_mesh_factory, Orientations){
     EXPECT_EQ(negative_orientations, negative_orientations_check);
 }
 
+
+
+//checks whether two PolygonPairs have the same entries neglecting the order
+bool CheckEqualPolygonPair(PolygonPair polypair1, PolygonPair polypair2){
+    return ((polypair1.first == polypair2.first && polypair1.second == polypair2.second) || (polypair1.first == polypair2.second && polypair1.second == polypair2.first));
+}
+
+TEST(lf_mesh_factory, EdgePolygonAdjacency){
+    //optain test mesh
+    auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+
+    //set up Adjacency MeshDataSet
+    auto adjacency = lf::mesh::polytopic2d::EdgePolygonAdjacency(mesh_ptr);
+
+    //check some adjacencies by hand
+    auto poly0 = mesh_ptr->Entities(0)[0];
+    auto poly3 = mesh_ptr->Entities(0)[3];
+    auto poly5 = mesh_ptr->Entities(0)[5];
+
+    auto pair_0_3 = std::make_pair(poly0, poly3);
+    auto pair_5_3 = std::make_pair(poly5, poly3);
+    auto pair_3_5 = std::make_pair(poly3, poly5);
+    auto pair_0_null = std::make_pair(poly0, nullptr);
+    auto pair_null_0 = std::make_pair(nullptr, poly0);
+    auto pair_null_5 = std::make_pair(nullptr, poly5);
+
+    auto edge4 = mesh_ptr->Entities(1)[4];
+    auto edge2 = mesh_ptr->Entities(1)[2];
+    auto edge12 = mesh_ptr->Entities(1)[12];
+    auto edge17 = mesh_ptr->Entities(1)[17];
+
+    //First test CheckEqualPolygonPair function
+    EXPECT_TRUE(CheckEqualPolygonPair( pair_5_3 , pair_3_5) );
+    EXPECT_FALSE(CheckEqualPolygonPair( pair_0_3 , pair_3_5) );
+
+    //Now test the CodimMeshDataSet EdgePolygonAdjacency
+    EXPECT_TRUE(CheckEqualPolygonPair( pair_0_3 , adjacency(*edge2) ));
+    EXPECT_TRUE(CheckEqualPolygonPair( pair_0_null , adjacency(*edge4) ));
+    EXPECT_TRUE(CheckEqualPolygonPair( pair_5_3 , adjacency(*edge12) ));
+    EXPECT_TRUE(CheckEqualPolygonPair( pair_null_5 , adjacency(*edge17) ));
+    EXPECT_FALSE(CheckEqualPolygonPair( adjacency(*edge2) , adjacency(*edge12)) );
+
+}
+
 }   //  namespace lf::mesh::polytopic2d

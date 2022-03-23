@@ -32,12 +32,12 @@ namespace lf::mesh::polytopic2d {
 
 
         //constrution of corners_ => TODO: get rid of hardcoded 2 dimensions
-        Eigen::MatrixXd corners(2, num_nodes);
+        corners_ = Eigen::MatrixXd(2, num_nodes);
         for (int node_loc_idx = 0; node_loc_idx < num_nodes; node_loc_idx++){
             Eigen::MatrixXd this_col= lf::geometry::Corners(*(nodes.at(node_loc_idx)->Geometry()));
-            corners.col(node_loc_idx) = this_col;
+            corners_.col(node_loc_idx) = this_col;
         }
-        corners_ = corners;
+    
 
 
         //Finally set relative orientations for the edges. Edge i has positive
@@ -60,17 +60,21 @@ namespace lf::mesh::polytopic2d {
         return corners_;
     }
 
+    std::vector<const lf::mesh::hybrid2d::Segment*> Polygon::Edges() const {
+        return edges_;
+    }
+
     nonstd::span<const Entity* const> Polygon::SubEntities(unsigned rel_codim) const {
         auto l = [&](auto i) -> const mesh::Entity& { return **i; };
         switch (rel_codim){
             case 2:
                 return {reinterpret_cast<const Entity* const*>(&nodes_[0]), (long int)nodes_.size()};
             case 1:
-                return {reinterpret_cast<const Entity* const*>(&edges_[0]), (long int)nodes_.size()};
+                return {reinterpret_cast<const Entity* const*>(&edges_[0]), (long int)edges_.size()};                
             case 0:
                 return {&this_, 1};
             default:
-                LF_VERIFY_MSG(false, "Triangle: rel_codim out of range");
+                LF_VERIFY_MSG(false, "Polygon: rel_codim out of range");
         }
     }
 

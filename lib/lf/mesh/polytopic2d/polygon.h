@@ -58,6 +58,8 @@ class Polygon : public mesh::Entity {
 
         [[nodiscard]] nonstd::span<const Entity* const> SubEntities(unsigned rel_codim) const override;
 
+        std::vector<const lf::mesh::hybrid2d::Segment*> Edges() const ;
+
         /** @brief Access to relative orientations of edges
          * @sa mesh::Orientation
          */

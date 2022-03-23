@@ -11,6 +11,7 @@
 
 #include <lf/mesh/mesh.h>
 #include <lf/mesh/hybrid2d/hybrid2d.h>
+#include <lf/mesh/utils/utils.h>
 #include <Eigen/Eigen>
 
 #include "polygon.h"
@@ -119,6 +120,9 @@ class Mesh: public mesh::Mesh {
         friend class MeshFactory;
 };
 
+using PolygonPair = std::pair<const lf::mesh::Entity*, const lf::mesh::Entity*>;
+
+lf::mesh::utils::CodimMeshDataSet<PolygonPair> EdgePolygonAdjacency(std::shared_ptr<lf::mesh::Mesh> mesh_ptr);
 
 }  // namespace lf::mesh::hybrid2d
 
