@@ -62,6 +62,7 @@ class MeshFactory : public mesh::MeshFactory{
     private:
         dim_t dim_world_;  // dimension of ambient space
         polytopic2d::Mesh::NodeCoordList nodes_;
+        polytopic2d::Mesh::EdgeList edges_;
         polytopic2d::Mesh::CellList elements_;
 
         // If set to true, the Build() method will check whether all sub-entities

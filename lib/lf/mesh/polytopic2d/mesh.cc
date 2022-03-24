@@ -91,7 +91,8 @@ bool Mesh::Contains(const Entity &e) const {
   }
 }
 
-Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_completeness) : dim_world_(dim_world){
+Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, EdgeList edges, CellList cells, bool check_completeness)
+           : dim_world_(dim_world) {
 
     //edges are not used at all! They are constructed from cells
 
@@ -109,6 +110,11 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_comp
     size_type point_global_index = 0;
     size_type segment_global_index = 0;
     size_type polygon_global_index = 0;
+
+    //map to check whether Segments already exist or not
+    //maps the pair of Points of a Segment (first_node, second_node) to the index of the Segment
+    std::map<const std::pair<size_type, size_type>, const size_type> SegmentIdxMap;
+    using PointPairAndIdx = std::map<const std::pair<size_type, size_type>, const size_type>::value_type;
     
     //First fill the points_ vector of the mesh
     for (polytopic2d::Mesh::GeometryPtr &point_geo_ptr : nodes){
@@ -116,10 +122,30 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_comp
         point_global_index++;
     }
 
-    //map to check whether Segments already exist or not
-    //maps the pair of Points of a Segment (first_node, second_node) to the index of the Segment
-    std::map<const std::pair<size_type, size_type>, const size_type> SegmentIdxMap;
-    using PointPairAndIdx = std::map<const std::pair<size_type, size_type>, const size_type>::value_type;
+    //loop over edges to construct explicit edges
+    for (std::pair<std::array<size_type, 2>, GeometryPtr> &edge : edges){
+        //CHeck that edge does not already exist
+        LF_VERIFY_MSG(SegmentIdxMap.find({edge.first[0], edge.first[1]}) == SegmentIdxMap.end()
+                    && SegmentIdxMap.find({edge.first[1], edge.first[0]}) == SegmentIdxMap.end(),
+                    "Somethign went wrong, an edge is passed to Mesh constructor that already exists.");
+
+        //get pointers to endpoints
+        const lf::mesh::hybrid2d::Point *p0_ptr = &points_[edge.first[0]];
+        const lf::mesh::hybrid2d::Point *p1_ptr = &points_[edge.first[2]];
+
+        //if geometry is nullptr construct it from endpoints
+        GeometryPtr edge_geo_ptr(std::move(edge.second));
+        if (edge_geo_ptr == nullptr){
+            const Eigen::MatrixXd zero_point = base::RefEl::kPoint().NodeCoords();
+            Eigen::Matrix<double, 2, 2> straight_edge_coords;
+            straight_edge_coords.block<2, 1>(0, 0) = p0_ptr->Geometry()->Global(zero_point);
+            straight_edge_coords.block<2, 1>(0, 1) = p1_ptr->Geometry()->Global(zero_point);
+            edge_geo_ptr = std::make_unique<geometry::SegmentO1>(straight_edge_coords);
+        }
+        segments_.emplace_back(segment_global_index, std::move(edge_geo_ptr), p0_ptr, p1_ptr);
+
+        segment_global_index++;
+    }
 
     //First loop over cells to construct Segments
     for (auto cell_nodes_idx_vec : cells){
