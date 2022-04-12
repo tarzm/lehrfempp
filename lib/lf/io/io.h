@@ -20,6 +20,7 @@
 #include "write_matlab.h"
 #include "write_matplotlib.h"
 #include "write_tikz.h"
+#include "vtk_polytopic_reader.h"
 
 /**
  * @brief Mesh input (from file) and output (in various formats) facilities

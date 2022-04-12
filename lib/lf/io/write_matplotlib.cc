@@ -8,6 +8,8 @@
 
 #include "write_matplotlib.h"
 
+#include <lf/mesh/polytopic2d/polytopic2d.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -34,8 +36,14 @@ void writeMatplotlib(const lf::mesh::Mesh &mesh, std::string filename) {
         const size_t obj_idx = mesh.Index(*obj);
         const lf::base::RefEl obj_ref_el = obj->RefEl();
         const lf::geometry::Geometry *obj_geo_ptr = obj->Geometry();
-        const Eigen::MatrixXd vertices =
-            obj_geo_ptr->Global(obj_ref_el.NodeCoords());
+        Eigen::MatrixXd vertices;
+        if (obj_ref_el == lf::base::RefEl::kPolygon()){
+          vertices = lf::mesh::polytopic2d::Corners(obj);
+        } else {
+          vertices =  obj_geo_ptr->Global(obj_ref_el.NodeCoords());
+        }
+           
+        
 
         switch (obj_ref_el) {
           case lf::base::RefEl::kPoint(): {
@@ -53,6 +61,7 @@ void writeMatplotlib(const lf::mesh::Mesh &mesh, std::string filename) {
 
             break;
           }
+          case lf::base::RefEl::kPolygon():
           case lf::base::RefEl::kTria():
           case lf::base::RefEl::kQuad(): {
             file << codim << ',' << obj_idx << ',';

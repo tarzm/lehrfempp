@@ -16,7 +16,7 @@
 
 namespace lf::io {
 /**
- * @brief Write affine triangulation data to file in matplotlib format
+ * @brief Write mesh data to file in matplotlib format
  * @param mesh the mesh to be stored to file
  * @param filename name of output file: .csv appended unless present
  *
@@ -29,7 +29,7 @@ namespace lf::io {
  * Segments:
  * codim, index, point1_idx, point2_idx
  *
- * Triangles/Quadrilaterals:
+ * Triangles/Quadrilaterals/Polygons:
  * codim, index, segment1_idx, segment2_idx, ...
  *
  * The .csv file can be read by plot_mesh.py to visualize the mesh

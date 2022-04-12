@@ -1,7 +1,14 @@
 from sys import argv
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+#used if no GUI is available
+#matplotlib.use('Agg')
+
+#fix figure size
+#plt.rcParams['figure.figsize'] = [50, 50]
 
 if len(argv) < 2:
     print('usage: python plot_mesh.py mesh.csv')
@@ -11,6 +18,10 @@ vertices = []
 segments = []
 triangles = []
 quads = []
+polygons = []
+
+#switch to show entities' indices in plot
+annotate = True
 
 with open(argv[1]) as f:
     for line in f:
@@ -22,7 +33,7 @@ with open(argv[1]) as f:
             elif array.size == 6:
                 quads.append(array)
             else:
-                raise ValueError('triangles and quadrilaterals only')
+                polygons.append(array)
         if array[0] == 1:
             segments.append(array)
         if array[0] == 2:
@@ -37,16 +48,17 @@ if quads != []:
 
 # plot vertices
 for i, num in enumerate(vertices[:, 1]):
-    plt.annotate(
-        int(num),
-        vertices[np.where(vertices[:, 1] == num)][0, -2:],
-        fontsize='xx-large',
-        weight='bold',
-        bbox=dict(boxstyle='circle', facecolor='none', edgecolor='red'),
-        color='r',
-        ha='center',
-        va='center'
-    )
+    if(annotate):
+            plt.annotate(
+                int(num),
+                vertices[np.where(vertices[:, 1] == num)][0, -2:],
+                fontsize='xx-large',
+                weight='bold',
+                bbox=dict(boxstyle='circle', facecolor='none', edgecolor='red'),
+                color='r',
+                ha='center',
+                va='center'
+            )   
 
 # plot segments
 for segment in segments:
@@ -60,14 +72,14 @@ for segment in segments:
             vertices[np.where(vertices[:, 1] == segment[2])][0, -2:] +
             vertices[np.where(vertices[:, 1] == segment[3])][0, -2:]
     )
-
-    plt.annotate(
-        int(segment[1]),
-        midpoint,
-        fontsize='xx-large',
-        ha='center',
-        va='center'
-    )
+    if(annotate):
+        plt.annotate(
+            int(segment[1]),
+            midpoint,
+            fontsize='xx-large',
+            ha='center',
+            va='center'
+        )
 
 
 # plot cells
@@ -84,20 +96,25 @@ def plot_cells(cells):
             )
 
         cell_vertices = np.vstack(cell_vertices)
-
-        plt.annotate(
-            int(cell[1]),
-            np.mean(cell_vertices, axis=0),
-            fontsize='xx-large',
-            color='deeppink',
-            weight='bold',
-            ha='center',
-            va='center'
-        )
+        if(annotate):
+            plt.annotate(
+                int(cell[1]),
+                np.mean(cell_vertices, axis=0),
+                fontsize='xx-large',
+                color='deeppink',
+                weight='bold',
+                ha='center',
+                va='center'
+            )
 
 
 plot_cells(triangles)
 plot_cells(quads)
+plot_cells(polygons)
 
 plt.axis('off')
+
+out_file = "Mesh.png"
+
 plt.show()
+#plt.savefig(out_file, bbox_inches='tight')

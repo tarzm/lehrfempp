@@ -17,6 +17,8 @@ set(sources
   write_matplotlib.cc
   write_tikz.h
   write_tikz.cc
+  vtk_polytopic_reader.h
+  vtk_polytopic_reader.cc
 )
 
 lf_add_library(lf.io ${sources})

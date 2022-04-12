@@ -142,4 +142,5 @@ TEST(lf_mesh_factory, EdgePolygonAdjacency){
 
 }
 
+
 }   //  namespace lf::mesh::polytopic2d
