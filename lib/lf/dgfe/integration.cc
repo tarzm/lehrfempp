@@ -8,6 +8,9 @@
 
 #include "integration.h"
 
+#include <lf/quad/quad.h>
+#include <lf/geometry/geometry.h>
+
 
 namespace lf::dgfe {
 
@@ -18,9 +21,11 @@ Eigen::MatrixXd outwardNormal(const Eigen::MatrixXd edge){
     LF_VERIFY_MSG( edge.cols() == 2 && edge.rows() == 2, "Edge whose outward normal should be found must be of shape 2x2");
     Eigen::Vector3d tangent(edge(0,1) - edge(0,0), edge(1,1) - edge(1,0), 0.0);
     Eigen::Vector3d z(0.0, 0.0, 1);
-    return (tangent.cross(z)).head<2>().normalized();
+    auto vec2 = (tangent.cross(z)).head<2>();
+    return vec2.normalized();
 }
 
+//calculates euclidean distance between two coordinates
 scalar_t euclideanDist(const Eigen::MatrixXd a, const Eigen::MatrixXd b){
     LF_VERIFY_MSG( a.cols() == 1 && a.rows() == 2, "Matrices (vectors) must be of shape 2x1");
     LF_VERIFY_MSG( b.cols() == 1 && b.rows() == 2, "Matrices (vectors) must be of shape 2x1");
@@ -43,33 +48,83 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
             scalar_t sum = 0.0;
             scalar_t pre_factor = 1.0 / (1.0 + degree_x + degree_y);
 
-            //setup of x_0
-            scalar_t x0_r;
-            size_type r = (degree_x < degree_y) ? 0 : 1;
-            auto n = outwardNormal(corners);
-            scalar_t b = (n.col(0)).dot(corners.col(0));
-            //r cannot be the axis where n_r is 0 => if so, flip it
-            if (n(r,0) == 0.0){
-                r = 1 - r;
-            }
-            x0_r = b / n(r,0);
-            Eigen::MatrixXd x0 = Eigen::MatrixXd::Zero(2,1);
-            x0(r,0) = x0_r;
 
-            //run over edge's end points
-            for (int i = 0; i < 2; i++){
-                //term in sum
-                sum += euclideanDist(corners.col(i), x0) * integrate(corners.col(i), degree_x, degree_y);
-            }
 
-            //term x0_i * k_i * I(N, ...)
-            if (r == 0 && degree_x > 0){
-                sum += x0(r,0) * degree_x * integrate(corners, degree_x - 1, degree_y);
-            } else if (r == 1 && degree_y > 0) {
-                sum += x0(r,0) * degree_y * integrate(corners, degree_x, degree_y - 1);
+            //############ Quadrature-based approach
+
+            auto edge_geo_ptr = std::make_unique<lf::geometry::SegmentO1>(corners);
+
+            auto qr = lf::quad::make_QuadRule(lf::base::RefEl::kSegment(), degree_x + degree_y + 1);
+
+            // qr points
+            const Eigen::MatrixXd zeta_ref{qr.Points()};
+            // qr points mapped to segment
+            Eigen::MatrixXd zeta{edge_geo_ptr->Global(zeta_ref)};
+            //weights
+            Eigen::VectorXd w_ref{qr.Weights()};
+            //gramian determinants
+            Eigen::VectorXd gram_dets{edge_geo_ptr->IntegrationElement(zeta_ref)};
+
+            for(int i = 0; i < qr.Points().cols(); i++){
+                sum += w_ref[i] * (std::pow(zeta(0,i), degree_x) * std::pow(zeta(1,i), degree_y)) * gram_dets[i];
             }
 
-            sum *= pre_factor;
+            //############ Quadrature-based approach END
+
+            
+            //############ MIDPOINT APPROACH
+
+            // Eigen::MatrixXd x0(2,1);
+            // x0 = (corners.col(0) + corners.col(1)) / 2.0;
+
+            // //endpoints
+            // for (int i = 0; i < 2; i++){
+            //     sum += euclideanDist(corners.col(i), x0) * integrate(corners.col(i), degree_x, degree_y);
+            // }
+
+            // if (degree_x > 0){
+            //     sum += x0(0,0) * degree_x * integrate(corners, degree_x - 1, degree_y);
+            // }
+            // if (degree_y > 0){
+            //     sum += x0(1,0) * degree_y * integrate(corners, degree_x, degree_y - 1);
+            // }
+
+            //############ MIDPOINT APPROACH END
+
+
+
+
+            //############ ORIGINAL APPROACH
+
+            // //setup of x_0
+            // scalar_t x0_r;
+            // size_type r = (degree_x < degree_y) ? 0 : 1;
+            // auto n = outwardNormal(corners);
+            // scalar_t b = (n.col(0)).dot(corners.col(0));
+            // //r cannot be the axis where n_r is 0 => if so, flip it
+            // if (n(r,0) == 0.0){
+            //     r = 1 - r;
+            // }
+            // x0_r = b / n(r,0);
+            // Eigen::MatrixXd x0 = Eigen::MatrixXd::Zero(2,1);
+            // x0(r,0) = x0_r;
+
+            // //run over edge's end points
+            // for (int i = 0; i < 2; i++){
+            //     //term in sum
+            //     sum += euclideanDist(corners.col(i), x0) * integrate(corners.col(i), degree_x, degree_y);
+            // }
+
+            // //term x0_i * k_i * I(N, ...)
+            // if (r == 0 && degree_x > 0){
+            //     sum += x0(r,0) * degree_x * integrate(corners, degree_x - 1, degree_y);
+            // } else if (r == 1 && degree_y > 0) {
+            //     sum += x0(r,0) * degree_y * integrate(corners, degree_x, degree_y - 1);
+            // }
+
+            //############ ORIGINAL APPROACH END
+
+            //sum *= pre_factor;
             //std::cout << "EDGE: " << sum << "\n";
             return sum;
         }
@@ -82,8 +137,8 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
                 Eigen::MatrixXd edge(2,2);
                 edge.col(0) = corners.col(i);
                 edge.col(1) = corners.col((i + 1) % corners.cols());
-                scalar_t b_i =  (edge.col(0))(0,0) * (outwardNormal(edge))(0,0) +
-                                (edge.col(0))(1,0) * (outwardNormal(edge))(1,0); //basically dot product
+                scalar_t b_i =  (outwardNormal(edge))(0,0) * edge(0,0) +
+                                (outwardNormal(edge))(1,0) * edge(1,0); //basically dot product
                 sum += b_i * integrate(edge, degree_x, degree_y);
             }
             sum *= pre_factor;
