@@ -1,6 +1,8 @@
 set(sources				
     integration.h
     integration.cc
+    bounding_box.h
+    bounding_box.cc
 )
 
 lf_add_library(lf.dgfe ${sources})

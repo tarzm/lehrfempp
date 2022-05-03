@@ -2,6 +2,7 @@ include(GoogleTest)
 
 set(src
   integration_tests.cc
+  bounding_box_tests.cc
 )
 
 add_executable(lf.dgfe.test ${src})

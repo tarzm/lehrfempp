@@ -17,6 +17,7 @@
 
 
 #include "integration.h"
+#include "bounding_box.h"
 
 /**
  * @brief Collects data structures and algorithms designed for discontinuous
