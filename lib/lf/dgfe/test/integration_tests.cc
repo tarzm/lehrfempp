@@ -12,7 +12,8 @@
 #include <lf/fe/fe.h>
 #include <lf/dgfe/dgfe.h>
 
-#define NORMALTOLERANCE 0.0000000001
+#define NORMALTOLERANCE 1e-10
+#define TOLERANCE 1e-10
 
 namespace lf::dgfe::test {
 
@@ -36,7 +37,7 @@ TEST(integration, helperFunctions){
     EXPECT_TRUE(lf::dgfe::outwardNormal(a_edge).isApprox(normal_check));
     EXPECT_TRUE(isNormalOf(lf::dgfe::outwardNormal(a_edge), a_edge));
 
-    //check outwardNBormal of all edges of the pentagon from the paper
+    //check outwardNormal of all edges of the pentagon from the paper
     Eigen::MatrixXd b_polygon(2,5);
     b_polygon <<    -0.666666666666667, 0.555555555555556, 1.0, -0.555555555555556, -1.0,
                     -0.789473684210526, -1.0, -0.52631578947368, 1.0, -0.157894736842105;
@@ -67,24 +68,34 @@ TEST(integration, triangle){
     Eigen::MatrixXd a_polygon(2,3);
     a_polygon <<    -1.0, 1.0, -1.0,
                     -1.0, 0.0, 1.0;
-    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 10, 10), 0.0111339078, 1e-10);
-    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 5, 5), 0.0, 1e-10);
-    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 5, 20), -0.005890191, 1e-10);
-    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 20, 20), 0.0030396808, 1e-10);
-    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 40, 40), 7.9534562047e-14, 1e-15);
+    
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 5, 5), 0.0, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 10, 10), 0.0111339078, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 20, 20), 0.0030396808, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 40, 40), 7.9534562047e-14, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 10, 5), 0.0, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 20, 40), 0.0, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 40, 5), 0.0, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 5, 20), -0.005890191, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(a_polygon, 5, 40), -0.001868889, TOLERANCE);
 }
-
+// 
 TEST(integration, pentagon){
 
     //test pentagon from paper
     Eigen::MatrixXd b_polygon(2,5);
-    b_polygon <<    -0.666666666666667, 0.555555555555556, 1.0, -0.555555555555556, -1.0,
-                    -0.789473684210526, -1.0, -0.52631578947368, 1.0, -0.157894736842105;
-    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 5, 5), -0.0020324991, 1e-8);
-    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 10, 10), 7.4274779926e-5, 1e-8);
-    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 10, 5), -2.0911953867e-4, 1e-8);
+    b_polygon <<    -0.666666666666667, 0.555555555555556, 1.000000000000000, -0.555555555555556, -1.000000000000000,
+                    -0.789473684210526, -1.000000000000000, -0.052631578947368, 1.000000000000000, -0.157894736842105;
 
-    
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 5, 5), -0.0020324991, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 10, 10), 7.4274779926e-5, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 20, 20), 6.0738145408e-8, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 40, 40), 2.2238524572e-12, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 10, 5), -2.0911953867e-4, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 20, 5), -1.3797380205e-5, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 40, 5), -7.9203571311e-7, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 5, 20), 8.08469022058e-5, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(b_polygon, 5, 40), 4.37593748009e-5, TOLERANCE);
 }
 
 TEST(integration, nonConvexPolygon){
@@ -92,10 +103,15 @@ TEST(integration, nonConvexPolygon){
     Eigen::MatrixXd c_polygon(2,15);
     c_polygon <<    0.413048522141662, 0.024879797655533, -0.082799691823524, -0.533191422779328, -0.553573605852999, -0.972432940212767, -1.000000000000000, -0.789986179147920, -0.627452906935866, -0.452662174765764, -0.069106265580153, 0.141448047807069, 1.000000000000000, 0.363704451489016, 0.627086024018283,
                     0.781696234443715, 0.415324992429711, 0.688810136531751, 1.000000000000000, 0.580958514816226, 0.734117068746903, 0.238078507228890, 0.012425068086110, -0.636532897516109, -1.000000000000000, -0.289054989277619, -0.464417038155806, -0.245698820584615, -0.134079689960635, -0.110940423607648;
-    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 5, 5), -0.002589861, 1e-10);
-    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 10, 5), 0.0014996521, 1e-10);
-
-
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 5, 5), -0.002589861, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 10, 10), 1.5738050178e-4, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 20, 20), 1.3793481020e-6, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 40, 40), 4.2588831784e-10, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 10, 5), 0.0014996521, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 20, 5), 7.0356275077e-4, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 40, 5), 2.5065856538e-4, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 5, 20), -1.330384913e-4, TOLERANCE);
+    EXPECT_NEAR(lf::dgfe::integrate(c_polygon, 5, 40), -3.963064075e-5, TOLERANCE);
 }
 
 } //namespace lf::dgfe::test

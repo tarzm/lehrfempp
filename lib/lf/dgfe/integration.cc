@@ -46,12 +46,9 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
 
         case 2: {       // entity is an edge
             scalar_t sum = 0.0;
-            scalar_t pre_factor = 1.0 / (1.0 + degree_x + degree_y);
-
-
-
-            //############ Quadrature-based approach
-
+            
+            //############ QUADRATURE-BASED APPROACH
+            //get pointer to segments geometry
             auto edge_geo_ptr = std::make_unique<lf::geometry::SegmentO1>(corners);
 
             auto qr = lf::quad::make_QuadRule(lf::base::RefEl::kSegment(), degree_x + degree_y + 1);
@@ -68,41 +65,18 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
             for(int i = 0; i < qr.Points().cols(); i++){
                 sum += w_ref[i] * (std::pow(zeta(0,i), degree_x) * std::pow(zeta(1,i), degree_y)) * gram_dets[i];
             }
-
-            //############ Quadrature-based approach END
-
-            
-            //############ MIDPOINT APPROACH
-
-            // Eigen::MatrixXd x0(2,1);
-            // x0 = (corners.col(0) + corners.col(1)) / 2.0;
-
-            // //endpoints
-            // for (int i = 0; i < 2; i++){
-            //     sum += euclideanDist(corners.col(i), x0) * integrate(corners.col(i), degree_x, degree_y);
-            // }
-
-            // if (degree_x > 0){
-            //     sum += x0(0,0) * degree_x * integrate(corners, degree_x - 1, degree_y);
-            // }
-            // if (degree_y > 0){
-            //     sum += x0(1,0) * degree_y * integrate(corners, degree_x, degree_y - 1);
-            // }
-
-            //############ MIDPOINT APPROACH END
+            //############ QUADRATURE-BASED APPROACH END
 
 
-
-
-            //############ ORIGINAL APPROACH
-
+            //############ ORIGINAL APPROACH ALGORITHM 1 FROM PAPER
+            // scalar_t pre_factor = 1.0 / (1.0 + degree_x + degree_y);
             // //setup of x_0
             // scalar_t x0_r;
             // size_type r = (degree_x < degree_y) ? 0 : 1;
             // auto n = outwardNormal(corners);
             // scalar_t b = (n.col(0)).dot(corners.col(0));
             // //r cannot be the axis where n_r is 0 => if so, flip it
-            // if (n(r,0) == 0.0){
+            // if (n(r,0) == 0){
             //     r = 1 - r;
             // }
             // x0_r = b / n(r,0);
@@ -122,9 +96,10 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
             //     sum += x0(r,0) * degree_y * integrate(corners, degree_x, degree_y - 1);
             // }
 
+            // sum *= pre_factor;
             //############ ORIGINAL APPROACH END
 
-            //sum *= pre_factor;
+            
             //std::cout << "EDGE: " << sum << "\n";
             return sum;
         }
@@ -137,8 +112,7 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
                 Eigen::MatrixXd edge(2,2);
                 edge.col(0) = corners.col(i);
                 edge.col(1) = corners.col((i + 1) % corners.cols());
-                scalar_t b_i =  (outwardNormal(edge))(0,0) * edge(0,0) +
-                                (outwardNormal(edge))(1,0) * edge(1,0); //basically dot product
+                scalar_t b_i = outwardNormal(edge).col(0).dot(edge.col(0));
                 sum += b_i * integrate(edge, degree_x, degree_y);
             }
             sum *= pre_factor;
