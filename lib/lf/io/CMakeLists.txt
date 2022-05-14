@@ -19,6 +19,8 @@ set(sources
   write_tikz.cc
   vtk_polytopic_reader.h
   vtk_polytopic_reader.cc
+  numpy_polytopic_writer.h
+  numpy_polytopic_writer.cc
 )
 
 lf_add_library(lf.io ${sources})

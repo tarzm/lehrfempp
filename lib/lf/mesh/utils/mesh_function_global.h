@@ -76,15 +76,21 @@ class MeshFunctionGlobal {
    */
   std::vector<F_return_type> operator()(const mesh::Entity& e,
                                         const Eigen::MatrixXd& local) const {
-    LF_ASSERT_MSG(e.RefEl().Dimension() == local.rows(),
+    if(e.RefEl() != lf::base::RefEl::kPolygon()){
+      LF_ASSERT_MSG(e.RefEl().Dimension() == local.rows(),
                   "mismatch between entity dimension and local.rows()");
-    std::vector<F_return_type> result;
-    result.reserve(local.cols());
-    auto global_points = e.Geometry()->Global(local);
-    for (long i = 0; i < local.cols(); ++i) {
-      result.push_back(f_(global_points.col(i)));
-    }
-    return result;
+      std::vector<F_return_type> result;
+      result.reserve(local.cols());
+      auto global_points = e.Geometry()->Global(local);
+      for (long i = 0; i < local.cols(); ++i) {
+        result.push_back(f_(global_points.col(i)));
+      }
+      return result;
+    } else { //is polygon => just return value of f_(local)
+      std::vector<F_return_type> result;
+      result.push_back(f_(local));
+      return result;
+    }                                 
   }
 
   virtual ~MeshFunctionGlobal() = default;

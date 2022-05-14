@@ -21,6 +21,7 @@
 #include "write_matplotlib.h"
 #include "write_tikz.h"
 #include "vtk_polytopic_reader.h"
+#include "numpy_polytopic_writer.h"
 
 /**
  * @brief Mesh input (from file) and output (in various formats) facilities

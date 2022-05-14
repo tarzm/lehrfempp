@@ -16,7 +16,7 @@
 #include <lf/io/io.h>
 #include "lf/mesh/test_utils/test_meshes.h"
 
-#define NORMALTOLERANCE 1e-10
+#define NORMALTOLERANCE 1e-12
 #define TOLERANCE 1e-10
 
 namespace lf::dgfe::test {
@@ -58,12 +58,22 @@ TEST(integration, helperFunctions){
     Eigen::MatrixXd c_point(2,1);
     b_point << 0.0, 0.0;
     c_point << 2.0, 2.5;
-    EXPECT_NEAR(euclideanDist(b_point, c_point), 3.2015621187164243, 1e-10);
-    Eigen::MatrixXd d_point(2,1);
-    Eigen::MatrixXd e_point(2,1);
-    d_point << 4.1, -1.7;
-    e_point << 0.8, -0.9;
-    EXPECT_NEAR(euclideanDist(d_point, e_point), 3.39559, 1e-5);
+    EXPECT_NEAR(euclideanDist(b_point, c_point), 3.2015621187164243, 1e-12);
+    Eigen::MatrixXd f_point(2,1);
+    Eigen::MatrixXd g_point(2,1);
+    f_point << -0.8, 3.0;
+    g_point << 2.34, 1.01;
+    EXPECT_NEAR(euclideanDist(f_point, g_point), std::sqrt(std::pow( 2.34-(-0.8) , 2) + std::pow( 1.01-3.0 , 2)), 1e-12);
+
+}
+
+TEST(integration, lineIntegrals){
+
+    Eigen::MatrixXd a_polygon(2,2);
+    a_polygon <<    2.0, 5.0,
+                    1.0, 3.0;
+    EXPECT_DOUBLE_EQ(lf::dgfe::integrate(a_polygon, 4, 3), std::sqrt(13) * (648.0/8.0 + 2700.0/7.0 + 4806.0/6.0 + 4737.0/5.0 + 2792.0/4.0 + 984.0/3.0 + 192.0/2.0 + 16.0));
+    
 }
 
 TEST(integration, triangle){
@@ -149,10 +159,11 @@ TEST(integration, bigMesh){
     lf::dgfe::scalar_t sum = 0.0;
     for (auto cell : mesh_ptr->Entities(0)){
         auto corners = lf::mesh::polytopic2d::Corners(cell);
+        //std::cout << "Cell " << mesh_ptr->Index(*cell) << " contributes " << integrate(corners, 3, 4) << "\n";
         sum += integrate(corners, 3, 4);
     }
     //this mesh has some very small edges => I believe that is where the error is coming from
-     EXPECT_NEAR(sum, 0.05, TOLERANCE);
+    EXPECT_NEAR(sum, 0.05, TOLERANCE);
 
 }
 

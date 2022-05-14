@@ -40,7 +40,7 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
     auto n_cols = corners.cols();
     switch(n_cols){
         case 1: {       // entity is a point
-            //std::cout << "POINT: " << std::pow(corners(0,0), degree_x) * std::pow(corners(1,0), degree_y) << "\n";
+            // std::cout << "POINT: " << std::pow(corners(0,0), degree_x) * std::pow(corners(1,0), degree_y) << "\n";
             return std::pow(corners(0,0), degree_x) * std::pow(corners(1,0), degree_y);
         }
 
@@ -70,11 +70,13 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
 
             //############ ORIGINAL APPROACH ALGORITHM 1 FROM PAPER
             // scalar_t pre_factor = 1.0 / (1.0 + degree_x + degree_y);
+            // Eigen::MatrixXd n = outwardNormal(corners);
+            // scalar_t b = (n.col(0)).dot(corners.col(0));
+
             // //setup of x_0
             // scalar_t x0_r;
-            // size_type r = (degree_x < degree_y) ? 0 : 1;
-            // auto n = outwardNormal(corners);
-            // scalar_t b = (n.col(0)).dot(corners.col(0));
+            // //r is where the exponent of the polynomial is smaller
+            // size_type r = (degree_x <= degree_y) ? 0 : 1;
             // //r cannot be the axis where n_r is 0 => if so, flip it
             // if (n(r,0) == 0){
             //     r = 1 - r;
@@ -100,7 +102,7 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
             //############ ORIGINAL APPROACH END
 
             
-            //std::cout << "EDGE: " << sum << "\n";
+            // std::cout << "EDGE: " << sum << "\n";
             return sum;
         }
 
@@ -116,7 +118,7 @@ scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
                 sum += b_i * integrate(edge, degree_x, degree_y);
             }
             sum *= pre_factor;
-            //std::cout << "POLYGON: " << sum << "\n";
+            // std::cout << "POLYGON: " << sum << "\n";
             return sum;
         }
     }
