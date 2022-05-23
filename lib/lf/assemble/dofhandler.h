@@ -745,6 +745,183 @@ class DynamicFEDofHandler : public DofHandler {
   /**@}*/
 };
 
+/* ====================================================================== */
+
+/**
+ * @brief Dofhandler for uniform discontinuos finite element spaces
+ *
+ * This management class for indices of global shape functions
+ * is suitable for situations where every entity of a particular
+ * type has exactly the same number of shape functions belonging to it.
+ * At the moment it is implemented to only represent shape functions on cells (polygons)
+ */
+class UniformDGFEDofHandler : public DofHandler {
+  public:
+    /** Construction from local dof layout */
+    /**@{*/
+    /** @name Constructors */
+
+    /** @brief Construction from a map object
+     *
+     * @param dofmap map telling number of interior dofs for every type of entity
+     *
+     * Detailed information about the construction from a map object
+     * is given in [Lecture
+     * Document](https://www.sam.math.ethz.ch/~grsam/NUMPDEFL/NUMPDE.pdf)
+     * @lref{par:dofhinit}. Also study [Lecture
+     * Document](https://www.sam.math.ethz.ch/~grsam/NUMPDEFL/NUMPDE.pdf)
+     * @lref{ex:dofdist}.
+     */
+    using dof_map_t = std::map<lf::base::RefEl, base::size_type>;
+    UniformDGFEDofHandler(std::shared_ptr<const lf::mesh::Mesh> mesh,
+                        dof_map_t dofmap);
+    /**@}*/
+
+
+    /**
+     * @brief Copy Construction doesn't make much sense for UniformFEDofHandler.
+     */
+    UniformDGFEDofHandler(const UniformFEDofHandler &) = delete;
+
+    /**
+     * @brief Copy assigning a UniformFEDofHandler doesn't make much sense.
+     */
+    UniformDGFEDofHandler &operator=(const UniformFEDofHandler &) = delete;
+
+    /**
+     * @brief Virtual Destructor.
+     */
+    ~UniformDGFEDofHandler() override = default;
+
+    [[nodiscard]] size_type NumDofs() const override { return num_dof_; }
+
+    /**
+     * @copydoc DofHandler::NumLocalDofs()
+     * @sa GlobalDofIndices()
+     */
+    [[nodiscard]] size_type NumLocalDofs(
+        const lf::mesh::Entity &entity) const override;
+
+    /**
+     * @copydoc DofHandler::NumInteriorDofs()
+     * @sa InteriorGlobalDofIndices
+     */
+    [[nodiscard]] size_type NumInteriorDofs(
+        const lf::mesh::Entity &entity) const override;
+
+    /**
+     * @copydoc DofHandler::GlobalDofIndices()
+     */
+    [[nodiscard]] nonstd::span<const gdof_idx_t> GlobalDofIndices(
+        const lf::mesh::Entity &entity) const override;
+
+    /**
+     * @copydoc DofHandler::InteriorGlobalDofIndices()
+     */
+    [[nodiscard]] nonstd::span<const gdof_idx_t> InteriorGlobalDofIndices(
+        const lf::mesh::Entity &entity) const override;
+    
+    /**
+     * @copydoc DofHandler::Entity()
+     * @sa GlobalDofIndices()
+     */
+    [[nodiscard]] const lf::mesh::Entity &Entity(
+        gdof_idx_t dofnum) const override {
+      LF_VERIFY_MSG(dofnum < dof_entities_.size(),
+                    "Illegal dof index " << dofnum << ", max = " << num_dof_);
+      return *dof_entities_[dofnum];
+    }
+  
+    /** @copydoc DofHandler::Mesh()
+     */
+    [[nodiscard]] std::shared_ptr<const lf::mesh::Mesh> Mesh() const override {
+      return mesh_;
+    }
+
+private:
+  /**
+   * @brief initialization of internal index arrays
+   */
+  void initIndexArrays();
+  /** @brief compute number of shape functions covering an entity type
+   *
+   * This method assumes that the variable num_loc_dof_cell_
+   * has already been set.
+   *
+   * @sa LocalStaticDOFs2D::TotalNoLocDofs()
+   */
+  void InitTotalNumDofs();
+
+  // Access method to numbers and values of indices of shape functions
+  [[nodiscard]] nonstd::span<const gdof_idx_t> GlobalDofIndices(
+      lf::base::RefEl ref_el_type, glb_idx_t entity_index) const;
+
+  [[nodiscard]] nonstd::span<const gdof_idx_t> InteriorGlobalDofIndices(
+      lf::base::RefEl ref_el_type, glb_idx_t entity_index) const;
+
+  [[nodiscard]] size_type GetNumLocalDofs(lf::base::RefEl ref_el_type,
+                                          glb_idx_t /*unused*/) const {
+    return NumCoveredDofs(ref_el_type);
+  }
+
+  /** co-dimensions of different geometric entities in a 2D mesh */
+  /**@{*/
+  size_type kCellOrd = 2; /**< */
+  /**@}*/
+
+  /** Number of covered dofs for an entity type */
+  [[nodiscard]] size_type NumCoveredDofs(lf::base::RefEl ref_el_type) const {
+    size_type no_covered_dofs;
+    switch (ref_el_type) {
+      case lf::base::RefEl::kPolygon(): {
+        no_covered_dofs = num_dofs_polygon_;
+        break;
+      }
+      default: {
+        LF_VERIFY_MSG(false, "Illegal entity type, only implemented for polygons");
+        break;
+      }
+    }  // end switch
+    return no_covered_dofs;
+  }
+
+  /** Number of interior shape functions for an entity type */
+  [[nodiscard]] size_type NumInteriorDofs(lf::base::RefEl ref_el_type) const {
+    size_type no_loc_dofs;
+    switch (ref_el_type) {
+      case lf::base::RefEl::kPolygon(): {
+        no_loc_dofs = num_loc_dof_polygon_;
+        break;
+      }
+      default: {
+        LF_VERIFY_MSG(false, "Illegal entity type, only implemented for polygons");
+        break;
+      }
+    }  // end switch
+    return no_loc_dofs;
+  }
+
+  /** The mesh on which the degrees of freedom are defined */
+  std::shared_ptr<const lf::mesh::Mesh> mesh_;
+  /** The total number of degrees of freedom */
+  size_type num_dof_{0};
+  /** Vector of entities to which global basis functions are associated */
+  std::vector<const lf::mesh::Entity *> dof_entities_;
+  /** Vectors of global indices of dofs belonging to entities of different
+      topological type */
+  std::array<std::vector<gdof_idx_t>, 1> dofs_;
+  /** Number of dofs covering entities of a particular type */
+  std::array<size_type, 1> num_dofs_;
+  /** (Maximum) number of shape functions covering entities
+   * of a particular co-dimension  */
+  size_type num_dofs_polygon_{0};
+  /** Numbers of local _interior_ shape functions associated with different
+   * types of entities */
+  /**@{*/
+  size_type num_loc_dof_polygon_{0};
+  /**@}*/
+};
+
 }  // namespace lf::assemble
 
 #endif

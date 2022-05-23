@@ -18,7 +18,7 @@
 
 #include "integration.h"
 #include "bounding_box.h"
-
+#include "legendre_dgfe.h"
 /**
  * @brief Collects data structures and algorithms designed for discontinuous
  * galerkin finite element methods
