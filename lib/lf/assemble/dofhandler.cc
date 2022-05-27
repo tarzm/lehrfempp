@@ -416,8 +416,10 @@ UniformDGFEDofHandler::UniformDGFEDofHandler(
   // Initialize total number of shape functions covering an entity.
   InitTotalNumDofs();
 
+
   // Initializatin of dof index arrays
   initIndexArrays();
+
 }
 
 void UniformDGFEDofHandler::InitTotalNumDofs() {
@@ -437,7 +439,6 @@ void UniformDGFEDofHandler::initIndexArrays() {
   // Visit all cells
   // Old implementation without strong link between cell
   // indices and ordering of global shape functions
-  // for (const lf::mesh::Entity &cell : mesh_->Entities(0)) {
   for (glb_idx_t cell_idx = 0; cell_idx < no_cells; cell_idx++) {
     // Obtain pointer to current ell
     const mesh::Entity *cell_p{mesh_->EntityByIndex(0, cell_idx)};
@@ -451,7 +452,7 @@ void UniformDGFEDofHandler::initIndexArrays() {
       num_int_dofs_cell = num_loc_dof_polygon_;
     } else {
       LF_ASSERT_MSG(
-          false, "Illegal cell type; only triangles and quads are supported");
+          false, "Illegal cell type; only polygons are supported");
     }
 
     // enlist new interior cell-associated dofs

@@ -866,7 +866,7 @@ private:
 
   /** co-dimensions of different geometric entities in a 2D mesh */
   /**@{*/
-  size_type kCellOrd = 2; /**< */
+  size_type kCellOrd = 0; /**< */
   /**@}*/
 
   /** Number of covered dofs for an entity type */

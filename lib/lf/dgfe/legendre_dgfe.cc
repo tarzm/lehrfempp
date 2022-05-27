@@ -34,6 +34,7 @@ Eigen::Matrix<scalar_t, 4, 4> DGFEO1MassElementMatrix::Eval(const lf::mesh::Enti
     BoundingBox box(cell);
     auto corners = lf::mesh::polytopic2d::Corners(&cell);
     Eigen::Matrix<scalar_t, 4, 4> elem_mat;
+    
     //loop over trial basis funtions on cell
     for (int i = 0; i < 4; i++){
         //loop over test basis functions on cell
@@ -55,7 +56,31 @@ Eigen::Matrix<scalar_t, 4, 4> DGFEO1MassElementMatrix::Eval(const lf::mesh::Enti
     return elem_mat;
 }
 
+DGFEO1LocalLoadVector::ElemVec DGFEO1LocalLoadVector::Eval(const lf::mesh::Entity &cell) const {
+    BoundingBox box(cell);
+    auto corners = lf::mesh::polytopic2d::Corners(&cell);
 
+    ElemVec elem_vec = Eigen::Matrix<scalar_t, 4, 1>::Zero();
+
+    //loop over monomials of the polynomial
+    for (auto monomial : polynomial_){
+        auto monomial_coeff = monomial.first;
+        auto monomial_degree_x = monomial.second.first;
+        auto monomial_degree_y = monomial.second.second;
+
+        //loop over trial basis funtions on cell
+        for(int basis = 0; basis < 4; basis++){
+            int basis_degree_x = basis / 2;
+            int basis_degree_y = basis % 2;
+            //legendre polynomials have max degree 1, therefore no legendre_coefficients have to be taken into account
+            elem_vec[basis] += monomial_coeff * box.det() * lf::dgfe::integrate(box.map(corners), basis_degree_x + monomial_degree_x, basis_degree_y + monomial_degree_y);
+
+            std::cout << "Added term " << monomial_coeff * box.det() * lf::dgfe::integrate(box.map(corners), basis_degree_x + monomial_degree_x, basis_degree_y + monomial_degree_y) << "\n";
+        }
+    }
+
+    return elem_vec;
+}
 
 
 

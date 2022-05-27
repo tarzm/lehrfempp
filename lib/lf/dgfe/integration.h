@@ -33,11 +33,6 @@ scalar_t euclideanDist(const Eigen::MatrixXd a, const Eigen::MatrixXd b);
 
 scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y);
 
-
-
-
-
-
 } //namespace dgfe
 
 #endif // LF_DGFEINTEGRATION_H

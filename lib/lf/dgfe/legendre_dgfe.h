@@ -11,14 +11,15 @@
 #ifndef LEGENDRE_DGFE_H
 #define LEGENDRE_DGFE_H
 
+#include <lf/mesh/mesh.h>
+
 #include <Eigen/Eigen>
-#include <Eigen/Dense>
 #include <cmath>
 
 #include "integration.h"
 #include "bounding_box.h"
 
-#include <lf/mesh/mesh.h>
+
 
 namespace lf::dgfe {
 
@@ -62,7 +63,7 @@ class DGFEO1MassElementMatrix {
         /**
          * @brief All cells are considered active in the default implementation
          */
-        [[nodiscard]] virtual bool isActive(const lf::mesh::Entity & /*cell*/) const {
+        [[nodiscard]] bool isActive(const lf::mesh::Entity & /*cell*/) const {
             return true;
         }
 
@@ -76,7 +77,26 @@ class DGFEO1MassElementMatrix {
         [[nodiscard]] Eigen::Matrix<scalar_t, 4, 4> Eval(const lf::mesh::Entity &cell) const;
 };
 
+class DGFEO1LocalLoadVector {
+    public:
+        using ElemVec = Eigen::Matrix<scalar_t, 4, 1>;
+        //polyomial expansion of a function in 2D
+        //format: {[coefficient, (degree x, degree y)], [coefficient, (degree x, degree y) , ... ]}
+        using Polynomial = std::vector<std::pair<scalar_t, std::pair<size_type, size_type>>>;
 
+        DGFEO1LocalLoadVector(Polynomial polynomial) : polynomial_(polynomial) {}
+
+        bool isActive(const lf::mesh::Entity & /*cell*/) const {
+            return true;
+        }
+
+        ElemVec Eval(const lf::mesh::Entity &cell) const;
+
+    private:
+        Polynomial polynomial_;
+
+
+};
 
 } //namespace lf::dgfe
 
