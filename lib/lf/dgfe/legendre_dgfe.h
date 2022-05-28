@@ -1,7 +1,6 @@
 /**
  * @file
- * @brief Classes supporting the discontinuous finite element discretization of boundary value problems
- * with mapped legendre basis functions
+ * @brief Functionalities for reference basis functions of a discrete space in the dgfe setting
  * @author Tarzis Maurer
  * @date May 22
  * @copyright ETH Zurich
@@ -49,54 +48,18 @@ scalar_t legendre_polynomial(size_type i, scalar_t x);
 scalar_t C_i_j_k(size_type i, size_type j, size_type k, size_type degree_p);
 
 /**
- * @ingroup entity_matrix_provider
- * @headerfile lf/dgfe/legendre_dgfe.h
- * @brief Computing the element matrix for the mass matrix
- *
- * This class complies with the requirements for the type
- * `ENTITY_MATRIX_PROVIDER` given as a template parameter to define an
- * incarnation of the function
- * @ref AssembleMatrixLocally().
+ * @brief returns a pair (degree_x, degree_y) derived from the basis function index of a cell
+ * 
+ * @param basis_index index of the basis fucntion on this cell
+ * @param degree_of_space max degree of the space defined over the cell
  */
-class DGFEO1MassElementMatrix {
-    public:
-        /**
-         * @brief All cells are considered active in the default implementation
-         */
-        [[nodiscard]] bool isActive(const lf::mesh::Entity & /*cell*/) const {
-            return true;
-        }
+std::pair<size_type, size_type> multiIndexToDegree(size_type basis_index, size_type degree_of_space);
 
-        /**
-         * @brief main routine for the computation of element matrices
-         *
-         * @param cell reference to the polytopic cell for
-         *        which the element matrix should be computed.
-         * @return a 2x2 matrix
-         */
-        [[nodiscard]] Eigen::Matrix<scalar_t, 4, 4> Eval(const lf::mesh::Entity &cell) const;
-};
+/**
+ * @brief inverse function of multiIndexToDegree
+ */
+size_type degreeToMultiIndex(std::pair<size_type, size_type> degrees, size_type degree_of_space);
 
-class DGFEO1LocalLoadVector {
-    public:
-        using ElemVec = Eigen::Matrix<scalar_t, 4, 1>;
-        //polyomial expansion of a function in 2D
-        //format: {[coefficient, (degree x, degree y)], [coefficient, (degree x, degree y) , ... ]}
-        using Polynomial = std::vector<std::pair<scalar_t, std::pair<size_type, size_type>>>;
-
-        DGFEO1LocalLoadVector(Polynomial polynomial) : polynomial_(polynomial) {}
-
-        bool isActive(const lf::mesh::Entity & /*cell*/) const {
-            return true;
-        }
-
-        ElemVec Eval(const lf::mesh::Entity &cell) const;
-
-    private:
-        Polynomial polynomial_;
-
-
-};
 
 } //namespace lf::dgfe
 

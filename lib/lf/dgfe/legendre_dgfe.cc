@@ -1,7 +1,6 @@
 /**
  * @file
- * @brief Implementation of classes supporting the discontinuous finite element discretization of boundary value problems
- * with mapped legendre basis functions
+ * @brief Implementation of functionalities for reference basis functions of a discrete space in the dgfe setting
  * @author Tarzis Maurer
  * @date May 22
  * @copyright ETH Zurich
@@ -30,57 +29,39 @@ scalar_t C_i_j_k(size_type i, size_type j, size_type k, size_type degree_p){
     return sum;
 }
 
-Eigen::Matrix<scalar_t, 4, 4> DGFEO1MassElementMatrix::Eval(const lf::mesh::Entity &cell) const{
-    BoundingBox box(cell);
-    auto corners = lf::mesh::polytopic2d::Corners(&cell);
-    Eigen::Matrix<scalar_t, 4, 4> elem_mat;
-    
-    //loop over trial basis funtions on cell
-    for (int i = 0; i < 4; i++){
-        //loop over test basis functions on cell
-        for (int j = 0; j < 4; j++){
-            scalar_t sum = 0;
-            //definition of i1, i2, j1, j2
-            int i1 = i / 2;
-            int i2 = i % 2;
-            int j1 = j / 2;
-            int j2 = j % 2;
-            for (int k = 0; k <= i1 + j1; k++){
-                for (int l = 0; l <= i2 + j2; l++){
-                    sum += C_i_j_k(i1, j1, k, 1) * C_i_j_k(i2, j2, l, 1) * box.det() * lf::dgfe::integrate(box.map(corners), k, l);
-                }
-            }
-            elem_mat(i,j) = sum;
-        }
+std::pair<size_type, size_type> multiIndexToDegree(size_type basis_index, size_type degree_of_space){
+    size_type degree_x;
+    size_type degree_y;
+    switch(degree_of_space){
+        case 1:
+            LF_VERIFY_MSG(basis_index < 4 && basis_index >= 0, "Basis index must be 0 <= basis_index <= 4 when degree of the space is 1");
+            degree_x = basis_index / 2;
+            degree_y = basis_index % 2;
+            return std::make_pair(degree_x, degree_y);
+
+        case 2:
+            LF_VERIFY_MSG(basis_index < 9 && basis_index >= 0, "Basis index must be 0 <= basis_index <= 8 when degree of the space is 2");
+            degree_x = basis_index / 3;
+            degree_y = basis_index % 3;
+            return std::make_pair(degree_x, degree_y);
+        default:
+            LF_VERIFY_MSG(false, "Degree of space must be 0 <= degree <= 2");
     }
-    return elem_mat;
 }
 
-DGFEO1LocalLoadVector::ElemVec DGFEO1LocalLoadVector::Eval(const lf::mesh::Entity &cell) const {
-    BoundingBox box(cell);
-    auto corners = lf::mesh::polytopic2d::Corners(&cell);
-
-    ElemVec elem_vec = Eigen::Matrix<scalar_t, 4, 1>::Zero();
-
-    //loop over monomials of the polynomial
-    for (auto monomial : polynomial_){
-        auto monomial_coeff = monomial.first;
-        auto monomial_degree_x = monomial.second.first;
-        auto monomial_degree_y = monomial.second.second;
-
-        //loop over trial basis funtions on cell
-        for(int basis = 0; basis < 4; basis++){
-            int basis_degree_x = basis / 2;
-            int basis_degree_y = basis % 2;
-            //legendre polynomials have max degree 1, therefore no legendre_coefficients have to be taken into account
-            elem_vec[basis] += monomial_coeff * box.det() * lf::dgfe::integrate(box.map(corners), basis_degree_x + monomial_degree_x, basis_degree_y + monomial_degree_y);
-
-            std::cout << "Added term " << monomial_coeff * box.det() * lf::dgfe::integrate(box.map(corners), basis_degree_x + monomial_degree_x, basis_degree_y + monomial_degree_y) << "\n";
-        }
+size_type degreeToMultiIndex(std::pair<size_type, size_type> degrees, size_type degree_of_space){
+    switch(degree_of_space){
+        case 1:
+            LF_VERIFY_MSG(degrees.first < 2 && degrees.first >= 0 && degrees.second < 2 && degrees.second >= 0, "Degrees must be 0 <= degree <= 1 when space is of degree 1");
+            return degrees.second + degrees.first * 2;
+        case 2:
+            LF_VERIFY_MSG(degrees.first < 3 && degrees.first >= 0 && degrees.second < 3 && degrees.second >= 0, "Degrees must be 0 <= degree <= 2 when space is of degree 2");
+            return degrees.second + degrees.first * 3;
+        default:
+            LF_VERIFY_MSG(false, "Degree of space must be 0 <= degree <= 2");
     }
-
-    return elem_vec;
 }
+
 
 
 
