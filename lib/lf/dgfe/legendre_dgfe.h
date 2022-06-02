@@ -43,9 +43,8 @@ scalar_t legendre_polynomial(size_type i, scalar_t x);
 /**
  * @brief returns the value of the definition (26) of the paper
  * https://link.springer.com/article/10.1007/s10915-018-0802-y
- * @param degree_p degree of the 1D polynomial space
  */
-scalar_t C_i_j_k(size_type i, size_type j, size_type k, size_type degree_p);
+scalar_t C_i_j_k(size_type i, size_type j, size_type k);
 
 /**
  * @brief returns a pair (degree_x, degree_y) derived from the basis function index of a cell

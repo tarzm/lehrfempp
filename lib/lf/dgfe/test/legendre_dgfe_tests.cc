@@ -77,7 +77,26 @@ TEST(legendre_dgfe, numberingBasisFunctions){
         auto index = degreeToMultiIndex(check_O2[i], 2);
         EXPECT_EQ(index, i);
     }
-
 }
+
+// TEST(legendre_dgfe, C_i_j_k_O1){
+//     //trial space basis
+//     for (int i = 0; i < 4; i++){
+//         //test space basis
+//         for (int j = 0; j < 4; j++){
+//             auto degrees_i = multiIndexToDegree(i, 1);
+//             auto degrees_j = multiIndexToDegree(j, 1);
+//             int i1 = degrees_i.first;
+//             int i2 = degrees_i.second;
+//             int j1 = degrees_j.first;
+//             int j2 = degrees_j.second;
+//             for (int k = 0; k <= i1 + j1; k++){
+//                 for (int l = 0; l <= i2 + j2; l++){
+//                     std::cout << "C_" << i1 << "_" << j1 << "_" << k << " = " <<  C_i_j_k(i1, j1, k, 1) << "\n";
+//                 }
+//             }
+//         }
+//     }
+// }
 
 } //namespace lf::dgfe:test

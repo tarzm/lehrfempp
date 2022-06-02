@@ -16,6 +16,11 @@
 
 namespace lf::dgfe {
 
+//polyomial expansion of a function in 2D
+//format: {[coefficient, (degree x, degree y)], [coefficient, (degree x, degree y)], ... }
+using Polynomial = std::vector<std::pair<scalar_t, std::pair<size_type, size_type>>>;
+
+
 /**
  * @ingroup entity_matrix_provider
  * @headerfile lf/dgfe/legendre_dgfe.h
@@ -40,7 +45,7 @@ class DGFEO1MassElementMatrix {
          *
          * @param cell reference to the polytopic cell for
          *        which the element matrix should be computed.
-         * @return a 2x2 matrix
+         * @return a 4x4 matrix
          */
         [[nodiscard]] Eigen::Matrix<scalar_t, 4, 4> Eval(const lf::mesh::Entity &cell) const;
 };
@@ -48,9 +53,6 @@ class DGFEO1MassElementMatrix {
 class DGFEO1LocalLoadVector {
     public:
         using ElemVec = Eigen::Matrix<scalar_t, 4, 1>;
-        //polyomial expansion of a function in 2D
-        //format: {[coefficient, (degree x, degree y)], [coefficient, (degree x, degree y) , ... ]}
-        using Polynomial = std::vector<std::pair<scalar_t, std::pair<size_type, size_type>>>;
 
         DGFEO1LocalLoadVector(Polynomial polynomial) : polynomial_(polynomial) {}
 
@@ -66,6 +68,43 @@ class DGFEO1LocalLoadVector {
 
 };
 
+class DGFEO2MassElementMatrix {
+    public:
+        /**
+         * @brief All cells are considered active in the default implementation
+         */
+        [[nodiscard]] bool isActive(const lf::mesh::Entity & /*cell*/) const {
+            return true;
+        }
+
+        /**
+         * @brief main routine for the computation of element matrices
+         *
+         * @param cell reference to the polytopic cell for
+         *        which the element matrix should be computed.
+         * @return a 9x9 matrix
+         */
+        [[nodiscard]] Eigen::Matrix<scalar_t, 9, 9> Eval(const lf::mesh::Entity &cell) const;
+};
+
+class DGFEO2LocalLoadVector {
+    public:
+        using ElemVec = Eigen::Matrix<scalar_t, 9, 1>;
+        
+
+        DGFEO2LocalLoadVector(Polynomial polynomial) : polynomial_(polynomial) {}
+
+        bool isActive(const lf::mesh::Entity & /*cell*/) const {
+            return true;
+        }
+
+        ElemVec Eval(const lf::mesh::Entity &cell) const;
+
+    private:
+        Polynomial polynomial_;
+
+
+};
 
 
 } //namespace lf::dgfe

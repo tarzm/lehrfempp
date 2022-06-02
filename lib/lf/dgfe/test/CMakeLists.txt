@@ -5,8 +5,7 @@ set(src
   bounding_box_tests.cc
   legendre_dgfe_tests.cc
   dgfe_providers_tests.cc
-  dgfe_O1_tests.cc
-  dgfe_O2_tests.cc
+  dgfe_space_tests.cc
 )
 
 add_executable(lf.dgfe.test ${src})

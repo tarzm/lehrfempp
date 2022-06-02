@@ -5,10 +5,8 @@ set(sources
     bounding_box.cc
     legendre_dgfe.h
     legendre_dgfe.cc
-    dgfe_O1.h
-    dgfe_O1.cc
-    dgfe_O2.h
-    dgfe_O2.cc
+    dgfe_space.h
+    dgfe_space.cc
     dgfe_providers.h
     dgfe_providers.cc
 )

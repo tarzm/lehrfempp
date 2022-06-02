@@ -19,8 +19,7 @@
 #include "integration.h"
 #include "bounding_box.h"
 #include "legendre_dgfe.h"
-#include "dgfe_O1.h"
-#include "dgfe_O2.h"
+#include "dgfe_space.h"
 #include "dgfe_providers.h"
 
 /**
@@ -43,6 +42,7 @@
  * - Broken spaces (e.g. for Discontinuous Galerkin Approximations)
  */
 namespace lf::dgfe {
+
 
 /** Type for indices into global matrices/vectors */
 using gdof_idx_t = lf::assemble::gdof_idx_t;

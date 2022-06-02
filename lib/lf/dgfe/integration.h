@@ -17,10 +17,7 @@
 
 namespace lf::dgfe {
 
-//degree of polynomials
-using degree_t = unsigned;
-
-//return value
+/**Type of scalar used*/
 using scalar_t = double;
 
 using size_type = lf::mesh::polytopic2d::Mesh::size_type;
