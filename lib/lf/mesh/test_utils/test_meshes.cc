@@ -457,36 +457,71 @@ std::shared_ptr<lf::mesh::Mesh> GenerateHybrid2DTestMesh(int selector,
 
 
 std::shared_ptr<lf::mesh::Mesh> GeneratePolytopic2DTestMesh(int selector, double scale) {
+
     using coord_t = Eigen::Vector2d;
     using size_type = lf::mesh::Mesh::size_type;
 
     // Obtain mesh factory
     std::unique_ptr<lf::mesh::polytopic2d::MeshFactory> mesh_factory_ptr = std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2);
 
-    //Add Points
-    mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.0 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.3 * scale, 0.0 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.7 * scale, 0.0 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.0 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.4 * scale, 0.3 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.6 * scale, 0.25 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.6 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.3 * scale, 0.6 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.7 * scale, 0.6 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.7 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.5 * scale, 0.8 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 1.0 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({0.6 * scale, 1.0 * scale}));
-    mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 1.0 * scale}));
+    switch (selector) {
+        case 0: {
 
-    //Add Polygons
-    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{0,1,4,7,6}}, nullptr);
-    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{1,2,5,4}}, nullptr);
-    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{2,3,9,8,5}}, nullptr);
-    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{4,5,8,10,7}}, nullptr);
-    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{6,7,10,12,11}}, nullptr);
-    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{10,8,9,13,12}}, nullptr);
+            //Add Points
+            mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.3 * scale, 0.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.7 * scale, 0.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.4 * scale, 0.3 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.6 * scale, 0.25 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.6 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.3 * scale, 0.6 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.7 * scale, 0.6 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.7 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.5 * scale, 0.8 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 1.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.6 * scale, 1.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 1.0 * scale}));
 
+            //Add Polygons
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{0,1,4,7,6}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{1,2,5,4}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{2,3,9,8,5}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{4,5,8,10,7}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{6,7,10,12,11}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,5>{{10,8,9,13,12}}, nullptr);
+
+            break;
+        }
+
+        case 1: {
+
+            //Add Points
+            mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.5 * scale, 0.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.5 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.5 * scale, 0.5 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.5 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 1.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({0.5 * scale, 1.0 * scale}));
+            mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 1.0 * scale}));
+
+            //Add Polygons
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{0,1,4,5}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{1,2,3,4}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{5,4,7,6}}, nullptr);
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{4,3,8,7}}, nullptr);
+
+            break;
+        }
+
+        default: {
+
+            LF_VERIFY_MSG(false, "Illegal selector for test meshes");
+            break;
+        }
+    }
     return mesh_factory_ptr->Build();
 
 }

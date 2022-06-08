@@ -70,12 +70,16 @@ std::shared_ptr<lf::mesh::Mesh> GenerateHybrid2DTestMesh(int selector = 0,
  * ~~~
  * 
  * - Test mesh selected with selector = 0: domain \f$[1.0]^2\f$*scale
- * @image html polytopic_testmesh.png
+ * @image html polytopic_testmesh1.png
+ * 
+ * - Test mesh selected with selector = 1: domain \f$[1.0]^2\f$*scale
+ * @image html polytopic_testmesh2.png
  */
 std::shared_ptr<lf::mesh::Mesh> GeneratePolytopic2DTestMesh(int selector = 0,
                                                          double scale = 1.0);
 
 static const lf::base::size_type GenerateHybrid2DTestMesh_maxsel = 8;
+static const lf::base::size_type GeneratePolytopic2DTestMesh_maxsel = 2;
 
 }  // namespace lf::mesh::test_utils
 
