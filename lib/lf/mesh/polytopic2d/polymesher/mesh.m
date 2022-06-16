@@ -4,7 +4,9 @@ addpath '.\matlab_out'
 output_folder = 'matlab_out/';
 
 
-write_mesh(output_folder, @MbbDomain, 1000, 100);
+write_mesh(output_folder, @MbbDomain, 100, 100);
+
+
 
 function write_mesh(outputfolder, domain, nElements, nIterations)
     [nodes, elements, supp, load] = PolyMesher(domain, nElements, nIterations);

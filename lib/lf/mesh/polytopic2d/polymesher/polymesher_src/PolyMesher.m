@@ -22,7 +22,7 @@ while(It<=MaxIter && Err>Tol)
   if NElem<=2000, PolyMshr_PlotMsh(Node,Element,NElem); end; 
 end
 [Node,Element] = PolyMshr_ExtrNds(NElem,Node,Element);  %Extract node list
-[Node,Element] = PolyMshr_CllpsEdgs(Node,Element,0.1);  %Remove small edges
+[Node,Element] = PolyMshr_CllpsEdgs(Node,Element,0.03);  %Remove small edges
 [Node,Element] = PolyMshr_RsqsNds(Node,Element);        %Reoder Nodes
 BC=Domain('BC',Node); Supp=BC{1}; Load=BC{2};           %Recover BC arrays
 Element = cellfun(@transpose, Element, 'UniformOutput', false); %my horzcat fix
@@ -75,12 +75,12 @@ function [Node0,Element0] = PolyMshr_CllpsEdgs(Node0,Element0,Tol)
 while(true)
   cEdge = [];
   for el=1:size(Element0,1)
-    if size(Element0{el},2)<4, continue; end;  %Cannot collapse triangles
+    if size(Element0{el},1)<4, continue; end;  %Cannot collapse triangles
     vx=Node0(Element0{el},1); vy=Node0(Element0{el},2); nv=length(vx);
     beta = atan2(vy-sum(vy)/nv, vx-sum(vx)/nv);
     beta = mod(beta([2:end 1]) -beta,2*pi);
     betaIdeal = 2*pi/size(Element0{el},2);
-    Edge = [Element0{el}',Element0{el}([2:end 1])'];
+    Edge = [Element0{el},Element0{el}([2:end 1])];
     cEdge = [cEdge; Edge(beta<Tol*betaIdeal,:)];
   end
   if (size(cEdge,1)==0), break; end
