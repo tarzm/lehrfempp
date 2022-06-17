@@ -78,7 +78,7 @@ VtkPolytopicReader::VtkPolytopicReader(std::unique_ptr<mesh::polytopic2d::MeshFa
                 std::getline(inFile, line);
                 split = splitString(line);
                 if (split[0] == "POINTS"){
-                    number_points = stoul(split[1]);
+                    number_points = std::stoul(split[1]);
                     section = points;
                     break;
                 }
@@ -91,6 +91,14 @@ VtkPolytopicReader::VtkPolytopicReader(std::unique_ptr<mesh::polytopic2d::MeshFa
                     break;
                 }
                 split = splitString(line);
+                if (split[0] == "POLYGONS"){
+                    number_polygons = std::stoul(split[1]);
+                    number_point_index = std::stoul(split[2]);
+                    section = offsets;
+                    offset_vector.reserve(number_polygons);
+                    //std::getline(inFile, line); // next line is not used
+                    break;
+                }
                 //read first two coordinates of each point and add the point to the MeshFactory
                 for (int i = 0; i < split.size() - 1 ; i += 3){
                     double x = std::stod(split[i]);
@@ -104,8 +112,8 @@ VtkPolytopicReader::VtkPolytopicReader(std::unique_ptr<mesh::polytopic2d::MeshFa
                 std::getline(inFile, line);
                 split = splitString(line);
                 if (split[0] == "POLYGONS"){
-                    number_polygons = stoul(split[1]);
-                    number_point_index = stoul(split[2]);
+                    number_polygons = std::stoul(split[1]);
+                    number_point_index = std::stoul(split[2]);
                     section = offsets;
                     offset_vector.reserve(number_polygons);
                     std::getline(inFile, line); // next line is not used
@@ -119,9 +127,11 @@ VtkPolytopicReader::VtkPolytopicReader(std::unique_ptr<mesh::polytopic2d::MeshFa
                 if (split[0] == "CONNECTIVITY"){ // section is finished
                     section = connectivity;
                     break;
+                } else if (split[0] == "OFFSETS"){ //line is not used
+                    break;
                 }
                 for (int i = 0; i < split.size() - 1; i++){       //last string is no number
-                    offset_vector.push_back(stoul(split[i]));
+                    offset_vector.push_back(std::stoul(split[i]));
                 }
                 break;
 
@@ -132,7 +142,7 @@ VtkPolytopicReader::VtkPolytopicReader(std::unique_ptr<mesh::polytopic2d::MeshFa
                     goto exit_switch;
                 }
                 for (int i = 0; i < split.size() - 1; i++){       //last string is no number
-                    connectivity_vector.push_back(stoul(split[i]));
+                    connectivity_vector.push_back(std::stoul(split[i]));
                 }
                 break;
                 

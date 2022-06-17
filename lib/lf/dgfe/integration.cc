@@ -8,7 +8,6 @@
 
 #include "integration.h"
 
-#include <lf/quad/quad.h>
 #include <lf/geometry/geometry.h>
 
 

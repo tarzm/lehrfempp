@@ -10,8 +10,7 @@
 #define DGFE_PROVIDERS_H
 
 #include "legendre_dgfe.h"
-#include "dgfe_O1.h"
-#include "dgfe_O2.h"
+#include "dgfe_space.h"
 #include "bounding_box.h"
 
 namespace lf::dgfe {

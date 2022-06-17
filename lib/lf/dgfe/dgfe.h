@@ -21,6 +21,8 @@
 #include "legendre_dgfe.h"
 #include "dgfe_space.h"
 #include "dgfe_providers.h"
+#include "dgfe_mesh_function.h"
+#include "sub_tessellation.h"
 
 /**
  * @brief Collects data structures and algorithms designed for discontinuous

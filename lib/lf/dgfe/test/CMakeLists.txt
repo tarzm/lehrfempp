@@ -4,8 +4,10 @@ set(src
   integration_tests.cc
   bounding_box_tests.cc
   legendre_dgfe_tests.cc
-  dgfe_providers_tests.cc
+  #dgfe_providers_tests.cc
   dgfe_space_tests.cc
+  #dgfe_mesh_function_tests.cc
+  sub_tessellation_tests.cc
 )
 
 add_executable(lf.dgfe.test ${src})

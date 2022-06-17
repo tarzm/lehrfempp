@@ -25,9 +25,11 @@ class DGFESpace {
 
 public:
 
+    DGFESpace() = delete;
     DGFESpace(std::shared_ptr<const lf::mesh::Mesh> mesh_p, size_type max_legendre_degree);
-    std::shared_ptr<const lf::mesh::Mesh> Mesh() const;
-    const lf::assemble::DofHandler &LocGlobMap() const;
+    const std::shared_ptr<const lf::mesh::Mesh> Mesh() const;
+    const lf::assemble::UniformDGFEDofHandler &LocGlobMap() const;
+    size_type MaxLegendreDegree() const;
     size_type NumRefShapeFunctions(const lf::mesh::Entity*);
     lf::mesh::polytopic2d::PolygonPair AdjacentPolygons(const lf::mesh::Entity* entity);
 
@@ -41,6 +43,16 @@ private:
     /** data set which contains 2 (inner Segments) or 1 (boundary Segment) pointers to polygons
      * for each Segment*/
     lf::mesh::utils::CodimMeshDataSet<lf::mesh::polytopic2d::PolygonPair> edge_polygon_adjacency_;
+
+    /**
+     * @brief used for initialization of dofhandler
+     */
+    lf::assemble::UniformDGFEDofHandler initializeDofHandler(std::shared_ptr<const lf::mesh::Mesh> mesh_p, size_type max_legendre_degree);
+
+    /**
+     * @brief used for initialization of edge_polygon_adjacency_
+     */
+    lf::mesh::utils::CodimMeshDataSet<lf::mesh::polytopic2d::PolygonPair> initializeEdgePolygonAdjacency();
 
 };
 

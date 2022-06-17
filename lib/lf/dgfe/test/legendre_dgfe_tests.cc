@@ -79,6 +79,12 @@ TEST(legendre_dgfe, numberingBasisFunctions){
     }
 }
 
+TEST(legendre_dgfe, polynomialEvaluation){
+    EXPECT_EQ(legendre_polynomial(1, 0.777), 0.777);
+    EXPECT_EQ(legendre_polynomial(2, 0.123), 1.5 * 0.123 * 0.123 - 0.5);
+    EXPECT_EQ(legendre_polynomial(0, -0.8), 1.0);
+}
+
 // TEST(legendre_dgfe, C_i_j_k_O1){
 //     //trial space basis
 //     for (int i = 0; i < 4; i++){

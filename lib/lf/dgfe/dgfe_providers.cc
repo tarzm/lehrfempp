@@ -134,9 +134,6 @@ DGFEO2LocalLoadVector::ElemVec DGFEO2LocalLoadVector::Eval(const lf::mesh::Entit
                     }
                 }
             }
-            
-
-            //std::cout << "Added term " << monomial_coeff * box.det() * lf::dgfe::integrate(box.map(corners), legendre_degree_x + monomial_degree_x, legendre_degree_y + monomial_degree_y) << "\n";
         }
     }
 

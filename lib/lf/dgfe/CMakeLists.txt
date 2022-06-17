@@ -9,6 +9,9 @@ set(sources
     dgfe_space.cc
     dgfe_providers.h
     dgfe_providers.cc
+    dgfe_mesh_function.h
+    sub_tessellation.h
+    sub_tessellation.cc
 )
 
 lf_add_library(lf.dgfe ${sources})
