@@ -178,7 +178,7 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
     int degree_x = 3;
     int degree_y = 4;
     // lambda function for polynomial integration
-    auto polynomial_lambda = [&degree_x, &degree_y](Eigen::Vector2d x) -> double {
+    auto polynomial_lambda = [&degree_x, &degree_y](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return std::pow(x[0], degree_x) * std::pow(x[1], degree_y);
     };
 
@@ -205,7 +205,7 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
 
 
     // Test sin^2(x) * cos (PI *y^2)
-    auto trigonometric_lambda = [](Eigen::Vector2d x) -> double {
+    auto trigonometric_lambda = [](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return std::pow(std::sin(x[0]), 2) * std::cos(M_PI * x[1] * x[1]);
     };
     lf::dgfe::SubTessellationIntegrator<double, decltype(trigonometric_lambda)> trigo_integrator;
@@ -220,7 +220,7 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
 
 
     //Test x^2 + e^(x*y)
-    auto exponential_lambda = [](Eigen::Vector2d x) -> double {
+    auto exponential_lambda = [](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return x[0]*x[0] + exp(x[0] * x[1]);
     };
     lf::dgfe::SubTessellationIntegrator<double, decltype(exponential_lambda)> exp_integrator;
@@ -256,22 +256,22 @@ TEST(sub_tessellation_integration, 100To400cells){
 
     //Set up lambdas, true solution and calculated solution vectors-----------------------------------
     //degrees used for lambda
-    std::vector<std::function<double(Eigen::Vector2d)>> functors;
+    std::vector<std::function<double(const lf::mesh::Entity *entity, Eigen::Vector2d)>> functors;
     std::vector<std::string> function_expressions{"x^3 * y^4", "x^5 * y^7", "sin^2(x) * cos (PI *y^2)", "x^2 + e^(x*y)"};
     // first lambda function for polynomial integration: x^3 * y^4
-    functors.emplace_back([](Eigen::Vector2d x) -> double {
+    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return std::pow(x[0], 3) * std::pow(x[1], 4);
     });
     // second lambda function for polynomial integration: x^5 * y^7
-    functors.emplace_back([](Eigen::Vector2d x) -> double {
+    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return std::pow(x[0], 5) * std::pow(x[1], 7);
     });
     //third lambda: sin^2(x) * cos (PI *y^2)
-    functors.emplace_back([](Eigen::Vector2d x) -> double {
+    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return std::pow(std::sin(x[0]), 2) * std::cos(M_PI * x[1] * x[1]);
     });
     //fourth lambda: x^2 + e^(x*y)
-    functors.emplace_back([](Eigen::Vector2d x) -> double {
+    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return x[0]*x[0] + exp(x[0] * x[1]);
     });
     //exact solutions calculated and copied from wolframalpha.com
@@ -352,7 +352,7 @@ TEST(sub_tessellation_integration, pentagon){
     int degree_x = 5;
     int degree_y = 5;
     // lambda function for polynomial integration
-    auto polynomial_lambda = [&degree_x, &degree_y](Eigen::Vector2d x) -> double {
+    auto polynomial_lambda = [&degree_x, &degree_y](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
         return std::pow(x[0], degree_x) * std::pow(x[1], degree_y);
     };
 

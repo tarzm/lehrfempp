@@ -47,9 +47,6 @@ public:
         int n_points = local.cols();
         //initialize result vector with 0
         std::vector<SCALAR> result(n_points, 0.0);
-        std::vector<SCALAR> term(n_points, 0.0);
-
-
 
         //loop over basis functions and dof coefficients
         for (int i = 0; i < num_shape_funct_polygon_; i++){
@@ -57,21 +54,11 @@ public:
             auto legendre_degree_x = degrees.first;
             auto legendre_degree_y = degrees.second;
 
-            //std::cout << "DOF coeff " << i << " " << dof_vector_[dof_loc_coeffs[i]] << "\n";
-
             //loop over local points
             for (int loc_idx = 0; loc_idx < n_points; loc_idx++){
                 result[loc_idx] += dof_vector_[dof_loc_coeffs[i]] * legendre_polynomial(legendre_degree_x, local(0, loc_idx)) * legendre_polynomial(legendre_degree_y, local(1, loc_idx));
-                term[loc_idx] += legendre_polynomial(legendre_degree_x, local(0, loc_idx)) * legendre_polynomial(legendre_degree_y, local(1, loc_idx));
-                if (dof_vector_[dof_loc_coeffs[i]] != 0.0){
-                    std::cout << "MeshFunction Legendre " << legendre_degree_x << " is " << legendre_polynomial(legendre_degree_x, local(0, loc_idx));
-                    std::cout << ", MeshFunction Legendre " << legendre_degree_y << " is " << legendre_polynomial(legendre_degree_y, local(1, loc_idx)) << "\n";
-                }
-                
-                
             }
         }
-        //std::cout << "Term " << term[0] << "\n";
         return result;
     }
 
@@ -92,40 +79,25 @@ private:
 };
 
 template<typename SCALAR, typename FUNCTOR> 
-SCALAR L2ErrorBarycenter(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, FUNCTOR f){
+SCALAR L2ErrorSubTessellation(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, FUNCTOR f, int max_degree){
 
     auto mesh_ptr = dgfe_function.Space()->Mesh();
     SCALAR error = 0.0;
 
+    //lambda to calculate difference between exact solution and dgfe solution in one point
+    auto errorAtPoint = [&dgfe_function, &f, max_degree](const lf::mesh::Entity *entity, Eigen::Vector2d local) -> SCALAR {
+        LF_VERIFY_MSG(entity->RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for polygons");
+        
+        return std::abs(dgfe_function(*entity, local)[0] - f(entity, local));
+    };
+
+    lf::dgfe::SubTessellationIntegrator<SCALAR, decltype(errorAtPoint)> integrator;
+
     //loop over cells
     for (auto cell : mesh_ptr->Entities(0)){
-
-        //get cells nodes
-        auto corners = lf::mesh::polytopic2d::Corners(cell);
-        //get barycenter of cell
-        Eigen::MatrixXd barycenter = corners.rowwise().mean();
-        
-        //setup bounding box
-        lf::dgfe::BoundingBox box(*cell);
-        //mapped barycenter
-        auto mapped_barycenter = box.map(barycenter);
-
-        //dgfe solution of barycenter
-        SCALAR dgfe_sol = dgfe_function(*cell, mapped_barycenter)[0];
-        
-        //true solution of barycenter
-        SCALAR true_sol = f(barycenter.col(0));
-
-        //area of cell
-        SCALAR area = integrate(corners, 0, 0);
-
-        //add error of cell
-        error += std::abs(dgfe_sol - true_sol) * area;
-
-        // std::cout << "Eval " << mesh_ptr->Index(*cell) << ": " << dgfe_sol << "\n";
-
-        // std::cout << "Cell " << mesh_ptr->Index(*cell) << " error: " << std::abs(dgfe_sol - true_sol) * area << "\n";
+        error += integrator.integrate(cell, errorAtPoint, max_degree);
     }
+
     return error;
 }
 

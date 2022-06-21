@@ -52,7 +52,7 @@ public:
 
         switch(ref_el){
             case lf::base::RefEl::kPoint():{
-                return f(lf::geometry::Corners(*(entity->Geometry())));
+                return f(entity, lf::geometry::Corners(*(entity->Geometry())));
             }
 
             case lf::base::RefEl::kSegment():{
@@ -75,7 +75,7 @@ public:
 
                 //sum over qr points
                 for (int i = 0; i < qr.Points().cols(); i++){
-                    sum += w_ref[i] * f(zeta.col(i)) * gram_dets[i];
+                    sum += w_ref[i] * f(entity, zeta.col(i)) * gram_dets[i];
                 }
                 return sum;
             }
@@ -102,7 +102,8 @@ public:
                     Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
                     //sum over qr points
                     for (int i = 0; i < qr.Points().cols(); i++){
-                        sum += w_ref[i] * f(zeta.col(i)) * gram_dets[i];
+                        //Note: functor calls entity as argument -> Important for dgfe functions
+                        sum += w_ref[i] * f(entity, zeta.col(i)) * gram_dets[i];
                     }
                 }
                 return sum;
