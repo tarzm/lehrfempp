@@ -37,8 +37,8 @@ BoundingBox::BoundingBox(const lf::mesh::Entity &entity){
 
     translation_ = bounding.rowwise().mean();
     jacobi_ = Eigen::Matrix2d::Zero();
-    jacobi_(0,0) = bounding(0,1) - bounding(0,0);
-    jacobi_(1,1) = bounding(1,1) - bounding(1,0);
+    jacobi_(0,0) = (bounding(0,1) - bounding(0,0)) / 2.0;
+    jacobi_(1,1) = (bounding(1,1) - bounding(1,0)) / 2.0;
 }
 
 Eigen::MatrixXd BoundingBox::map(const Eigen::MatrixXd corners){

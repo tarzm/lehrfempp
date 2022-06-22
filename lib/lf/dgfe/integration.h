@@ -32,7 +32,6 @@ scalar_t euclideanDist(const Eigen::MatrixXd a, const Eigen::MatrixXd b);
 scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y);
 
 
-
 template<typename SCALAR, typename FUNCTOR>
 class SubTessellationIntegrator{
 public:

@@ -85,10 +85,13 @@ SCALAR L2ErrorSubTessellation(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, 
     SCALAR error = 0.0;
 
     //lambda to calculate difference between exact solution and dgfe solution in one point
-    auto errorAtPoint = [&dgfe_function, &f, max_degree](const lf::mesh::Entity *entity, Eigen::Vector2d local) -> SCALAR {
+    auto errorAtPoint = [&dgfe_function, &f, max_degree](const lf::mesh::Entity *entity, Eigen::Vector2d global) -> SCALAR {
         LF_VERIFY_MSG(entity->RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for polygons");
         
-        return std::abs(dgfe_function(*entity, local)[0] - f(entity, local));
+        //points of the polygon need to be mapped into the reference box as dgfe_function takes local
+        //coordinates, but SubTessellationIntegrator works with global coordinates
+        lf::dgfe::BoundingBox box(*entity);
+        return std::abs(dgfe_function(*entity, box.inverseMap(global))[0] - f(entity, global));
     };
 
     lf::dgfe::SubTessellationIntegrator<SCALAR, decltype(errorAtPoint)> integrator;
