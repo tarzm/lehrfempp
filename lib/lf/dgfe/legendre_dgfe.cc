@@ -17,6 +17,11 @@ scalar_t legendre_polynomial(size_type i, scalar_t x){
     return legendre_coeffs_(i,0) + legendre_coeffs_(i,1) * x + legendre_coeffs_(i,2) * x * x;
 }
 
+scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, Eigen::Vector2d coord){
+    return legendre_polynomial(degree_x, coord[0]) * legendre_polynomial(degree_y, coord[1]);
+}
+
+
 scalar_t C_i_j_k(size_type i, size_type j, size_type k){
     scalar_t sum = 0;
     for (int n = 0; n <= i; n++){

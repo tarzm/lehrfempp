@@ -35,10 +35,17 @@ const Eigen::Matrix<scalar_t, 3, 3> legendre_coeffs_{
         -0.5,0.0,1.5).finished()};
 
 /**
- * @brief returns the value of the ith legendre polynomial at x
+ * @brief returns the value of the ith 1D legendre polynomial at x
  * 
  */
 scalar_t legendre_polynomial(size_type i, scalar_t x);
+
+/**
+ * @brief returns the value of the 2D basis function which is a multiplication of 
+ * two 1D legendre polynomials of degree_x and degree_y
+ * 
+ */
+scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, Eigen::Vector2d coord);
 
 /**
  * @brief returns the value of the definition (26) of the paper

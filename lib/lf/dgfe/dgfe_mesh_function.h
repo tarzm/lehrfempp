@@ -35,18 +35,24 @@ public:
                     : dgfe_space_(std::move(dgfe_space)), dof_vector_(std::move(coeff_vector)), num_shape_funct_polygon_((dgfe_space_->MaxLegendreDegree() == 1)? 4 : 9){}
 
     /**
-     * @brief evaluates the mesh function on a number of given local points. Local means that they are within the reference bounding box.
+     * @brief evaluates the mesh function on a number of given global points. 
+     * Global means that they will be mapped from the mesh into the reference bounding box inside the function.
      * 
      * @param e the polygon in which the points are located (inside or on the boundary)
-     * @param local the local points on which the function is evaluated (already mapped into reference bounding box)
+     * @param global the global points on which the function is evaluated
      * @return std::vector<SCALAR> vector of function evaluations of the local points
      */
-    std::vector<SCALAR> operator()(const lf::mesh::Entity& e, const Eigen::MatrixXd& local) const {
+    std::vector<SCALAR> operator()(const lf::mesh::Entity& e, const Eigen::MatrixXd& global) const {
         auto dof_loc_coeffs = dgfe_space_->LocGlobMap().GlobalDofIndices(e);
         auto max_degree = dgfe_space_->MaxLegendreDegree();
-        int n_points = local.cols();
+        int n_points = global.cols();
         //initialize result vector with 0
         std::vector<SCALAR> result(n_points, 0.0);
+
+        //get the bounding box of the polygon to map the points into the reference bounding box
+        lf::dgfe::BoundingBox box(e);
+        //result is calculated on the local coordinates
+        auto local = box.inverseMap(global);
 
         //loop over basis functions and dof coefficients
         for (int i = 0; i < num_shape_funct_polygon_; i++){
@@ -88,10 +94,8 @@ SCALAR L2ErrorSubTessellation(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, 
     auto errorAtPoint = [&dgfe_function, &f, max_degree](const lf::mesh::Entity *entity, Eigen::Vector2d global) -> SCALAR {
         LF_VERIFY_MSG(entity->RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for polygons");
         
-        //points of the polygon need to be mapped into the reference box as dgfe_function takes local
-        //coordinates, but SubTessellationIntegrator works with global coordinates
         lf::dgfe::BoundingBox box(*entity);
-        return std::abs(dgfe_function(*entity, box.inverseMap(global))[0] - f(entity, global));
+        return std::abs(dgfe_function(*entity, global)[0] - f(entity, global));
     };
 
     lf::dgfe::SubTessellationIntegrator<SCALAR, decltype(errorAtPoint)> integrator;

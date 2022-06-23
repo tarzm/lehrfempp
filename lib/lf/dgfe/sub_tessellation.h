@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Functionalities for decomposing a polygon into geometry objects of triangles for integration
+ * @brief Functionalities for decomposing a polygon into Geometry objects of triangles for integration
  * @author Tarzis Maurer
  * @date June
  * @copyright ETH Zurich

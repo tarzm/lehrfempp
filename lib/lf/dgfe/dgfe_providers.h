@@ -12,6 +12,7 @@
 #include "legendre_dgfe.h"
 #include "dgfe_space.h"
 #include "bounding_box.h"
+#include "integration.h"
 
 namespace lf::dgfe {
 
@@ -22,7 +23,7 @@ using Polynomial = std::vector<std::pair<scalar_t, std::pair<size_type, size_typ
 
 /**
  * @ingroup entity_matrix_provider
- * @headerfile lf/dgfe/legendre_dgfe.h
+ * @headerfile lf/dgfe/dgfe_providers.h
  * @brief Computing the element matrix for the mass matrix
  *
  * This class complies with the requirements for the type
@@ -105,6 +106,47 @@ class DGFEO2LocalLoadVector {
 
 };
 
+/**
+ * @ingroup entity_matrix_provider
+ * @headerfile lf/dgfe/dgfe_providers.h
+ * @brief Computing the element matrix for the mass matrix using the SubTessellationIntegrator class
+ *
+ * This class complies with the requirements for the type
+ * `ENTITY_MATRIX_PROVIDER` given as a template parameter to define an
+ * incarnation of the function
+ * @ref AssembleMatrixLocally().
+ */
+class DGFEMassElementMatrixST {
+    public:
+        /**
+         * @brief Construct a new DGFEMassElementMatrixST object
+         * 
+         * @param integration_max_degree the maximum degree used for the quadrature rule
+         * @param legendre_max_degree maximum degree of legendre polynomials: Either 1 or 2
+         */
+        DGFEMassElementMatrixST(unsigned max_integration_degree, unsigned max_legendre_degree);
+
+        /**
+         * @brief All cells are considered active in the default implementation
+         */
+        [[nodiscard]] bool isActive(const lf::mesh::Entity & /*cell*/) const {
+            return true;
+        }
+
+        /**
+         * @brief main routine for the computation of element matrices
+         *
+         * @param cell reference to the polytopic cell for
+         *        which the element matrix should be computed.
+         * @return a 4x4 or a 9x9 matrix
+         */
+        [[nodiscard]] Eigen::Matrix<scalar_t, Eigen::Dynamic, Eigen::Dynamic> Eval(const lf::mesh::Entity &cell) const;
+    
+    private:
+
+        unsigned max_integration_degree_;
+        unsigned max_legendre_degree_;
+};
 
 } //namespace lf::dgfe
 
