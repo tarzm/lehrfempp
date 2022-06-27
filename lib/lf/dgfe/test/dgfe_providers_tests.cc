@@ -20,7 +20,7 @@
 
 namespace lf::dgfe::test {
 
-TEST(dgfe_SubTessellation_providers, massMatrixProviderO1){
+TEST(dgfe_SubTessellation_providers, singleSquaremassMatrixProviderO1){
     //UNIT SQUARE SINGLE POLYGON MESH--------------------
     using coord_t = Eigen::Vector2d;
     using size_type = lf::mesh::Mesh::size_type;
@@ -64,12 +64,11 @@ TEST(dgfe_SubTessellation_providers, massMatrixProviderO1){
 
     auto M_dense = M.makeDense();
 
-
     EXPECT_TRUE(M_dense.isApprox(check_M, std::numeric_limits<double>::epsilon()));
-    
 }
 
-TEST(dgfe_SubTessellation_providers, massMatrixProviderO2){
+TEST(dgfe_SubTessellation_providers, singleSquaremassMatrixProviderO2){
+
     //UNIT SQUARE SINGLE POLYGON MESH--------------------
     using coord_t = Eigen::Vector2d;
     using size_type = lf::mesh::Mesh::size_type;
@@ -91,7 +90,7 @@ TEST(dgfe_SubTessellation_providers, massMatrixProviderO2){
     lf::assemble::COOMatrix<double> M(dofhandler.NumDofs(), dofhandler.NumDofs());
     M.setZero();
     //initialization of element matrix provider
-    lf::dgfe::DGFEMassElementMatrixST massMatrixProvider(9, 1); 
+    lf::dgfe::DGFEMassElementMatrixST massMatrixProvider(9, 2); 
     //assemble mass matrix
     lf::assemble::AssembleMatrixLocally(0, dofhandler, dofhandler, massMatrixProvider, M);
 
@@ -109,7 +108,7 @@ TEST(dgfe_SubTessellation_providers, massMatrixProviderO2){
      * 
      * Now the entry (i, j) of the elements matrix is basis_i(x,y) * basis_j(x,y) integrated over (0,1)^2
     */
-
+   
     double e_0_0 = 1.0;
     double e_1_0 = 0.5;
     double e_2_0 = 0.0;
@@ -119,61 +118,121 @@ TEST(dgfe_SubTessellation_providers, massMatrixProviderO2){
     double e_6_0 = 0.0;
     double e_7_0 = 0.0;
     double e_8_0 = 0.0;
+
     double e_1_1 = 1.0 / 3.0;
     double e_2_1 = 0.125;
     double e_3_1 = 0.25;
     double e_4_1 = 1.0 / 6.0;
     double e_5_1 = 1.0 / 16.0;
     double e_6_1 = 0.0;
-    double e_7_1 = 1.0 / 12.0;
-    double e_8_1 = 1.0 / 32.0;
+    double e_7_1 = 0.0;
+    double e_8_1 = 0.0;
+
     double e_2_2 = 0.2;
-    double e_3_2 = e_0_5;
-    double e_4_2 = e_1_5;
+    double e_3_2 = 0.0;
+    double e_4_2 = 1.0 / 16.0;
     double e_5_2 = 0.1;
     double e_6_2 = 0.0;
     double e_7_2 = 0.0;
     double e_8_2 = 0.0;
+
     double e_3_3 = 1.0 / 3.0;
     double e_4_3 = 1.0 / 6.0;
     double e_5_3 = 0.0;
     double e_6_3 = 0.125;
     double e_7_3 = 1.0 / 16.0;
-    double e_8_3 = e_1_8;
+    double e_8_3 = 0.0;
+
     double e_4_4 = 1.0 / 9.0;
     double e_5_4 = 1.0 / 24.0;
     double e_6_4 = 1.0 / 16.0;
     double e_7_4 = 1.0 / 24.0;
     double e_8_4 = 1.0 / 64.0;
+
     double e_5_5 = 1.0 / 15.0;
-    double e_6_5 = 0.025;
+    double e_6_5 = 0.0;
     double e_7_5 = 1.0 / 64.0;
+    double e_8_5 = 0.025;
+
     double e_6_6 = 0.2;
     double e_7_6 = 0.1;
     double e_8_6 = 0.0;
+
     double e_7_7 = 1.0 / 15.0;
-    double e_8_7 = 0.0;
+    double e_8_7 = 0.025;
+
     double e_8_8 = 0.04;
 
+    Eigen::MatrixXd check_M = Eigen::MatrixXd::Zero(9,9);
+    check_M(0,0) = e_0_0;
+    check_M(1,0) = e_1_0;
+    check_M(2,0) = e_2_0;
+    check_M(3,0) = e_3_0;
+    check_M(4,0) = e_4_0;
+    check_M(5,0) = e_5_0;
+    check_M(6,0) = e_6_0;
+    check_M(7,0) = e_7_0;
+    check_M(8,0) = e_8_0;
 
+    check_M(1,1) = e_1_1;
+    check_M(2,1) = e_2_1;
+    check_M(3,1) = e_3_1;
+    check_M(4,1) = e_4_1;
+    check_M(5,1) = e_5_1;
+    check_M(6,1) = e_6_1;
+    check_M(7,1) = e_7_1;
+    check_M(8,1) = e_8_1;
 
-    double x = 0.5;
-    double y = 0.5;
-    double xy = 0.25;
-    double x_2 = 1.0 / 3.0; //x^2
-    double y_2 = 1.0 / 3.0; //y^2
-    double x_2_y = 1.0 / 6.0; //x^2 * y
-    double x_y_2 = 1.0 / 6.0; //x* y^2
-    double x_2_y_2 = 1.0 / 9.0; // x^2 * y^2
+    check_M(2,2) = e_2_2;
+    check_M(3,2) = e_3_2;
+    check_M(4,2) = e_4_2;
+    check_M(5,2) = e_5_2;
+    check_M(6,2) = e_6_2;
+    check_M(7,2) = e_7_2;
+    check_M(8,2) = e_8_2;
 
-    Eigen::Matrix4d check_M = Eigen::Matrix4d::Zero();
+    check_M(3,3) = e_3_3;
+    check_M(4,3) = e_4_3;
+    check_M(5,3) = e_5_3;
+    check_M(6,3) = e_6_3;
+    check_M(7,3) = e_7_3;
+    check_M(8,3) = e_8_3;
 
+    check_M(4,4) = e_4_4;
+    check_M(5,4) = e_5_4;
+    check_M(6,4) = e_6_4;
+    check_M(7,4) = e_7_4;
+    check_M(8,4) = e_8_4;
+
+    check_M(5,5) = e_5_5;
+    check_M(6,5) = e_6_5;
+    check_M(7,5) = e_7_5;
+    check_M(8,5) = e_8_5;
+
+    check_M(6,6) = e_6_6;
+    check_M(7,6) = e_7_6;
+    check_M(8,6) = e_8_6;
+
+    check_M(7,7) = e_7_7;
+    check_M(8,7) = e_8_7;
+
+    check_M(8,8) = e_8_8;
+
+    //M is symmetric
+    for (int i = 0; i < 8; i++){ //last row is already full
+        for (int j = i + 1; j < 9; j++){ //diagonal is full
+            check_M(i, j) = check_M(j, i);
+        }
+    }
 
     auto M_dense = M.makeDense();
 
-
-    EXPECT_TRUE(M_dense.isApprox(check_M, std::numeric_limits<double>::epsilon()));
-    
+    //compare each entry
+    for (int i = 0; i < M_dense.cols(); i++){
+        for (int j = 0; j < M_dense.cols(); j++){
+            EXPECT_NEAR(M_dense(i,j), check_M(i,j), std::numeric_limits<double>::epsilon()) << "At (" << i << ", " << j << ")\n";
+        }
+    }
 }
 
 // TEST(dgfe_O1_providers, O1massMatrixAnd01LocalLoadVector){
