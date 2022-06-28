@@ -20,7 +20,7 @@
 
 namespace lf::dgfe::test {
 
-TEST(meshFunction, O1L2ErrorSubTessellation){
+TEST(meshFunction, singleSquareO2L2ErrorSubTessellation){
 
     //UNIT SQUARE SINGLE POLYGON MESH--------------------
     using coord_t = Eigen::Vector2d;
@@ -50,7 +50,7 @@ TEST(meshFunction, O1L2ErrorSubTessellation){
     //setup mesh function
     lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, dof_vector);
 
-    //calculate with mesh function
+    //calculate with mesh function error function
     double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation(dgfe_mesh_function, true_sol_lambda, 2);
 
     //mesh function should be exact

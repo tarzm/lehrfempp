@@ -235,6 +235,61 @@ TEST(dgfe_SubTessellation_providers, singleSquaremassMatrixProviderO2){
     }
 }
 
+TEST(dgfe_subTessellation_providers, singleSquareO2LoadElementVectorST){
+
+    //UNIT SQUARE SINGLE POLYGON MESH--------------------
+    using coord_t = Eigen::Vector2d;
+    using size_type = lf::mesh::Mesh::size_type;
+    double scale = 1.0;
+    std::unique_ptr<lf::mesh::polytopic2d::MeshFactory> mesh_factory_ptr = std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2);
+    mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.0 * scale}));
+    mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.0 * scale}));
+    mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 1.0 * scale}));
+    mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 1.0 * scale}));
+    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{0,1,2,3}}, nullptr);
+    auto mesh_ptr = mesh_factory_ptr->Build();
+
+    //setup of dofhandler
+    std::map<lf::base::RefEl, base::size_type> dofmap;
+    dofmap.insert(std::pair<lf::base::RefEl, lf::base::size_type>(lf::base::RefEl::kPolygon(), 9));
+    lf::assemble::UniformDGFEDofHandler dofhandler(mesh_ptr, dofmap);
+
+    //dgfe space
+    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
+    auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
+
+    //load function is e^(x*y)
+    auto load_lambda = [](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+        return exp(x[0] * x[1]);
+    };
+
+    //rhs vector initialization
+    Eigen::VectorXd rhs(dofhandler.NumDofs());
+    rhs.setZero();
+    //initialization of vector provider
+    lf::dgfe::DGFELoadElementVectorProvider<double, decltype(load_lambda)> vec_provider(dgfe_space_ptr, load_lambda);
+    //assemble load vector
+    lf::assemble::AssembleVectorLocally(0, dofhandler, vec_provider, rhs);
+
+    Eigen::VectorXd rhs_check(dofhandler.NumDofs());
+    
+    //all calculated via wolframalpha.com
+    rhs_check[0] = 1.317902151454403894860008844249231837974901245792783992840461196997646107756139482611953646834392207;
+    rhs_check[1] = 0.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274;
+    rhs_check[2] = 0.09104892427279805256999557787538408101254937710360800357976940150117694612193025869402317658280389627;
+    rhs_check[3] = 0.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274;
+    rhs_check[4] = 0.4003796770046413405002786271034306597823458479071755821265064307264305225974081119594285316907742200;
+    rhs_check[5] = 0.06343634308190952927942505729467500448550581260008085006606474455184673929290481085723564294966714515;
+    rhs_check[6] = 0.09104892427279805256999557787538408101254937710360800357976940150117694612193025869402317658280389627;
+    rhs_check[7] = 0.06343634308190952927942505729467500448550581260008085006606474455184673929290481085723564294966714515;
+    rhs_check[8] = 0.02776699134271494146374838909686999047316899586590587864083636098047417525069836683556001910011406200;
+
+    //each coefficient of the vector should be equal up to machine precision
+    for (int i = 0; i < 9; i++){
+        EXPECT_NEAR(rhs[i], rhs_check(i), std::numeric_limits<double>::epsilon()) << "\n";
+    }
+}
+
 // TEST(dgfe_O1_providers, O1massMatrixAnd01LocalLoadVector){
 
 //     //MESH FROM FILE -----------------------------
