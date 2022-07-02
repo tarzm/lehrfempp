@@ -155,8 +155,12 @@ Eigen::Matrix<scalar_t, Eigen::Dynamic, Eigen::Dynamic> DGFEMassElementMatrixST:
     int i2;
     int j1;
     int j2;
-    auto eval_lambda = [&i1, &i2, &j1, &j2](const lf::mesh::Entity *entity, Eigen::Vector2d coord) -> scalar_t{
-        return lf::dgfe::legendre_polynomial_2D(i1, i2, coord) * lf::dgfe::legendre_polynomial_2D(j1, j2, coord);
+    auto eval_lambda = [&i1, &i2, &j1, &j2](const lf::mesh::Entity &entity, Eigen::MatrixXd local) -> std::vector<scalar_t> {
+        std::vector<scalar_t> result(local.cols());
+        for (int i = 0; i < local.cols(); i++){
+            result.at(i) = lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(i)) * lf::dgfe::legendre_polynomial_2D(j1, j2, local.col(i));
+        }
+        return result;
     };
 
     lf::dgfe::SubTessellationIntegrator<scalar_t, decltype(eval_lambda)> integrator;
@@ -175,7 +179,7 @@ Eigen::Matrix<scalar_t, Eigen::Dynamic, Eigen::Dynamic> DGFEMassElementMatrixST:
             j1 = degrees_j.first;   //degree of x in test basis
             j2 = degrees_j.second;  //degree of y in test basis
 
-            elem_mat(i,j) = integrator.integrate(&cell, eval_lambda, max_integration_degree_);
+            elem_mat(i,j) = integrator.integrate(cell, eval_lambda, max_integration_degree_);
         }
     }
 

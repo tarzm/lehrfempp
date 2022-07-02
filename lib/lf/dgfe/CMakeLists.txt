@@ -9,7 +9,8 @@ set(sources
     dgfe_space.cc
     dgfe_providers.h
     dgfe_providers.cc
-    dgfe_mesh_function.h
+    mesh_function_dgfe.h
+    mesh_function_global.h
     sub_tessellation.h
     sub_tessellation.cc
 )

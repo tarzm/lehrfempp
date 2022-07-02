@@ -165,7 +165,6 @@ TEST(integration, bigMesh){
         //std::cout << "Cell " << mesh_ptr->Index(*cell) << " contributes " << integrate(corners, 3, 4) << "\n";
         sum += integrate(corners, 3, 4);
     }
-    //this mesh has some very small edges => I believe that is where the error is coming from
     EXPECT_NEAR(sum, 0.05, TOLERANCE);
 
 }
@@ -178,7 +177,7 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
     int degree_x = 3;
     int degree_y = 4;
     // lambda function for polynomial integration
-    auto polynomial_lambda = [&degree_x, &degree_y](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    auto polynomial_lambda = [&degree_x, &degree_y](const lf::mesh::Entity &entity, Eigen::Vector2d x) -> double {
         return std::pow(x[0], degree_x) * std::pow(x[1], degree_y);
     };
 
@@ -189,7 +188,7 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
     // Test monomial x^3 * y^3
     lf::dgfe::scalar_t sum = 0.0;
     for (auto cell : mesh_ptr->Entities(0)){
-        sum += poly_integrator.integrate(cell, polynomial_lambda, degree_x + degree_y);
+        sum += poly_integrator.integrate(*cell, polynomial_lambda, degree_x + degree_y);
     }
     EXPECT_NEAR(sum, 0.05, 1e-14);
 
@@ -199,20 +198,20 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
     degree_x = 5;
     degree_y = 7;
     for (auto cell : mesh_ptr->Entities(0)){
-        sum += poly_integrator.integrate(cell, polynomial_lambda, degree_x + degree_y);
+        sum += poly_integrator.integrate(*cell, polynomial_lambda, degree_x + degree_y);
     }
     EXPECT_NEAR(sum, 1.0/48.0, 1e-14);
 
 
     // Test sin^2(x) * cos (PI *y^2)
-    auto trigonometric_lambda = [](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    auto trigonometric_lambda = [](const lf::mesh::Entity &entity, Eigen::Vector2d x) -> double {
         return std::pow(std::sin(x[0]), 2) * std::cos(M_PI * x[1] * x[1]);
     };
     lf::dgfe::SubTessellationIntegrator<double, decltype(trigonometric_lambda)> trigo_integrator;
     sum = 0.0;
     //loop over cells
     for (auto cell : mesh_ptr->Entities(0)){
-        sum += trigo_integrator.integrate(cell, trigonometric_lambda, 14); //14 is lowest degree that results in an error < 1e-14
+        sum += trigo_integrator.integrate(*cell, trigonometric_lambda, 14); //14 is lowest degree that results in an error < 1e-14
     }
     //check
     double exact_check = 0.1019760096823904218580342315643055994170804185885964798615039678; // copied from wolframalpha.com
@@ -220,14 +219,14 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
 
 
     //Test x^2 + e^(x*y)
-    auto exponential_lambda = [](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    auto exponential_lambda = [](const lf::mesh::Entity &entity, Eigen::Vector2d x) -> double {
         return x[0]*x[0] + exp(x[0] * x[1]);
     };
     lf::dgfe::SubTessellationIntegrator<double, decltype(exponential_lambda)> exp_integrator;
     sum = 0.0;
     //loop over cells
     for (auto cell : mesh_ptr->Entities(0)){
-        sum += exp_integrator.integrate(cell, exponential_lambda, 10); //10 is lowest degree that results in an error < 1e-14
+        sum += exp_integrator.integrate(*cell, exponential_lambda, 10); //10 is lowest degree that results in an error < 1e-14
     }
     //check
     exact_check = 1.651235484787737228193342177582565171308234579126117326173794530330979441089472815945286980167725541; // copied from wolframalpha.com
@@ -245,35 +244,40 @@ TEST(sub_tessellation_integration, 100To400cells){
     mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_400_cells.vtk");
     mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_800_cells.vtk");
     mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1200_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1400_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1600_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_2000_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_3000_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_4000_cells.vtk");
+    //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1200_cells.vtk");
+    //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1400_cells.vtk");
+    //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1600_cells.vtk");
+    //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_2000_cells.vtk");
+    //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_3000_cells.vtk");
+    //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_4000_cells.vtk");
     //------------------------------------------------------------------------------------------------
 
 
     //Set up lambdas, true solution and calculated solution vectors-----------------------------------
     //degrees used for lambda
-    std::vector<std::function<double(const lf::mesh::Entity *entity, Eigen::Vector2d)>> functors;
+    std::vector<std::function<double(Eigen::Vector2d)>> functors;
     std::vector<std::string> function_expressions{"x^3 * y^4", "x^5 * y^7", "sin^2(x) * cos (PI *y^2)", "x^2 + e^(x*y)"};
     // first lambda function for polynomial integration: x^3 * y^4
-    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    functors.emplace_back([](Eigen::Vector2d x) -> double {
         return std::pow(x[0], 3) * std::pow(x[1], 4);
     });
     // second lambda function for polynomial integration: x^5 * y^7
-    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    functors.emplace_back([](Eigen::Vector2d x) -> double {
         return std::pow(x[0], 5) * std::pow(x[1], 7);
     });
     //third lambda: sin^2(x) * cos (PI *y^2)
-    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    functors.emplace_back([](Eigen::Vector2d x) -> double {
         return std::pow(std::sin(x[0]), 2) * std::cos(M_PI * x[1] * x[1]);
     });
     //fourth lambda: x^2 + e^(x*y)
-    functors.emplace_back([](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    functors.emplace_back([](Eigen::Vector2d x) -> double {
         return x[0]*x[0] + exp(x[0] * x[1]);
     });
+    //setup mesh functions of lambdas
+    std::vector<lf::dgfe::MeshFunctionGlobalDGFE<std::function<double(Eigen::Vector2d)>>> mesh_functions;
+    for (auto functor : functors){
+        mesh_functions.emplace_back(lf::dgfe::MeshFunctionGlobalDGFE<decltype(functor)>(functor));
+    }
     //exact solutions calculated and copied from wolframalpha.com
     std::vector<double> exact_solutions{0.05, 1.0/48.0, 0.1019760096823904218580342315643055994170804185885964798615039678, 1.651235484787737228193342177582565171308234579126117326173794530330979441089472815945286980167725541};
     //degrees are chosen and adjusted by hand
@@ -294,14 +298,14 @@ TEST(sub_tessellation_integration, 100To400cells){
         std::vector<double> mesh_solutions{};
         int functor_idx = 0;
         //loop over functors
-        for (auto functor : functors){
+        for (auto mesh_function : mesh_functions){
             //set up integrator
-            lf::dgfe::SubTessellationIntegrator<double, decltype(functor)> integrator;
+            lf::dgfe::SubTessellationIntegrator<double, decltype(mesh_function)> integrator;
 
             //integrate
             double sum = 0;
             for (auto cell : mesh_ptr->Entities(0)){
-                sum += integrator.integrate(cell, functor, quadrule_degrees[functor_idx]);
+                sum += integrator.integrate(*cell, mesh_function, quadrule_degrees[functor_idx]);
             }
             
             //no error should be bigger than TOLERANCE
@@ -362,13 +366,13 @@ TEST(sub_tessellation_integration, pentagon){
     //TEST
     degree_x = 5;
     degree_y = 5;
-    EXPECT_NEAR(integrator.integrate(b_polygon, polynomial_lambda, 10), -0.0020324991, TOLERANCE);
+    EXPECT_NEAR(integrator.integrate(*b_polygon, polynomial_lambda, 10), -0.0020324991, TOLERANCE);
     degree_x = 20;
     degree_y = 20;
-    EXPECT_NEAR(integrator.integrate(b_polygon, polynomial_lambda, 40), 6.0738145408e-8, TOLERANCE);
+    EXPECT_NEAR(integrator.integrate(*b_polygon, polynomial_lambda, 40), 6.0738145408e-8, TOLERANCE);
     degree_x = 40;
     degree_y = 40;
-    EXPECT_NEAR(integrator.integrate(b_polygon, polynomial_lambda, 80), 2.2238524572e-12, TOLERANCE);
+    EXPECT_NEAR(integrator.integrate(*b_polygon, polynomial_lambda, 80), 2.2238524572e-12, TOLERANCE);
 }
 
 } //namespace lf::dgfe::test

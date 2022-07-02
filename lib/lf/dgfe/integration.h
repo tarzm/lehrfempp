@@ -15,6 +15,7 @@
 #include <lf/quad/quad.h>
 
 #include "sub_tessellation.h"
+#include "bounding_box.h"
 
 namespace lf::dgfe {
 
@@ -32,100 +33,99 @@ scalar_t euclideanDist(const Eigen::MatrixXd a, const Eigen::MatrixXd b);
 scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y);
 
 
-template<typename SCALAR, typename FUNCTOR>
+template<typename SCALAR, typename MESHFUNC>
 class SubTessellationIntegrator{
 public:
 
-    SubTessellationIntegrator(){
-        for (int i = 0; i < 6; i++){
-            segment_quadrules_[i] = lf::quad::make_QuadRule(lf::base::RefEl::kSegment(), i);
-            tria_quadrules_[i] = lf::quad::make_QuadRule(lf::base::RefEl::kTria(), i);
-        }
-    }
+    SubTessellationIntegrator(){};
 
-
-    SCALAR integrate(const lf::mesh::Entity *entity, FUNCTOR f, unsigned max_degree){
-        auto ref_el = entity->RefEl();
+    SCALAR integrate(const lf::mesh::Entity& entity, MESHFUNC f, unsigned max_degree){
+        auto ref_el = entity.RefEl();
         SCALAR sum = 0.0;
         lf::quad::QuadRule qr;
 
         switch(ref_el){
-            case lf::base::RefEl::kPoint():{
-                return f(entity, lf::geometry::Corners(*(entity->Geometry())));
-            }
+            // case lf::base::RefEl::kPoint():{
+            //     return f(*entity, lf::geometry::Corners(*(entity->Geometry())))[0];
+            // }
 
-            case lf::base::RefEl::kSegment():{
-                //setup quadrature rule
-                if (max_degree < 6){
-                    qr = segment_quadrules_[max_degree];
-                } else {
-                    qr = lf::quad::make_QuadRule(lf::base::RefEl::kSegment(), max_degree);
-                }
-                //get geometry pointer
-                auto edge_geo_ptr = entity->Geometry();
-                // qr points
-                const Eigen::MatrixXd zeta_ref{qr.Points()};
-                // qr points mapped to segment
-                Eigen::MatrixXd zeta{edge_geo_ptr->Global(zeta_ref)};
-                //weights
-                Eigen::VectorXd w_ref{qr.Weights()};
-                //gramian determinants
-                Eigen::VectorXd gram_dets{edge_geo_ptr->IntegrationElement(zeta_ref)};
+            // case lf::base::RefEl::kSegment():{
+            //     //setup quadrature rule
+            //     qr = qr_cache_.Get(lf::base::RefEl::kSegment(), max_degree);
+            //     //get geometry pointer
+            //     auto edge_geo_ptr = entity->Geometry();
+            //     // qr points
+            //     const Eigen::MatrixXd zeta_ref{qr.Points()};
+            //     // qr points mapped to segment
+            //     Eigen::MatrixXd zeta{edge_geo_ptr->Global(zeta_ref)};
+            //     //weights
+            //     Eigen::VectorXd w_ref{qr.Weights()};
+            //     //gramian determinants
+            //     Eigen::VectorXd gram_dets{edge_geo_ptr->IntegrationElement(zeta_ref)};
 
-                //sum over qr points
-                for (int i = 0; i < qr.Points().cols(); i++){
-                    sum += w_ref[i] * f(entity, zeta.col(i)) * gram_dets[i];
-                }
-                return sum;
-            }
+            //     //sum over qr points
+            //     for (int i = 0; i < qr.Points().cols(); i++){
+            //         sum += w_ref[i] * f(entity, zeta.col(i)) * gram_dets[i];
+            //     }
+            //     return sum;
+            // }
 
             case lf::base::RefEl::kPolygon():{
                 //setup quadrature rule
-                if (max_degree < 6){
-                    qr = tria_quadrules_[max_degree];
-                } else {
-                    qr = lf::quad::make_QuadRule(lf::base::RefEl::kTria(), max_degree);
-                }
+                qr = qr_cache_.Get(lf::base::RefEl::kTria(), max_degree);
                 //get sub-tessellation
-                auto sub_tessellation = subTessellation(entity);
+                auto sub_tessellation = subTessellation(&entity);
                 // qr points
                 const Eigen::MatrixXd zeta_ref{qr.Points()};
                 //weights
                 Eigen::VectorXd w_ref{qr.Weights()};
+                //bounding box
+                lf::dgfe::BoundingBox box(entity);
 
                 //loop over triangles in the sub-tessellation
                 for (auto& tria_geo_ptr : sub_tessellation){
                     // qr points mapped to triangle
-                    Eigen::MatrixXd zeta{tria_geo_ptr->Global(zeta_ref)};
+                    Eigen::MatrixXd zeta_global{tria_geo_ptr->Global(zeta_ref)};
+                    // qr points mapped back to reference bounding box of polygon
+                    Eigen::MatrixXd zeta{box.inverseMap(zeta_global)};
                     //gramian determinants
                     Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
-                    //sum over qr points
-                    for (int i = 0; i < qr.Points().cols(); i++){
-                        //Note: functor calls entity as argument -> Important for dgfe functions
-                        sum += w_ref[i] * f(entity, zeta.col(i)) * gram_dets[i];
-                    }
+
+                    auto shapes = [](Eigen::MatrixXd x, std::string name) -> void {
+                        std::cout << name << " has dimension " << x.rows() << " x " << x.cols() << "\n";
+                    };
+
+                    auto f_res_vec = f(entity, zeta);
+
+                    Eigen::VectorXd f_result{f_res_vec.data()};
+
+                    shapes(w_ref, "W_ref");
+                    shapes(f_result, "f_result");
+                    shapes(gram_dets, "grams_dets");
+
+                    
+                    //sum += w_ref * f_result.transpose() * gram_dets;
+                    // //sum over qr points
+                    // for (int i = 0; i < qr.Points().cols(); i++){
+                    //     //Note: MESHFUNC calls entity as argument -> Important for dgfe functions
+                    //     //Note: we use zeta -> mapped from reference triangle to polygon and then back to reference bounding box
+                        
+                    //     sum += w_ref[i] * f(entity, zeta.col(i)) * gram_dets[i];
+                    // }
                 }
                 return sum;
             }
 
             default:{
-                LF_ASSERT_MSG(false, "SubTessellation integration only implemented in the polytopic setting");
+                LF_ASSERT_MSG(false, "SubTessellation integration only implemented for polygons");
                 return 0;
             }
         }
     }
 private:
-    std::array<lf::quad::QuadRule, 6> segment_quadrules_{};
-    std::array<lf::quad::QuadRule, 6> tria_quadrules_{};
+    lf::quad::QuadRuleCache qr_cache_;
 
 };
-
-
-
-
-
-
-
 
 } //namespace dgfe
 

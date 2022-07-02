@@ -51,7 +51,7 @@ TEST(meshFunction, singleSquareO2L2ErrorSubTessellation){
     lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, dof_vector);
 
     //calculate with mesh function error function
-    double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation(dgfe_mesh_function, true_sol_lambda, 2);
+    double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(true_sol_lambda)>(dgfe_mesh_function, true_sol_lambda, 2);
 
     //mesh function should be exact
     EXPECT_NEAR(0.0, mesh_func_l2_error, std::numeric_limits<double>::epsilon());
