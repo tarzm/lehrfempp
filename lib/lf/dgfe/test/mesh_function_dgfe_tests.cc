@@ -40,7 +40,7 @@ TEST(meshFunction, singleSquareO2L2ErrorSubTessellation){
     dof_vector[3] = 0.5;
 
     //true solution is x
-    auto true_sol_lambda = [](const lf::mesh::Entity *entity, Eigen::Vector2d x) -> double {
+    auto true_sol_lambda = [](Eigen::Vector2d x) -> double {
         return x[0];
     };
 
@@ -49,9 +49,11 @@ TEST(meshFunction, singleSquareO2L2ErrorSubTessellation){
 
     //setup mesh function
     lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, dof_vector);
+    //setup global mesh function
+    lf::dgfe::MeshFunctionGlobalDGFE<decltype(true_sol_lambda)> lambda_mesh_func(true_sol_lambda);
 
     //calculate with mesh function error function
-    double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(true_sol_lambda)>(dgfe_mesh_function, true_sol_lambda, 2);
+    double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(lambda_mesh_func)>(dgfe_mesh_function, lambda_mesh_func, 2);
 
     //mesh function should be exact
     EXPECT_NEAR(0.0, mesh_func_l2_error, std::numeric_limits<double>::epsilon());

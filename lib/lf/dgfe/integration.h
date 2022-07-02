@@ -97,14 +97,15 @@ public:
 
                     auto f_res_vec = f(entity, zeta);
 
-                    Eigen::VectorXd f_result{f_res_vec.data()};
+                    Eigen::VectorXd f_result = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(f_res_vec.data(), f_res_vec.size());
 
-                    shapes(w_ref, "W_ref");
-                    shapes(f_result, "f_result");
-                    shapes(gram_dets, "grams_dets");
+                    // shapes(w_ref, "W_ref");
+                    // shapes(f_result, "f_result");
+                    // shapes(gram_dets, "grams_dets");
 
                     
-                    //sum += w_ref * f_result.transpose() * gram_dets;
+                    sum += w_ref.cwiseProduct(f_result).dot(gram_dets);
+                    //std::cout << "ADDED " << w_ref.cwiseProduct(f_result).dot(gram_dets) << "\n";
                     // //sum over qr points
                     // for (int i = 0; i < qr.Points().cols(); i++){
                     //     //Note: MESHFUNC calls entity as argument -> Important for dgfe functions

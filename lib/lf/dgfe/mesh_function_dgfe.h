@@ -89,17 +89,27 @@ SCALAR L2ErrorSubTessellation(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, 
     SCALAR error = 0.0;
 
     //lambda to calculate difference between exact solution and dgfe solution in one point
-    auto errorAtPoint = [&dgfe_function, &f](const lf::mesh::Entity *entity, Eigen::Vector2d local) -> SCALAR {
-        LF_VERIFY_MSG(entity->RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for polygons");
+    auto errorAtPoint = [&dgfe_function, &f](Eigen::Vector2d local) -> std::vector<SCALAR> {
+
+        auto dgfe_res = dgfe_function(entity, local);
+        auto f_res = f(entity, local);
+        std::vector<SCALAR> result(local.cols());
+        for (int i = 0; i < local.cols(); i++){
+            result[i] = std::abs(dgfe_res[i] - f_res[i]);
+        }
+        return result;
         
-        return std::abs(dgfe_function(*entity, local)[0] - f(entity, local));
+        //return std::abs(dgfe_function(entity, local) - f(entity, local));
+        //return std::transform(dgfe_function(entity, local).begin(), dgfe_function(entity, local).end(), f(entity, local).begin(), f(entity, local).end(), std::abs<SCALAR>(std::minus<SCALAR>()));
     };
+
+    //std::transform(vector1.begin(), vector1.end(), vector2.begin(), vector1.begin(), std::minus<int>())
 
     lf::dgfe::SubTessellationIntegrator<SCALAR, decltype(errorAtPoint)> integrator;
 
     //loop over cells
     for (auto cell : mesh_ptr->Entities(0)){
-        error += integrator.integrate(cell, errorAtPoint, max_degree);
+        error += integrator.integrate(*cell, errorAtPoint, max_degree);
     }
 
     return error;

@@ -155,7 +155,7 @@ Eigen::Matrix<scalar_t, Eigen::Dynamic, Eigen::Dynamic> DGFEMassElementMatrixST:
     int i2;
     int j1;
     int j2;
-    auto eval_lambda = [&i1, &i2, &j1, &j2](const lf::mesh::Entity &entity, Eigen::MatrixXd local) -> std::vector<scalar_t> {
+    auto eval_lambda = [&i1, &i2, &j1, &j2](const lf::mesh::Entity &entity, Eigen::MatrixXd &local) -> std::vector<scalar_t> {
         std::vector<scalar_t> result(local.cols());
         for (int i = 0; i < local.cols(); i++){
             result.at(i) = lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(i)) * lf::dgfe::legendre_polynomial_2D(j1, j2, local.col(i));
