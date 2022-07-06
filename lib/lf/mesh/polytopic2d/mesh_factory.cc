@@ -6,20 +6,42 @@
  * @copyright ETH ZUrich
  */
 
+#include <cmath>
+
 #include "mesh_factory.h"
 
+#define COORD_TOLERANCE 1e-7
 
 namespace lf::mesh::polytopic2d {
 
 
 size_type MeshFactory::AddPoint(coord_t coord) {
-  LF_ASSERT_MSG(coord.rows() == dim_world_,
+    LF_ASSERT_MSG(coord.rows() == dim_world_,
                 "coord has incompatible number of rows.");
-  // Create default geometry object for a point from location vector
-  polytopic2d::Mesh::GeometryPtr point_geo =
-      std::make_unique<geometry::Point>(coord);
-  nodes_.emplace_back(std::move(point_geo));
-  return nodes_.size() - 1;
+
+    double x = coord[0];
+    double y = coord[1];
+    if (unit_square_){
+        double x = coord[0];
+        double y = coord[1];
+        if (std::abs(x) < COORD_TOLERANCE){
+            coord[0] = 0.0;
+        }
+        if (std::abs(x - 1.0) < COORD_TOLERANCE){
+            coord[0] = 1.0;
+        }
+        if (std::abs(y) < COORD_TOLERANCE){
+            coord[1] = 0.0;
+        }
+        if (std::abs(y - 1.0) < COORD_TOLERANCE){
+            coord[1] = 1.0;
+        }
+    }
+    
+    // Create default geometry object for a point from location vector
+    polytopic2d::Mesh::GeometryPtr point_geo = std::make_unique<geometry::Point>(coord);
+    nodes_.emplace_back(std::move(point_geo));
+    return nodes_.size() - 1;
 }
 
 size_type MeshFactory::AddPoint(std::unique_ptr<geometry::Geometry>&& geometry){
@@ -39,6 +61,7 @@ size_type MeshFactory::AddEntity(base::RefEl ref_el, const nonstd::span<const si
     elements_.emplace_back(nodes_vec);
     return elements_.size() - 1;
 }
+
 
 std::shared_ptr<mesh::Mesh> MeshFactory::Build(){
     //Actual construction is done by Mesh object

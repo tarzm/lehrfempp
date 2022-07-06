@@ -85,6 +85,18 @@ TEST(legendre_dgfe, polynomialEvaluation){
     EXPECT_EQ(legendre_polynomial(0, -0.8), 1.0);
 }
 
+TEST(legendre_dgfe, legendre_polynomial_2D){
+
+    double x = 0.123;
+    double y = 0.745;
+
+    Eigen::Vector2d vec{x, y};
+
+    EXPECT_EQ(legendre_polynomial_2D(1,1,vec), x * y);
+    EXPECT_EQ(legendre_polynomial_2D(0,1,vec), y );
+    EXPECT_EQ(legendre_polynomial_2D(2,1,vec), (1.5*x*x - 0.5) * y);
+}
+
 // TEST(legendre_dgfe, C_i_j_k_O1){
 //     //trial space basis
 //     for (int i = 0; i < 4; i++){

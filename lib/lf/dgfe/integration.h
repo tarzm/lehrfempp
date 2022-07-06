@@ -87,32 +87,17 @@ public:
                     // qr points mapped to triangle
                     Eigen::MatrixXd zeta_global{tria_geo_ptr->Global(zeta_ref)};
                     // qr points mapped back to reference bounding box of polygon
-                    Eigen::MatrixXd zeta{box.inverseMap(zeta_global)};
+                    Eigen::MatrixXd zeta_box{box.inverseMap(zeta_global)};
                     //gramian determinants
                     Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
-
-                    auto shapes = [](Eigen::MatrixXd x, std::string name) -> void {
-                        std::cout << name << " has dimension " << x.rows() << " x " << x.cols() << "\n";
-                    };
-
-                    auto f_res_vec = f(entity, zeta);
+                    
+                    //function evaluated at the local points (points within the reference bounding box)
+                    auto f_res_vec = f(entity, zeta_box);
 
                     Eigen::VectorXd f_result = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(f_res_vec.data(), f_res_vec.size());
 
-                    // shapes(w_ref, "W_ref");
-                    // shapes(f_result, "f_result");
-                    // shapes(gram_dets, "grams_dets");
-
-                    
                     sum += w_ref.cwiseProduct(f_result).dot(gram_dets);
-                    //std::cout << "ADDED " << w_ref.cwiseProduct(f_result).dot(gram_dets) << "\n";
-                    // //sum over qr points
-                    // for (int i = 0; i < qr.Points().cols(); i++){
-                    //     //Note: MESHFUNC calls entity as argument -> Important for dgfe functions
-                    //     //Note: we use zeta -> mapped from reference triangle to polygon and then back to reference bounding box
-                        
-                    //     sum += w_ref[i] * f(entity, zeta.col(i)) * gram_dets[i];
-                    // }
+                    //sum += w_ref.dot(f_result) * box.det();
                 }
                 return sum;
             }

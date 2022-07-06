@@ -89,7 +89,7 @@ SCALAR L2ErrorSubTessellation(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, 
     SCALAR error = 0.0;
 
     //lambda to calculate difference between exact solution and dgfe solution in one point
-    auto errorAtPoint = [&dgfe_function, &f](Eigen::Vector2d local) -> std::vector<SCALAR> {
+    auto errorAtPoint = [&dgfe_function, &f](const lf::mesh::Entity& entity, Eigen::MatrixXd &local) -> std::vector<SCALAR> {
 
         auto dgfe_res = dgfe_function(entity, local);
         auto f_res = f(entity, local);
@@ -98,12 +98,7 @@ SCALAR L2ErrorSubTessellation(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, 
             result[i] = std::abs(dgfe_res[i] - f_res[i]);
         }
         return result;
-        
-        //return std::abs(dgfe_function(entity, local) - f(entity, local));
-        //return std::transform(dgfe_function(entity, local).begin(), dgfe_function(entity, local).end(), f(entity, local).begin(), f(entity, local).end(), std::abs<SCALAR>(std::minus<SCALAR>()));
     };
-
-    //std::transform(vector1.begin(), vector1.end(), vector2.begin(), vector1.begin(), std::minus<int>())
 
     lf::dgfe::SubTessellationIntegrator<SCALAR, decltype(errorAtPoint)> integrator;
 

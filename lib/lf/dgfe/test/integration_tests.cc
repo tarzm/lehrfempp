@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <filesystem>
+#include <limits>
 
 #include <gtest/gtest.h>
 #include <lf/fe/fe.h>
@@ -150,88 +151,95 @@ TEST(integration, polytopicTestMesh){
     EXPECT_NEAR(sum, (1.0/48.0), 1e-14);
 }
 
-TEST(integration, bigMesh){
-    //get mesh
-    std::filesystem::path here = __FILE__;
-    auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk";
-
-    lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
-    
-    auto mesh_ptr = reader.mesh();
-
-    lf::dgfe::scalar_t sum = 0.0;
-    for (auto cell : mesh_ptr->Entities(0)){
-        auto corners = lf::mesh::polytopic2d::Corners(cell);
-        //std::cout << "Cell " << mesh_ptr->Index(*cell) << " contributes " << integrate(corners, 3, 4) << "\n";
-        sum += integrate(corners, 3, 4);
-    }
-    EXPECT_NEAR(sum, 0.05, TOLERANCE);
-
-}
-
-// TEST(sub_tessellation_integration, polytopicTestMesh){
+// TEST(integration, bigMesh){
 //     //get mesh
-//     auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
-    
-//     //degrees used for lambda
-//     int degree_x = 3;
-//     int degree_y = 4;
-//     // lambda function for polynomial integration
-//     auto polynomial_lambda = [&degree_x, &degree_y](const lf::mesh::Entity &entity, Eigen::Vector2d x) -> std::vector<double> {
-//         return std::vector<double>{std::pow(x[0], degree_x) * std::pow(x[1], degree_y)};
-//     };
+//     std::filesystem::path here = __FILE__;
+//     auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk";
 
-//     //initialize integrator
-//     lf::dgfe::SubTessellationIntegrator<double, decltype(polynomial_lambda)> poly_integrator;
-
+//     lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
     
-//     // Test monomial x^3 * y^3
+//     auto mesh_ptr = reader.mesh();
+
 //     lf::dgfe::scalar_t sum = 0.0;
 //     for (auto cell : mesh_ptr->Entities(0)){
-//         sum += poly_integrator.integrate(*cell, polynomial_lambda, degree_x + degree_y);
+//         auto corners = lf::mesh::polytopic2d::Corners(cell);
+//         //std::cout << "Cell " << mesh_ptr->Index(*cell) << " contributes " << integrate(corners, 3, 4) << "\n";
+//         sum += integrate(corners, 3, 4);
 //     }
-//     EXPECT_NEAR(sum, 0.05, 1e-14);
+//     EXPECT_NEAR(sum, 0.05, TOLERANCE);
 
-
-//     // Test monomial x^5 * y^7
-//     sum = 0.0;
-//     degree_x = 5;
-//     degree_y = 7;
-//     for (auto cell : mesh_ptr->Entities(0)){
-//         sum += poly_integrator.integrate(*cell, polynomial_lambda, degree_x + degree_y);
-//     }
-//     EXPECT_NEAR(sum, 1.0/48.0, 1e-14);
-
-
-//     // Test sin^2(x) * cos (PI *y^2)
-//     auto trigonometric_lambda = [](const lf::mesh::Entity &entity, Eigen::Vector2d x) -> std::vector<double> {
-//         return std::vector<double>{std::pow(std::sin(x[0]), 2) * std::cos(M_PI * x[1] * x[1])};
-//     };
-//     lf::dgfe::SubTessellationIntegrator<double, decltype(trigonometric_lambda)> trigo_integrator;
-//     sum = 0.0;
-//     //loop over cells
-//     for (auto cell : mesh_ptr->Entities(0)){
-//         sum += trigo_integrator.integrate(*cell, trigonometric_lambda, 14); //14 is lowest degree that results in an error < 1e-14
-//     }
-//     //check
-//     double exact_check = 0.1019760096823904218580342315643055994170804185885964798615039678; // copied from wolframalpha.com
-//     EXPECT_NEAR(sum, exact_check, 1e-14);
-
-
-//     //Test x^2 + e^(x*y)
-//     auto exponential_lambda = [](const lf::mesh::Entity &entity, Eigen::Vector2d x) -> std::vector<double> {
-//         return std::vector<double>{x[0]*x[0] + exp(x[0] * x[1])};
-//     };
-//     lf::dgfe::SubTessellationIntegrator<double, decltype(exponential_lambda)> exp_integrator;
-//     sum = 0.0;
-//     //loop over cells
-//     for (auto cell : mesh_ptr->Entities(0)){
-//         sum += exp_integrator.integrate(*cell, exponential_lambda, 10); //10 is lowest degree that results in an error < 1e-14
-//     }
-//     //check
-//     exact_check = 1.651235484787737228193342177582565171308234579126117326173794530330979441089472815945286980167725541; // copied from wolframalpha.com
-//     EXPECT_NEAR(sum, exact_check, 1e-14);
 // }
+
+TEST(sub_tessellation_integration, polytopicTestMesh){
+    //get mesh
+    auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+    
+    //degrees used for lambda
+    int degree_x = 3;
+    int degree_y = 4;
+    // lambda function for polynomial integration
+    auto polynomial_lambda = [&degree_x, &degree_y](Eigen::Vector2d x) -> double {
+        return std::pow(x[0], degree_x) * std::pow(x[1], degree_y);
+    };
+
+    //initialize mesh function
+    lf::dgfe::MeshFunctionGlobalDGFE<decltype(polynomial_lambda)> poly_msh_funct(polynomial_lambda);
+
+    //initialize integrator
+    lf::dgfe::SubTessellationIntegrator<double, decltype(poly_msh_funct)> poly_integrator;
+
+    // Test monomial x^3 * y^3
+    lf::dgfe::scalar_t sum = 0.0;
+    for (auto cell : mesh_ptr->Entities(0)){
+        sum += poly_integrator.integrate(*cell, poly_msh_funct, degree_x + degree_y);
+    }
+    EXPECT_NEAR(sum, 0.05, 1e-14);
+
+    // Test monomial x^5 * y^7
+    sum = 0.0;
+    degree_x = 5;
+    degree_y = 7;
+    //second mesh function
+    lf::dgfe::MeshFunctionGlobalDGFE<decltype(polynomial_lambda)> poly_msh_funct2(polynomial_lambda);
+    //initialize integrator
+    lf::dgfe::SubTessellationIntegrator<double, decltype(poly_msh_funct2)> poly_integrator2;
+    for (auto cell : mesh_ptr->Entities(0)){
+        sum += poly_integrator2.integrate(*cell, poly_msh_funct2, degree_x + degree_y);
+    }
+    EXPECT_NEAR(sum, 1.0/48.0, 1e-14);
+
+
+    // Test sin^2(x) * cos (PI *y^2)
+    auto trigonometric_lambda = [](Eigen::Vector2d x) -> double {
+        return std::pow(std::sin(x[0]), 2) * std::cos(M_PI * x[1] * x[1]);
+    };
+    lf::dgfe::MeshFunctionGlobalDGFE<decltype(trigonometric_lambda)> trigo_msh_funct(trigonometric_lambda);
+    lf::dgfe::SubTessellationIntegrator<double, decltype(trigo_msh_funct)> trigo_integrator;
+    sum = 0.0;
+    //loop over cells
+    for (auto cell : mesh_ptr->Entities(0)){
+        sum += trigo_integrator.integrate(*cell, trigo_msh_funct, 14); //14 is lowest degree that results in an error < 1e-14
+    }
+    //check
+    double exact_check = 0.1019760096823904218580342315643055994170804185885964798615039678; // copied from wolframalpha.com
+    EXPECT_NEAR(sum, exact_check, 1e-14);
+
+
+    //Test x^2 + e^(x*y)
+    auto exponential_lambda = [](Eigen::Vector2d x) -> double {
+        return x[0]*x[0] + exp(x[0] * x[1]);
+    };
+    lf::dgfe::MeshFunctionGlobalDGFE<decltype(exponential_lambda)> exp_msh_funct(exponential_lambda);
+    lf::dgfe::SubTessellationIntegrator<double, decltype(exp_msh_funct)> exp_integrator;
+    sum = 0.0;
+    //loop over cells
+    for (auto cell : mesh_ptr->Entities(0)){
+        sum += exp_integrator.integrate(*cell, exp_msh_funct, 10); //10 is lowest degree that results in an error < 1e-14
+    }
+    //check
+    exact_check = 1.651235484787737228193342177582565171308234579126117326173794530330979441089472815945286980167725541; // copied from wolframalpha.com
+    EXPECT_NEAR(sum, exact_check, 1e-14);
+}
 
 TEST(sub_tessellation_integration, 100To400cells){
     //get meshes files--------------------------------------------------------------------------------------
@@ -241,9 +249,9 @@ TEST(sub_tessellation_integration, 100To400cells){
     std::vector<decltype(mesh_file_100)> mesh_files;
     mesh_files.push_back(std::move(mesh_file_100));
     mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_200_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_400_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_800_cells.vtk");
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk");
+    // mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_400_cells.vtk");
+    // mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_800_cells.vtk");
+    // mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk");
     //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1200_cells.vtk");
     //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1400_cells.vtk");
     //mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1600_cells.vtk");
@@ -281,7 +289,7 @@ TEST(sub_tessellation_integration, 100To400cells){
     //exact solutions calculated and copied from wolframalpha.com
     std::vector<double> exact_solutions{0.05, 1.0/48.0, 0.1019760096823904218580342315643055994170804185885964798615039678, 1.651235484787737228193342177582565171308234579126117326173794530330979441089472815945286980167725541};
     //degrees are chosen and adjusted by hand
-    std::vector<int> quadrule_degrees{7, 12, 14, 10};
+    std::vector<int> quadrule_degrees{7, 12, 14, 12};
     // outer vector for meshes, inner for functors
     std::vector<std::vector<double>> solutions;
     //--------------------------------------------------------------------------------------------------
@@ -323,6 +331,11 @@ TEST(sub_tessellation_integration, 100To400cells){
 
     for(int i = 0; i < mesh_files.size(); i++){
         auto sol_vec = solutions[i];
+        EXPECT_NEAR(std::abs(sol_vec[0] - exact_solutions[0]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+        EXPECT_NEAR(std::abs(sol_vec[1] - exact_solutions[1]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+        EXPECT_NEAR(std::abs(sol_vec[2] - exact_solutions[2]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+        EXPECT_NEAR(std::abs(sol_vec[3] - exact_solutions[3]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+
         std::cout << std::left << std::setw(10) << mesh_sizes[i] << std::right << std::setw(16)
               << std::abs(sol_vec[0] - exact_solutions[0]) << std::setw(16)
               << std::abs(sol_vec[1] - exact_solutions[1]) << std::setw(16)

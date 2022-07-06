@@ -15,6 +15,8 @@
 #include "dgfe_space.h"
 #include "bounding_box.h"
 #include "integration.h"
+#include "mesh_function_dgfe.h"
+#include "mesh_function_global.h"
 
 namespace lf::dgfe {
 
@@ -118,6 +120,7 @@ class DGFEO2LocalLoadVector {
  * incarnation of the function
  * @ref AssembleMatrixLocally().
  */
+template <typename SCALAR>
 class DGFEMassElementMatrixST {
     public:
         /**
@@ -126,7 +129,9 @@ class DGFEMassElementMatrixST {
          * @param integration_max_degree the maximum degree used for the quadrature rule
          * @param legendre_max_degree maximum degree of legendre polynomials: Either 1 or 2
          */
-        DGFEMassElementMatrixST(unsigned max_integration_degree, unsigned max_legendre_degree);
+        DGFEMassElementMatrixST(unsigned max_integration_degree, unsigned max_legendre_degree) : max_integration_degree_(max_integration_degree), max_legendre_degree_(max_legendre_degree) {
+            LF_VERIFY_MSG(max_legendre_degree_ == 1 || max_legendre_degree_ == 2, "Only implemented for maximum 1D legendre polynomials of degree 1 and 2");
+        }
 
         /**
          * @brief All cells are considered active in the default implementation
@@ -142,7 +147,45 @@ class DGFEMassElementMatrixST {
          *        which the element matrix should be computed.
          * @return a 4x4 or a 9x9 matrix
          */
-        [[nodiscard]] Eigen::Matrix<scalar_t, Eigen::Dynamic, Eigen::Dynamic> Eval(const lf::mesh::Entity &cell) const;
+        [[nodiscard]] Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic> Eval(const lf::mesh::Entity &cell) const{
+            unsigned matrix_size = (max_legendre_degree_ == 1) ? 4 : 9;
+            Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic> elem_mat(matrix_size, matrix_size);
+
+            int i1;
+            int i2;
+            int j1;
+            int j2;
+            auto eval_lambda = [&i1, &i2, &j1, &j2](const lf::mesh::Entity &entity, Eigen::MatrixXd &local) -> std::vector<SCALAR> {
+                std::vector<SCALAR> result(local.cols());
+                for (int i = 0; i < local.cols(); i++){
+                    result.at(i) = lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(i)) * lf::dgfe::legendre_polynomial_2D(j1, j2, local.col(i));
+                    //std::cout << "calculated one result to be " <<  lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(i)) * lf::dgfe::legendre_polynomial_2D(j1, j2, local.col(i)) << "\n";
+                }
+                //std::cout << "i1 to j2 are " << i1 << " and " << i2 << " and " << j1 << " and " << j2 << "\n";
+                return result;
+            };
+
+            lf::dgfe::SubTessellationIntegrator<SCALAR, decltype(eval_lambda)> integrator;
+            
+            //loop over trial basis funtions on cell
+            for (int i = 0; i < matrix_size; i++){
+                //loop over test basis functions on cell
+                for (int j = 0; j < matrix_size; j++){
+                    scalar_t sum = 0;
+                    //definition of i1, i2, j1, j2
+                    auto degrees_i = multiIndexToDegree(i, max_legendre_degree_);
+                    auto degrees_j = multiIndexToDegree(j, max_legendre_degree_);
+                    i1 = degrees_i.first;   //degree of x in trial basis
+                    i2 = degrees_i.second;  //degree of y in trial basis
+                    j1 = degrees_j.first;   //degree of x in test basis
+                    j2 = degrees_j.second;  //degree of y in test basis
+
+                    elem_mat(i,j) = integrator.integrate(cell, eval_lambda, max_integration_degree_);
+                }
+            }
+
+            return elem_mat;
+        }
     
     private:
 
