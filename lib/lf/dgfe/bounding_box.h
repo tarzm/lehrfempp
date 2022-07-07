@@ -25,7 +25,20 @@ using scalar_t = double;
 class BoundingBox {
     public:
         BoundingBox(const lf::mesh::Entity &entity);
+        /**
+         * @brief maps from reference bounding box to the cell's bounding box
+         * 
+         * @param corners local points to be mapped into global coordinates
+         * @return Eigen::Matrix Global points
+         */
         Eigen::MatrixXd map(const Eigen::MatrixXd corners);
+
+        /**
+         * @brief Maps global coordinates into reference bounding box
+         * 
+         * @param corners global points
+         * @return Eigen::MatrixXd local points
+         */
         Eigen::MatrixXd inverseMap(const Eigen::MatrixXd corners);
         scalar_t det();
 

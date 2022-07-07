@@ -127,7 +127,7 @@ class DGFEMassElementMatrixST {
          * @brief Construct a new DGFEMassElementMatrixST object
          * 
          * @param integration_max_degree the maximum degree used for the quadrature rule
-         * @param legendre_max_degree maximum degree of legendre polynomials: Either 1 or 2
+         * @param legendre_max_degree maximum degree of 1D legendre polynomials: Either 1 or 2
          */
         DGFEMassElementMatrixST(unsigned max_integration_degree, unsigned max_legendre_degree) : max_integration_degree_(max_integration_degree), max_legendre_degree_(max_legendre_degree) {
             LF_VERIFY_MSG(max_legendre_degree_ == 1 || max_legendre_degree_ == 2, "Only implemented for maximum 1D legendre polynomials of degree 1 and 2");
@@ -159,9 +159,7 @@ class DGFEMassElementMatrixST {
                 std::vector<SCALAR> result(local.cols());
                 for (int i = 0; i < local.cols(); i++){
                     result.at(i) = lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(i)) * lf::dgfe::legendre_polynomial_2D(j1, j2, local.col(i));
-                    //std::cout << "calculated one result to be " <<  lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(i)) * lf::dgfe::legendre_polynomial_2D(j1, j2, local.col(i)) << "\n";
                 }
-                //std::cout << "i1 to j2 are " << i1 << " and " << i2 << " and " << j1 << " and " << j2 << "\n";
                 return result;
             };
 
@@ -236,13 +234,13 @@ class DGFELoadElementVectorProvider {
   /** @brief Constructor, performs precomputations
    *
    * @param fe_space specification of local shape functions
-   * @param f functor object for source function
+   * @param f MeshFunctionGlobalDGFE object for source function
    *
    * Uses quadrature rule of double the degree of exactness compared to the
    * degree of the finite element space.
    */
   DGFELoadElementVectorProvider(
-      std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space, FUNCTOR f) : f_(std::move(f)), dgfe_space_(std::move(dgfe_space)), max_legendre_degree_(dgfe_space_->MaxLegendreDegree()) {}
+      std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space, lf::dgfe::MeshFunctionGlobalDGFE<FUNCTOR> f) : f_(std::move(f)), dgfe_space_(std::move(dgfe_space)), max_legendre_degree_(dgfe_space_->MaxLegendreDegree()) {}
   /** @brief all cells are active */
   bool isActive(const lf::mesh::Entity & /*cell*/) const { return true; }
 
@@ -256,7 +254,7 @@ class DGFELoadElementVectorProvider {
     ElemVec Eval(const lf::mesh::Entity &cell) const {
         LF_VERIFY_MSG(cell.RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for Polygons");
 
-        //degree of quadrule is fixed as the maximum degree of the basis functions plus 12
+        //degree of quadrule is fixed as the maximum degree of the basis functions plus 13
         const lf::quad::QuadRule qr = qr_cache_.Get(lf::base::RefEl::kTria(), 12 + max_legendre_degree_* max_legendre_degree_);
 
         //get sub-tessellation
@@ -271,17 +269,32 @@ class DGFELoadElementVectorProvider {
         Eigen::Matrix<scalar_t, Eigen::Dynamic, 1> elem_vec(vector_size, 1);
         elem_vec.setZero();
 
+        // int i1;
+        // int i2;
+        // //lambda that calculates a basis function multiplied with the functor
+        // auto eval_lambda = [&i1, &i2, this](const lf::mesh::Entity *entity, Eigen::Vector2d coord) -> SCALAR {
+        //     return lf::dgfe::legendre_polynomial_2D(i1, i2, coord) * f_(entity, coord);
+        // };
+
+        // //lambda that calculates a basis function multiplied with the functor
+        // auto eval_lambda = [&i1, &i2, this](const lf::mesh::Entity *entity, Eigen::MatrixXd &local) -> std::vector<SCALAR> {
+        //     std::vector<SCALAR> result(local.cols());
+        //     for (int col = 0; col < local.cols(); col++){
+        //         result[i] = lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(col)) * f_(entity, local.col(col));
+        //     }
+        //     return result;
+        // };
+
+        lf::dgfe::BoundingBox box(cell);
+
         int i1;
         int i2;
-        //lambda that calculates a basis function multiplied with the functor
-        auto eval_lambda = [&i1, &i2, this](const lf::mesh::Entity *entity, Eigen::Vector2d coord) -> scalar_t{
-            return lf::dgfe::legendre_polynomial_2D(i1, i2, coord) * f_(entity, coord);
-        };
-
         //loop over triangles in the sub-tessellation
         for(auto& tria_geo_ptr : sub_tessellation){
             // qr points mapped to triangle
-            Eigen::MatrixXd zeta{tria_geo_ptr->Global(zeta_ref)};
+            Eigen::MatrixXd zeta_global{tria_geo_ptr->Global(zeta_ref)};
+            // qr points mapped back into reference bounding box to retrieve values
+            Eigen::MatrixXd zeta_box{box.inverseMap(zeta_global)};
             //gramian determinants
             Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
             //loop over basis functions
@@ -294,7 +307,7 @@ class DGFELoadElementVectorProvider {
                 for (int i = 0; i < qr.Points().cols(); i++){
 
                     //Note: functor calls entity as argument
-                    elem_vec[basis] += w_ref[i] * eval_lambda(&cell, zeta.col(i)) * gram_dets[i];
+                    elem_vec[basis] += w_ref[i] * f_(cell, zeta_box.col(i))[0] * legendre_polynomial_2D(i1, i2, zeta_box.col(i)) * gram_dets[i];
                 }
             }
         }
@@ -305,7 +318,7 @@ class DGFELoadElementVectorProvider {
 
  private:
   /** @brief An object providing the source function */
-  FUNCTOR f_;
+  lf::dgfe::MeshFunctionGlobalDGFE<FUNCTOR> f_;
 
   std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_;
 
@@ -314,56 +327,8 @@ class DGFELoadElementVectorProvider {
   unsigned max_legendre_degree_;
 };
 
-//Eval() function
-// template <typename SCALAR, typename FUNCTOR>
-// typename DGFELoadElementVectorProvider<SCALAR, FUNCTOR>::ElemVec
-// DGFELoadElementVectorProvider<SCALAR, FUNCTOR>::Eval(const lf::mesh::Entity &cell) const {
-//     LF_VERIFY_MSG(cell.RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for Polygons");
 
-//     //degree of quadrule is fixed as the maximum degree of the basis functions times 2
-//     const lf::quad::QuadRule qr = qr_cache_.Get(lf::base::RefEl::kPolygon(), 2 * max_legendre_degree_* max_legendre_degree_);
 
-//     //get sub-tessellation
-//     auto sub_tessellation = subTessellation(cell);
-//     //get sub-tessellation
-//     auto sub_tessellation = subTessellation(entity);
-//     // qr points
-//     const Eigen::MatrixXd zeta_ref{qr.Points()};
-//     //weights
-//     Eigen::VectorXd w_ref{qr.Weights()};
-
-//     //initialize element vector
-//     unsigned vector_size = (max_legendre_degree_ == 1) ? 4 : 9;
-//     Eigen::Matrix<scalar_t, Eigen::Dynamic, 1> elem_vec(vector_size, matrix_size);
-//     elem_vec.setZero();
-
-//     int i1;
-//     int i2;
-//     //lambda that calculates a basis function multiplied with the functor
-//     auto eval_lambda = [&i1, &i2, &f_](const lf::mesh::Entity *entity, Eigen::Vector2d coord) -> scalar_t{
-//         return lf::dgfe::legendre_polynomial_2D(i1, i2, coord) * f_(entity, coord);
-//     };
-
-//     //loop over triangles in the sub-tessellation
-//     for(auto& tria_geo_ptr : sub_tessellation){
-//         // qr points mapped to triangle
-//         Eigen::MatrixXd zeta{tria_geo_ptr->Global(zeta_ref)};
-//         //gramian determinants
-//         Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
-//         //loop over basis functions
-//         for (int basis = 0; basis < vector_size; basis++){
-//             auto basis_degrees = multiIndexToDegree(basis, max_legendre_degree_);
-//             i1 = basis_degrees.first;
-//             i2 = basis_degrees.second;
-//             //sum over qr points
-//             for (int i = 0; i < qr.Points().cols(); i++){
-//                 //Note: functor calls entity as argument
-//                 elem_vec[basis] += w_ref[i] * eval_lambda(cell, zeta.col(i)) * gram_dets[i];
-//             }
-//         }
-//     }
-//     return elem_vec;
-// }
 
 } //namespace lf::dgfe
 

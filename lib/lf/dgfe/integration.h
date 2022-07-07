@@ -86,7 +86,7 @@ public:
                 for (auto& tria_geo_ptr : sub_tessellation){
                     // qr points mapped to triangle
                     Eigen::MatrixXd zeta_global{tria_geo_ptr->Global(zeta_ref)};
-                    // qr points mapped back to reference bounding box of polygon
+                    // qr points mapped back to reference bounding box
                     Eigen::MatrixXd zeta_box{box.inverseMap(zeta_global)};
                     //gramian determinants
                     Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
@@ -97,7 +97,6 @@ public:
                     Eigen::VectorXd f_result = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(f_res_vec.data(), f_res_vec.size());
 
                     sum += w_ref.cwiseProduct(f_result).dot(gram_dets);
-                    //sum += w_ref.dot(f_result) * box.det();
                 }
                 return sum;
             }
