@@ -67,6 +67,8 @@ std::pair<size_type, size_type> multiIndexToDegree(size_type basis_index, size_t
 size_type degreeToMultiIndex(std::pair<size_type, size_type> degrees, size_type degree_of_space);
 
 
+
+
 } //namespace lf::dgfe
 
 

@@ -6,7 +6,7 @@
  * @copyright ETH Zurich
 */
 
-
+#include <lf/fe/fe.h>
 
 #include "legendre_dgfe.h"
 
@@ -18,6 +18,7 @@ scalar_t legendre_polynomial(size_type i, scalar_t x){
 }
 
 scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, Eigen::Vector2d coord){
+    //return lf::fe::legendre(degree_x, coord[0], 1) * lf::fe::legendre(degree_y, coord[1], 1);
     return legendre_polynomial(degree_x, coord[0]) * legendre_polynomial(degree_y, coord[1]);
 }
 
