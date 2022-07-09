@@ -14,14 +14,97 @@
 namespace lf::dgfe {
 
 scalar_t legendre_polynomial(size_type i, scalar_t x){
-    return legendre_coeffs_(i,0) + legendre_coeffs_(i,1) * x + legendre_coeffs_(i,2) * x * x;
+    switch(i){
+        case 0:
+            return 1.0;
+        
+        case 1:
+            return x;
+        
+        case 2:
+            return 1.5 * x * x - 0.5;
+        
+        default:
+            LF_VERIFY_MSG(false, "Only implemented for polynomials of degree 0, 1 and 2");
+    }
 }
 
-scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, Eigen::Vector2d coord){
+scalar_t legendre_polynomial_dx(size_type n, scalar_t x){
+    switch(n){
+        case 0:
+            return 0.0;
+            break;
+        
+        case 1:
+            return 1.0;
+            break;
+        
+        case 2: 
+            return 3.0 * x;
+            break;
+        
+        default:
+            LF_VERIFY_MSG(false, "Only implemented for polynomials of degree 0, 1 and 2");
+    }
+}
+
+scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, const Eigen::Vector2d &coord){
     //return lf::fe::legendre(degree_x, coord[0], 1) * lf::fe::legendre(degree_y, coord[1], 1);
     return legendre_polynomial(degree_x, coord[0]) * legendre_polynomial(degree_y, coord[1]);
 }
 
+scalar_t legendre_polynomial_2D_dx(size_type degree_x, size_type degree_y, const Eigen::Vector2d &coord){
+    switch(degree_x){
+        case 0:
+            return 0.0;
+            break;
+        
+        case 1:
+            return legendre_polynomial(degree_y, coord[1]);
+            break;
+        
+        case 2:
+            return 3.0 * coord[0] * legendre_polynomial(degree_y, coord[1]);
+            break;
+        
+        default:
+            LF_VERIFY_MSG(false, "Only implemented for polynomials of degree 0, 1 and 2");
+    }
+}
+
+scalar_t legendre_polynomial_2D_dy(size_type degree_x, size_type degree_y, const Eigen::Vector2d &coord){
+    switch(degree_y){
+        case 0:
+            return 0.0;
+            break;
+        
+        case 1:
+            return legendre_polynomial(degree_x, coord[0]);
+            break;
+        
+        case 2:
+            return 3.0 * coord[1] * legendre_polynomial(degree_x, coord[0]);
+            break;
+        
+        default:
+            LF_VERIFY_MSG(false, "Only implemented for polynomials of degree 0, 1 and 2");
+    }
+}
+
+scalar_t legendre_basis(size_type n, size_type max_degree, const Eigen::Vector2d &coord){
+    auto degrees = multiIndexToDegree(n, max_degree);
+    return legendre_polynomial_2D(degrees.first, degrees.second, coord);
+}
+
+scalar_t legendre_basis_dx(size_type n, size_type max_degree, const Eigen::Vector2d &coord){
+    auto degrees = multiIndexToDegree(n, max_degree);
+    return legendre_polynomial_2D_dx(degrees.first, degrees.second, coord);
+}
+
+scalar_t legendre_basis_dy(size_type n, size_type max_degree, const Eigen::Vector2d &coord){
+    auto degrees = multiIndexToDegree(n, max_degree);
+    return legendre_polynomial_2D_dy(degrees.first, degrees.second, coord);
+}
 
 scalar_t C_i_j_k(size_type i, size_type j, size_type k){
     scalar_t sum = 0;

@@ -24,6 +24,7 @@
 #include "mesh_function_dgfe.h"
 #include "sub_tessellation.h"
 #include "mesh_function_global.h"
+#include "advection_reaction.h"
 
 /**
  * @brief Collects data structures and algorithms designed for discontinuous

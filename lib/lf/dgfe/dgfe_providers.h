@@ -269,22 +269,6 @@ class DGFELoadElementVectorProvider {
         Eigen::Matrix<scalar_t, Eigen::Dynamic, 1> elem_vec(vector_size, 1);
         elem_vec.setZero();
 
-        // int i1;
-        // int i2;
-        // //lambda that calculates a basis function multiplied with the functor
-        // auto eval_lambda = [&i1, &i2, this](const lf::mesh::Entity *entity, Eigen::Vector2d coord) -> SCALAR {
-        //     return lf::dgfe::legendre_polynomial_2D(i1, i2, coord) * f_(entity, coord);
-        // };
-
-        // //lambda that calculates a basis function multiplied with the functor
-        // auto eval_lambda = [&i1, &i2, this](const lf::mesh::Entity *entity, Eigen::MatrixXd &local) -> std::vector<SCALAR> {
-        //     std::vector<SCALAR> result(local.cols());
-        //     for (int col = 0; col < local.cols(); col++){
-        //         result[i] = lf::dgfe::legendre_polynomial_2D(i1, i2, local.col(col)) * f_(entity, local.col(col));
-        //     }
-        //     return result;
-        // };
-
         lf::dgfe::BoundingBox box(cell);
 
         int i1;

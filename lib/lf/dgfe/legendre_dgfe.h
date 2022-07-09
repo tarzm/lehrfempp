@@ -41,11 +41,55 @@ const Eigen::Matrix<scalar_t, 3, 3> legendre_coeffs_{
 scalar_t legendre_polynomial(size_type i, scalar_t x);
 
 /**
+ * @brief returns the derivative of nth legendre polynomial at x
+ */
+scalar_t legendre_polynomial_dx(size_type n, scalar_t x);
+
+/**
  * @brief returns the value of the 2D basis function which is a multiplication of 
  * two 1D legendre polynomials of degree_x and degree_y
  * 
  */
-scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, Eigen::Vector2d coord);
+scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, const Eigen::Vector2d &coord);
+
+
+/**
+ * @brief returns partial derivative in x of 2d legendre polynomial
+ */
+scalar_t legendre_polynomial_2D_dx(size_type degree_x, size_type degree_y, const Eigen::Vector2d &coord);
+
+/**
+ * @brief returns partial derivative in y of 2d legendre polynomial
+ */
+scalar_t legendre_polynomial_2D_dy(size_type degree_x, size_type degree_y, const Eigen::Vector2d &coord);
+
+/**
+ * @brief returns 2D basis function at coordinate defined on reference bounding box
+ * 
+ * @param n nth basis function of
+ * @param max_degree maximum degree of 1D legendre polnynomials present in basis
+ * 
+ */
+scalar_t legendre_basis(size_type n, size_type max_degree, const Eigen::Vector2d &coord);
+
+/**
+ * @brief returns partial derivative in x of 2D basis function at coordinate defined on reference bounding box
+ * 
+ * @param n nth basis function of
+ * @param max_degree maximum degree of 1D legendre polnynomials present in basis
+ * 
+ */
+scalar_t legendre_basis_dx(size_type n, size_type max_degree, const Eigen::Vector2d &coord);
+
+/**
+ * @brief returns partial derivative in y of 2D basis function at coordinate defined on reference bounding box
+ * 
+ * @param n nth basis function of
+ * @param max_degree maximum degree of 1D legendre polnynomials present in basis
+ * 
+ */
+scalar_t legendre_basis_dy(size_type n, size_type max_degree, const Eigen::Vector2d &coord);
+
 
 /**
  * @brief returns the value of the definition (26) of the paper

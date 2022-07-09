@@ -297,13 +297,13 @@ TEST(dgfe_subTessellation_providers, singleSquareO2LoadElementVectorST){
     }
 }
 
-TEST(dgfe_sub_providers, meshFunction){
+TEST(dgfe_subTessellation_providers, massMatrixmeshFunction){
     //SIMPLE TEST MESH ----------------------------------
     //auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
 
     //get mesh
     std::filesystem::path here = __FILE__;
-    auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_200_cells.vtk";
+    auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_100_cells.vtk";
     lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
     auto mesh_ptr = reader.mesh();
 
