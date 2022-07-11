@@ -73,7 +73,9 @@ scalar_t legendre_polynomial_2D_dy(size_type degree_x, size_type degree_y, const
 scalar_t legendre_basis(size_type n, size_type max_degree, const Eigen::Vector2d &coord);
 
 /**
- * @brief returns partial derivative in x of 2D basis function at coordinate defined on reference bounding box
+ * @brief returns partial derivative in x of 2D reference basis function at coordinate defined on reference bounding box
+ * 
+ * @note !! DO NOT FORGET TO MULTIPLY WITH ENTRY (0, 0) OF THE INVERSE JACOBI OF THE REFERENCE BOX MAPPING !!
  * 
  * @param n nth basis function of
  * @param max_degree maximum degree of 1D legendre polnynomials present in basis
@@ -82,7 +84,9 @@ scalar_t legendre_basis(size_type n, size_type max_degree, const Eigen::Vector2d
 scalar_t legendre_basis_dx(size_type n, size_type max_degree, const Eigen::Vector2d &coord);
 
 /**
- * @brief returns partial derivative in y of 2D basis function at coordinate defined on reference bounding box
+ * @brief returns partial derivative in y of 2D reference basis function at coordinate defined on reference bounding box
+ * 
+ * @note !! DO NOT FORGET TO MULTIPLY WITH ENTRY (1, 1) OF THE INVERSE JACOBI OF THE REFERENCE BOX MAPPING !!
  * 
  * @param n nth basis function of
  * @param max_degree maximum degree of 1D legendre polnynomials present in basis

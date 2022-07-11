@@ -40,11 +40,18 @@ class BoundingBox {
          * @return Eigen::MatrixXd local points
          */
         Eigen::MatrixXd inverseMap(const Eigen::MatrixXd corners);
+
         scalar_t det();
+
+        /**
+         * @brief returns entry (i,i) of the inverse jacobi
+         */
+        scalar_t inverseJacobi(unsigned i);
 
     private:
         Eigen::Vector2d translation_;
         Eigen::Matrix2d jacobi_;
+        Eigen::Matrix2d inverse_jacobi_;
 };
 
 } //namespace lf::dgfe
