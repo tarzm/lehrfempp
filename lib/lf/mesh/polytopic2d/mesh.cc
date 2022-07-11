@@ -10,6 +10,7 @@
 #include "mesh.h"
 
 #include <map>
+#include <tuple>
 
 namespace lf::mesh::polytopic2d {
 
@@ -121,6 +122,25 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_comp
     std::map<const std::pair<size_type, size_type>, const size_type> SegmentIdxMap;
     using PointPairAndIdx = std::map<const std::pair<size_type, size_type>, const size_type>::value_type;
 
+    //used such that it is possible to know segments_ size and call segments_.reserve(n_segments)
+    //before constructing them, otherwise segment.SubEntities(0) does not work
+    struct EdgeData {
+        EdgeData(size_type index, GeometryPtr geo_uptr, size_type p1, size_type p2)
+            : geo_uptr(std::move(geo_uptr)),
+            index(index), p1_idx(p1), p2_idx(p2) {}
+        EdgeData(const EdgeData &) = delete;
+        EdgeData(EdgeData &&) = default;
+        EdgeData &operator=(const EdgeData &) = delete;
+        EdgeData &operator=(EdgeData &&) = default;
+        ~EdgeData() = default;
+        size_type index;
+        GeometryPtr geo_uptr;
+        size_type p1_idx;
+        size_type p2_idx;
+    };
+    //vector holding construction info for segments
+    std::vector<EdgeData> edge_data_vec;
+
     //First loop over cells to construct Segments
     for (auto cell_nodes_idx_vec : cells){
         int n_nodes = cell_nodes_idx_vec.size();
@@ -143,10 +163,10 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_comp
                 const Eigen::MatrixXd zero_point = base::RefEl::kPoint().NodeCoords();
                 straight_edge_coords.block<2, 1>(0, 0) = current_node_ptr->Geometry()->Global(zero_point);
                 straight_edge_coords.block<2, 1>(0, 1) = next_node_ptr->Geometry()->Global(zero_point);
-                GeometryPtr edge_geo_ptr = std::make_unique<geometry::SegmentO1>(straight_edge_coords);
+                GeometryPtr edge_geo_ptr = std::make_unique<lf::geometry::SegmentO1>(straight_edge_coords);
 
-                //Construct Segment and add it to segments_ vector
-                segments_.emplace_back(segment_global_index, std::move(edge_geo_ptr), current_node_ptr, next_node_ptr);
+                //add constructor info for segment to edge_data_vec
+                edge_data_vec.emplace_back(segment_global_index, std::move(edge_geo_ptr), current_node_glb_idx, next_node_glb_idx);
 
                 //Add it to the SegmentIdxMap
                 SegmentIdxMap.insert(PointPairAndIdx({current_node_glb_idx, next_node_glb_idx}, segment_global_index));
@@ -162,6 +182,15 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_comp
 
         } 
     }//end loop cells 1
+
+    //reserve memory for segments
+    segments_.reserve(edge_data_vec.size());
+    //construct segments
+    for (EdgeData &edge_data : edge_data_vec){
+      const lf::mesh::hybrid2d::Point *p1_ptr = &points_[edge_data.p1_idx];  // pointer to first endpoint
+      const lf::mesh::hybrid2d::Point *p2_ptr = &points_[edge_data.p2_idx];  // pointer to second endpoint
+      segments_.emplace_back(edge_data.index, std::move(edge_data.geo_uptr), p1_ptr, p2_ptr);
+    }
     //now all Points and Segments of all the Polygons exist
     
     //Second loop over cells to construct the Polygons
@@ -233,7 +262,7 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_comp
 
 
 
-lf::mesh::utils::CodimMeshDataSet<PolygonPair> EdgePolygonAdjacency(std::shared_ptr<lf::mesh::Mesh> mesh_ptr){
+lf::mesh::utils::CodimMeshDataSet<PolygonPair> EdgePolygonAdjacency(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr){
     //initialize the CodimMeshDataSet
     PolygonPair init_pair = std::make_pair(nullptr, nullptr);
     lf::mesh::utils::CodimMeshDataSet<PolygonPair> adjacency(mesh_ptr, 1, init_pair);
