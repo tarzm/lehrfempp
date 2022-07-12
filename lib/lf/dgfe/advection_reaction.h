@@ -97,9 +97,8 @@ public:
                 }
             }
         }
-
-        // !!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!
-        //     ( b * n ) * upwind_jump[w] * v^+   over all edges which are not on boundary
+        //!!!!!!!!!!!!! END FIRST TERM !!!!!!!!!!!!!!
+        
 
         //quadrule setup
         const lf::quad::QuadRule qr_s = qr_cache_.Get(lf::base::RefEl::kSegment(), integration_degree_);
@@ -108,18 +107,38 @@ public:
         //weights
         Eigen::VectorXd w_ref_s{qr_s.Weights()};
 
-        //loop over cells edges
-        for (auto edge : cell.SubEntities(1)){
-            if (!(boundary_edge_(*edge))){    // edge must not be on boundary
+        size_type edge_sub_idx = 0;
 
-                //normal n
-                auto normal = lf::dgfe::outwardNormal(lf::geometry::Corners(*(edge->Geometry())));
-                // qr points mapped to segment
-                Eigen::MatrixXd zeta_global_s{edge->Geometry()->Global(zeta_ref_s)};
-                // qr points mapped back into reference bounding box to retrieve values
-                Eigen::MatrixXd zeta_box_s{box.inverseMap(zeta_global_s)};
-                //gramian determinants
-                Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
+        //loop over cell's edges
+        for (auto edge : cell.SubEntities(1)){
+
+            //normal n
+            auto normal = lf::dgfe::outwardNormal(lf::geometry::Corners(*(edge->Geometry())));
+            //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
+            normal *= (int) (cell.RelativeOrientations()[edge_sub_idx]);
+
+            // qr points mapped to segment
+            Eigen::MatrixXd zeta_global_s{edge->Geometry()->Global(zeta_ref_s)};
+            // qr points mapped back into reference bounding box to retrieve values
+            Eigen::MatrixXd zeta_box_s{box.inverseMap(zeta_global_s)};
+            //gramian determinants
+            Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
+
+            auto b = b_coeff_(cell, zeta_box_s);
+
+            //check wether weigthed sum of qr points satisfies
+            //    (b(x) * n(x) < 0)
+            //=> if so, edge belongs to the delta_minus_k set
+            double sum;
+            for (int i = 0; i < gram_dets_s.size(); i++){
+                sum += b[i].dot(normal) * w_ref_s[i] * gram_dets_s[i];
+            }
+            bool delta_minus_k = (sum < 0) ? true : false;
+
+            // !!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!
+            //    - ( b * n ) * upwind_jump[w] * v^+   over all edges which are not on boundary and belong to delta_minus_k
+
+            if (!(boundary_edge_(*edge)) && delta_minus_k){    // edge must not be on boundary and belong to delta_minus_k
 
                 //get pointer to polygon on other side of edge
                 auto polygon_pair = dgfe_space_ptr_->AdjacentPolygons(edge);
@@ -127,9 +146,7 @@ public:
                 //get qr points mapped to other polygon's reference box
                 lf::dgfe::BoundingBox box_other(*other_polygon);
                 Eigen::MatrixXd zeta_box_other{box_other.inverseMap(zeta_global_s)};
-
-                auto b = b_coeff_(cell, zeta_box_s);
-                
+                    
                 //loop over basis functions in trial space
                 for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
                     //loop over bsis functions in test space
@@ -137,7 +154,7 @@ public:
 
                         //sum over qr points
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            elem_mat(basis_trial, basis_test) +=  (b[i][0] * normal[0] + b[i][1] * normal[1])
+                            elem_mat(basis_trial, basis_test) -=  (b[i][0] * normal[0] + b[i][1] * normal[1])
                                                                 * ( legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i))
                                                                     - legendre_basis(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) )
                                                                 * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
@@ -147,9 +164,30 @@ public:
                     }
 
                 }
-
-
             }
+            // !!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!
+
+
+            // !!!!!!!!!!!!! THIRD TERM !!!!!!!!!!!!!
+            //    - ( b * n ) * w^+ * v^+   over delta_minus_k and (boundary_d_edge or boundary_minus_edge)
+            if (delta_minus_k && (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge))){
+                //loop over basis functions in trial space
+                for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
+                    //loop over bsis functions in test space
+                    for(int basis_test = 0; basis_test < n_basis; basis_test++){
+
+                        //sum over qr points
+                        for (int i = 0; i < gram_dets_s.size(); i++){
+                            elem_mat(basis_trial, basis_test) -=  (b[i][0] * normal[0] + b[i][1] * normal[1])
+                                                                * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i))
+                                                                * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
+                                                                * w_ref_s[i] * gram_dets_s[i];
+                    
+                        }
+                    }
+                }
+            }
+            edge_sub_idx++;
         }
 
 

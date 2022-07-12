@@ -25,7 +25,7 @@ const lf::assemble::UniformDGFEDofHandler& DGFESpace::LocGlobMap() const {
     return dofh_;
 }
 
-size_type DGFESpace::NumRefShapeFunctions(const lf::mesh::Entity* entity){
+size_type DGFESpace::NumRefShapeFunctions(const lf::mesh::Entity* entity) const {
     switch(entity->RefEl()){
         case lf::base::RefEl::kPolygon():
             return num_shape_funct_polygon_;
@@ -40,7 +40,7 @@ size_type DGFESpace::NumRefShapeFunctions(const lf::mesh::Entity* entity){
     }
 }
 
-lf::mesh::polytopic2d::PolygonPair DGFESpace::AdjacentPolygons(const lf::mesh::Entity* entity){
+lf::mesh::polytopic2d::PolygonPair DGFESpace::AdjacentPolygons(const lf::mesh::Entity* entity) const {
     lf::base::RefEl ref_el = entity->RefEl();
     
     switch (ref_el){

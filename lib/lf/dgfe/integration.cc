@@ -16,7 +16,7 @@ namespace lf::dgfe {
 
 //it is assumed that all edges are oriented counterclockwise
 //such that edge.col(1) is the coordinate of the second point
-Eigen::MatrixXd outwardNormal(const Eigen::MatrixXd edge){
+Eigen::VectorXd outwardNormal(const Eigen::MatrixXd edge){
     LF_VERIFY_MSG( edge.cols() == 2 && edge.rows() == 2, "Edge whose outward normal should be found must be of shape 2x2");
     Eigen::Vector3d tangent(edge(0,1) - edge(0,0), edge(1,1) - edge(1,0), 0.0);
     Eigen::Vector3d z(0.0, 0.0, 1);
@@ -34,7 +34,7 @@ scalar_t euclideanDist(const Eigen::MatrixXd a, const Eigen::MatrixXd b){
     return a_b.norm();
 }
 
-scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y){
+scalar_t integrate(Eigen::MatrixXd &corners, int degree_x, int degree_y){
 
     auto n_cols = corners.cols();
     switch(n_cols){

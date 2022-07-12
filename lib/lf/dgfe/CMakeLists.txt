@@ -13,6 +13,8 @@ set(sources
     mesh_function_global.h
     sub_tessellation.h
     sub_tessellation.cc
+    discontinuity_penalization.h
+    discontinuity_penalization.cc
 )
 
 lf_add_library(lf.dgfe ${sources})

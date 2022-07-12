@@ -30,8 +30,8 @@ public:
     const std::shared_ptr<const lf::mesh::Mesh> Mesh() const;
     const lf::assemble::UniformDGFEDofHandler &LocGlobMap() const;
     size_type MaxLegendreDegree() const;
-    size_type NumRefShapeFunctions(const lf::mesh::Entity*);
-    lf::mesh::polytopic2d::PolygonPair AdjacentPolygons(const lf::mesh::Entity* entity);
+    size_type NumRefShapeFunctions(const lf::mesh::Entity*) const;
+    lf::mesh::polytopic2d::PolygonPair AdjacentPolygons(const lf::mesh::Entity* entity) const;
 
 private:
     /** maximum degree of 1D legendre polynomials used as basis fucntions*/
