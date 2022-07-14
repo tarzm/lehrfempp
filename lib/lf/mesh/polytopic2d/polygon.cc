@@ -30,7 +30,6 @@ namespace lf::mesh::polytopic2d {
         
         size_type num_nodes = nodes.size();
 
-
         //constrution of corners_ => TODO: get rid of hardcoded 2 dimensions
         corners_ = Eigen::MatrixXd(2, num_nodes);
         for (int node_loc_idx = 0; node_loc_idx < num_nodes; node_loc_idx++){

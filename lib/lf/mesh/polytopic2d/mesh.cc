@@ -264,23 +264,27 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, CellList cells, bool check_comp
 
 lf::mesh::utils::CodimMeshDataSet<PolygonPair> EdgePolygonAdjacency(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr){
     //initialize the CodimMeshDataSet
-    PolygonPair init_pair = std::make_pair(nullptr, nullptr);
+    PolygonPair init_pair = std::make_pair(std::make_pair(nullptr, 0), std::make_pair(nullptr, 0));
     lf::mesh::utils::CodimMeshDataSet<PolygonPair> adjacency(mesh_ptr, 1, init_pair);
 
     //set the values of the DataSet
     //loop over polygons
     for (const lf::mesh::Entity* polygon: mesh_ptr->Entities(0)){
 
+        size_type edge_loc_idx = 0;
         //loop over the polygons edges
         for(const lf::mesh::Entity* edge : polygon->SubEntities(1)){
             PolygonPair &polygon_pair = adjacency(*edge);
-            if(adjacency(*edge).first == nullptr){
-                adjacency(*edge).first = polygon;
-            } else if (adjacency(*edge).second == nullptr){
-                adjacency(*edge).second = polygon;
+            if(adjacency(*edge).first.first == nullptr){
+                adjacency(*edge).first.first = polygon;
+                adjacency(*edge).first.second = edge_loc_idx;
+            } else if (adjacency(*edge).second.first == nullptr){
+                adjacency(*edge).second.first = polygon;
+                adjacency(*edge).second.second = edge_loc_idx;
             } else {
                 LF_VERIFY_MSG(false, "Something went wrong, both pointers of the edge polygon adjacency dataset are already set. An edge can only be adjacent to two polygons.\n");
             }
+            edge_loc_idx++;
         }
     }  
 

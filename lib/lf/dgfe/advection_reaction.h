@@ -30,7 +30,7 @@ public:
                                             EDGESELECTOR boundary_edge, EDGESELECTOR boundary_d_edge,
                                             EDGESELECTOR boundary_minus_edge, unsigned integration_degree)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
-         max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), b_coeff_(std::move(b_coeff)), c_coeff_(std::move(c_coeff)),
+         max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), b_coeff_(b_coeff), c_coeff_(c_coeff),
          boundary_edge_(std::move(boundary_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
          boundary_minus_edge_(std::move(boundary_minus_edge)) {
             LF_VERIFY_MSG(dgfe_space_ptr_ != nullptr, "No DGFE space defined");
@@ -142,7 +142,7 @@ public:
 
                 //get pointer to polygon on other side of edge
                 auto polygon_pair = dgfe_space_ptr_->AdjacentPolygons(edge);
-                auto other_polygon = (polygon_pair.first == &cell) ? polygon_pair.second : polygon_pair.first;
+                auto other_polygon = (polygon_pair.first.first == &cell) ? polygon_pair.second.first : polygon_pair.first.first;
                 //get qr points mapped to other polygon's reference box
                 lf::dgfe::BoundingBox box_other(*other_polygon);
                 Eigen::MatrixXd zeta_box_other{box_other.inverseMap(zeta_global_s)};

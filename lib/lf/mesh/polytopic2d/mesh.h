@@ -68,9 +68,6 @@ class Mesh: public mesh::Mesh {
          * @brief Construction of mesh from information gathered in a MeshFactory
          * @param dim_world Dimension of the ambient space.
          * @param nodes sequential container of node coordinates
-         * @param edges sequential container of pairs of
-         *               (i) vectors of indices of the nodes of an edge
-         *               (ii) pointers to the geometry object describing an edge
          * @param cells sequential container of pairs of
          *               (i) vectors of indices of the nodes of a cell
          *               (ii) pointers to the geometry object for the cell. 
@@ -103,17 +100,18 @@ class Mesh: public mesh::Mesh {
         friend class MeshFactory;
 };
 
-using PolygonPair = std::pair<const lf::mesh::Entity*, const lf::mesh::Entity*>;
+using PolygonPair = std::pair<std::pair<const lf::mesh::Entity*, size_type>, std::pair<const lf::mesh::Entity*, size_type>>;
 
 
 /**
  * @brief Constructs A CodimMeshDataSet that contains the adjacencies of the Segements. Each Segment is adjacent to either two Polygons
- *        (inner Segment) or one Polygon (boundary Segment).
+ *        (inner Segment) or one Polygon (boundary Segment). Returns a pair of pairs. First object of the inner pair
+ *        a pointer to the polygon, the second is the local idx of the edge in that polygon.
  * 
  * @param mesh_ptr The mesh used.
  * @return lf::mesh::utils::CodimMeshDataSet<PolygonPair> The constructed CodimMeshDataSet
  */
-lf::mesh::utils::CodimMeshDataSet<PolygonPair> EdgePolygonAdjacency(std::shared_ptr<lf::mesh::Mesh> mesh_ptr);
+lf::mesh::utils::CodimMeshDataSet<PolygonPair> EdgePolygonAdjacency(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr);
 
 }  // namespace lf::mesh::hybrid2d
 

@@ -9,6 +9,7 @@
 #ifndef DISCONTINUITY_PENALIZATION_H
 #define DISCONTINUITY_PENALIZATION_H
 
+#include "dgfe_space.h"
 #include "integration.h"
 
 namespace lf::dgfe {
@@ -21,15 +22,28 @@ using scalar_t = double;
  * such that the first value in the vector is the area of the triangle 
  * made up by endpoint_0, endpoint_1, and the next node of the polygon in counterclockwise direction
  * 
- * @param cell 
- * @return std::vector<scalar_t> 
+ * @note this only works for convex polygons!
  */
 std::vector<scalar_t> simplexAreas(const lf::mesh::Entity &cell, size_type egde_loc_idx);
 
 
 
+class DiscontinuityPenalization{
+    
+    public:
+        DiscontinuityPenalization(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, scalar_t c_inv_constant, scalar_t c_sigma_constant) : 
+                                dgfe_space_ptr_(std::move(dgfe_space_ptr)), c_inv_const_(c_inv_constant), c_sigma_const_(c_sigma_constant) {}
+
+        scalar_t operator()(const lf::mesh::Entity &edge, scalar_t A_f);
+    
+
+    private:
+        std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr_;
+        scalar_t c_inv_const_;
+        scalar_t c_sigma_const_;
 
 
+};
 
 
 

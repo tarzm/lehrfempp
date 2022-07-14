@@ -79,7 +79,8 @@ while(true)
     vx=Node0(Element0{el},1); vy=Node0(Element0{el},2); nv=length(vx);
     beta = atan2(vy-sum(vy)/nv, vx-sum(vx)/nv);
     beta = mod(beta([2:end 1]) -beta,2*pi);
-    betaIdeal = 2*pi/size(Element0{el},2);
+    working = Element0{el};
+    betaIdeal = 2*pi/size(Element0{el},1);
     Edge = [Element0{el},Element0{el}([2:end 1])];
     cEdge = [cEdge; Edge(beta<Tol*betaIdeal,:)];
   end

@@ -103,7 +103,7 @@ TEST(lf_mesh_factory, Orientations){
 
 //checks whether two PolygonPairs have the same entries neglecting the order
 bool CheckEqualPolygonPair(PolygonPair polypair1, PolygonPair polypair2){
-    return ((polypair1.first == polypair2.first && polypair1.second == polypair2.second) || (polypair1.first == polypair2.second && polypair1.second == polypair2.first));
+    return ((polypair1.first.first == polypair2.first.first && polypair1.second.first == polypair2.second.first) || (polypair1.first.first == polypair2.second.first && polypair1.second.first == polypair2.first.first));
 }
 
 TEST(lf_mesh_factory, EdgePolygonAdjacency){
@@ -117,12 +117,15 @@ TEST(lf_mesh_factory, EdgePolygonAdjacency){
     auto poly3 = mesh_ptr->Entities(0)[3];
     auto poly5 = mesh_ptr->Entities(0)[5];
 
-    auto pair_0_3 = std::make_pair(poly0, poly3);
-    auto pair_5_3 = std::make_pair(poly5, poly3);
-    auto pair_3_5 = std::make_pair(poly3, poly5);
-    auto pair_0_null = std::make_pair(poly0, nullptr);
-    auto pair_null_0 = std::make_pair(nullptr, poly0);
-    auto pair_null_5 = std::make_pair(nullptr, poly5);
+    //dummy idx;
+    size_type i = 1;
+
+    auto pair_0_3 = std::make_pair(std::make_pair(poly0, i), std::make_pair(poly3, i));
+    auto pair_5_3 = std::make_pair(std::make_pair(poly5, i), std::make_pair(poly3, i));
+    auto pair_3_5 = std::make_pair(std::make_pair(poly3, i), std::make_pair(poly5, i));
+    auto pair_0_null = std::make_pair(std::make_pair(poly0, i), std::make_pair(nullptr, i));
+    auto pair_null_0 = std::make_pair(std::make_pair(nullptr, i), std::make_pair(poly0, i));
+    auto pair_null_5 = std::make_pair(std::make_pair(nullptr, i), std::make_pair(poly5, i));
 
     auto edge4 = mesh_ptr->Entities(1)[4];
     auto edge2 = mesh_ptr->Entities(1)[2];
@@ -140,6 +143,20 @@ TEST(lf_mesh_factory, EdgePolygonAdjacency){
     EXPECT_TRUE(CheckEqualPolygonPair( pair_null_5 , adjacency(*edge17) ));
     EXPECT_FALSE(CheckEqualPolygonPair( adjacency(*edge2) , adjacency(*edge12)) );
 
+}
+
+TEST(lf_mesh_factory, flagEntitiesOnBoundary){
+    auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+
+    auto bd_flags = lf::mesh::utils::flagEntitiesOnBoundary(mesh_ptr, 1);
+
+    std::vector<bool> check{true, false, false, false, true, true, false, false, true, true,
+                             false, false, false, false, false, true, true, true, true};
+
+    for (auto edge : mesh_ptr->Entities(1)){
+        auto edge_idx = mesh_ptr->Index(*edge);
+        EXPECT_EQ(bd_flags(*edge), check[edge_idx]) << "Index " << edge_idx << "\n";
+    }
 }
 
 

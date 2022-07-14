@@ -3,8 +3,15 @@ addpath '.\matlab_out'
 
 output_folder = 'matlab_out/';
 
+mesh_sizes = [10 20 40 100 200 400 800 1000 1200 1400 1600 2000 3000 4000];
 
-write_mesh(output_folder, @MbbDomain, 100, 100);
+disp(size(mesh_sizes));
+
+for i = 1:size(mesh_sizes, 2)
+    write_mesh(output_folder, @MbbDomain, mesh_sizes(i), 100);
+    disp("wrote mesh");
+end
+
 
 
 
