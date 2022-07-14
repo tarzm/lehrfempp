@@ -30,7 +30,7 @@ Eigen::VectorXd outwardNormal(const Eigen::MatrixXd edge);
 
 scalar_t euclideanDist(const Eigen::MatrixXd a, const Eigen::MatrixXd b);
 
-scalar_t integrate(Eigen::MatrixXd corners, int degree_x, int degree_y);
+scalar_t integrate(const Eigen::MatrixXd &corners, int degree_x, int degree_y);
 
 
 template<typename SCALAR, typename MESHFUNC>

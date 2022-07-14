@@ -34,7 +34,7 @@ scalar_t euclideanDist(const Eigen::MatrixXd a, const Eigen::MatrixXd b){
     return a_b.norm();
 }
 
-scalar_t integrate(Eigen::MatrixXd &corners, int degree_x, int degree_y){
+scalar_t integrate(const Eigen::MatrixXd &corners, int degree_x, int degree_y){
 
     auto n_cols = corners.cols();
     switch(n_cols){

@@ -25,6 +25,7 @@
 #include "sub_tessellation.h"
 #include "mesh_function_global.h"
 #include "advection_reaction.h"
+#include "discontinuity_penalization.h"
 
 /**
  * @brief Collects data structures and algorithms designed for discontinuous

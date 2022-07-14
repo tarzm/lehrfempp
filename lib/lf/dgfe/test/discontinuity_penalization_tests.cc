@@ -18,12 +18,23 @@
 
 namespace lf::dgfe::test {
 
+TEST(discontinuity_penalization, simplexArea){
 auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(1,1);
 
 for (auto cell : mesh_ptr->Entities(0)){
-    for (auto edge : mesh_ptr->)
+    unsigned edge_loc_idx = 0;
+
+    for (auto edge : cell->SubEntities(1)){
+        auto simplex_areas = lf::dgfe::simplexAreas(*cell, edge_loc_idx);
+
+        for (int i = 0; i < simplex_areas.size(); i++){
+            EXPECT_EQ(simplex_areas[i], 0.125);
+        }
+        edge_loc_idx++;
+    }
 }
 
+}
 
 
 } //namespace lf::dgfe::test
