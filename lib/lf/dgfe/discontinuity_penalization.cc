@@ -37,7 +37,11 @@ std::vector<scalar_t> simplexAreas(const lf::mesh::Entity &cell, size_type egde_
     return result;
 }
 
-scalar_t DiscontinuityPenalization::operator()(const lf::mesh::Entity &edge, scalar_t A_f){
+std::shared_ptr<const lf::dgfe::DGFESpace> DiscontinuityPenalization::dgfeSpace(){
+    return dgfe_space_ptr_;
+}
+
+scalar_t DiscontinuityPenalization::operator()(const lf::mesh::Entity &edge, scalar_t A_f) const {
     LF_VERIFY_MSG(edge.RefEl() == lf::base::RefEl::kSegment(), "Only works for Segments");
 
     //prepare pointers to adjacent polygons

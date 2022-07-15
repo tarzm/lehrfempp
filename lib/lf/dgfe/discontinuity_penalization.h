@@ -34,7 +34,9 @@ class DiscontinuityPenalization{
         DiscontinuityPenalization(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, scalar_t c_inv_constant, scalar_t c_sigma_constant) : 
                                 dgfe_space_ptr_(std::move(dgfe_space_ptr)), c_inv_const_(c_inv_constant), c_sigma_const_(c_sigma_constant) {}
 
-        scalar_t operator()(const lf::mesh::Entity &edge, scalar_t A_f);
+        scalar_t operator()(const lf::mesh::Entity &edge, scalar_t A_f) const ;
+
+        std::shared_ptr<const lf::dgfe::DGFESpace> dgfeSpace();
     
 
     private:

@@ -9,8 +9,9 @@ set(src
   # mesh_function_dgfe_tests.cc
   # sub_tessellation_tests.cc
   # mesh_function_global_tests.cc
-  # advection_reaction_tests.cc
+  advection_reaction_tests.cc
   discontinuity_penalization_tests.cc
+  advection_reaction_diffusion_rhs_tests.cc
 )
 
 add_executable(lf.dgfe.test ${src})
