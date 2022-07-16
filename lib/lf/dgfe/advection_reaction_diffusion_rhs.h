@@ -44,7 +44,7 @@ public:
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
          max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), b_coeff_(b_coeff), a_coeff_(a_coeff),
          boundary_minus_edge_(std::move(boundary_minus_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
-         boundary_n_edge_(std::move(boundary_n_edge)), f_(f), gD_(gD), gN_(gN), disc_pen_(std::move(disc_pen)) {
+         boundary_n_edge_(std::move(boundary_n_edge)), f_(f), gD_(gD), gN_(gN), disc_pen_(disc_pen) {
             LF_VERIFY_MSG(dgfe_space_ptr_ != nullptr, "No DGFE space defined");
             LF_VERIFY_MSG(dgfe_space_ptr_ == disc_pen_.dgfeSpace(), "Space in constructor and space of discontinuity penalization do not match");
     }
@@ -150,7 +150,7 @@ public:
 
                         //std::cout << "Shape of 151: " << get_shape((b[i][0] * normal[0] + b[i][1] * normal[1]) * gD_evaluated[i] * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * w_ref_s[i] * gram_dets_s[i]) << "\n";
 
-                        elem_vec(basis_test) -= (b[i][0] * normal[0] + b[i][1] * normal[1]) * gD_evaluated[i] * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * w_ref_s[i] * gram_dets_s[i];
+                        elem_vec(basis_test) -= (b[i].dot(normal)) * gD_evaluated[i] * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * w_ref_s[i] * gram_dets_s[i];
                     }
                 }
             }
@@ -176,9 +176,9 @@ public:
                         Eigen::Vector2d nabla_v{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
                                                 legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
 
-                        // elem_vec(basis_test) -= gD_evaluated[i] * ( (a_coeff_(cell, zeta_box_s.col(i))[0] *  nabla_v).dot(normal)
-                        //                                              - disc_pen_(*edge, A_F) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) )
-                        //                         * w_ref_s[i] * gram_dets_s[i];
+                        elem_vec(basis_test) -= gD_evaluated[i] * ( (a_coeff_(cell, zeta_box_s.col(i))[0] *  nabla_v).dot(normal)
+                                                                     - disc_pen_(*edge, A_F) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) )
+                                                * w_ref_s[i] * gram_dets_s[i];
                     }
                 }                    
             }

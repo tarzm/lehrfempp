@@ -16,6 +16,7 @@ set(sources
     discontinuity_penalization.h
     discontinuity_penalization.cc
     advection_reaction_diffusion_rhs.h
+    diffusion.h
 )
 
 lf_add_library(lf.dgfe ${sources})
