@@ -44,7 +44,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic> Eval(const lf::mesh::Entity &cell) const{
+    [[nodiscard]] Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic> Eval(const lf::mesh::Entity &cell){
 
         const unsigned n_basis = (max_legendre_degree_ == 1) ? 4 : 9;
         //initialize element matrix
@@ -109,8 +109,8 @@ public:
 
         //loop over cells edges
         for (auto edge : cell.SubEntities(1)){
-            if( boundary_d_edge_(*edge) || ( !boundary_edge_(*edge) && !evaluated_edge_(*edge) ) ){
-            
+            if( (boundary_d_edge_(*edge) ||  !boundary_edge_(*edge)) && !evaluated_edge_(*edge) ){
+
                 //normal n
                 auto normal = lf::dgfe::outwardNormal(lf::geometry::Corners(*(edge->Geometry())));
                 //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
@@ -126,6 +126,10 @@ public:
                 //get pointer to polygon on other side of edge
                 auto polygon_pair = dgfe_space_ptr_->AdjacentPolygons(edge);
                 auto other_polygon = (polygon_pair.first.first == &cell) ? polygon_pair.second.first : polygon_pair.first.first;
+                //if edge is on boundary, other_polygon pointer is just to same cell
+                if (other_polygon == nullptr){
+                    other_polygon = &cell;
+                }
                 //get qr points mapped to other polygon's reference box
                 lf::dgfe::BoundingBox box_other(*other_polygon);
                 Eigen::MatrixXd zeta_box_other{box_other.inverseMap(zeta_global_s)};
@@ -154,6 +158,13 @@ public:
                             Eigen::Vector2d jump_test{legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * normal
                                                      + legendre_basis(basis_test, max_legendre_degree_, zeta_box_other.col(i)) * normal_other};
 
+                            //if edge is on edge_d, the jump operators need to be divided by 2
+                            //because jump operators are evaluated just like there was a polygon on other side of edge
+                            if(other_polygon == &cell){
+                                jump_trial *= 0.5;
+                                jump_test *= 0.5;
+                            }
+
                             //!!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!!
                             elem_mat(basis_trial, basis_test) += disc_pen_(*edge, A_F) * jump_trial.dot(jump_test) * w_ref_s[i] * gram_dets_s[i];
                             //!!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!!
@@ -165,29 +176,26 @@ public:
                             Eigen::Vector2d nabla_test{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
                                                        legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
 
+                            Eigen::Vector2d nabla_trial_other{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) * box_other.inverseJacobi(0),
+                                                              legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) * box_other.inverseJacobi(1)};
 
+                            Eigen::Vector2d nabla_test_other{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_other.col(i)) * box_other.inverseJacobi(0),
+                                                             legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_other.col(i)) * box_other.inverseJacobi(1)};
+                                                            
+                            Eigen::Vector2d average_a_nabla_trial{0.5 * (a_coeff_(cell, zeta_box_s.col(i))[0] * (nabla_trial + nabla_trial_other))};
+
+                            Eigen::Vector2d average_a_nabla_test{0.5 * (a_coeff_(cell, zeta_box_s.col(i))[0] * (nabla_test + nabla_test_other))};
+
+                            elem_mat(basis_trial, basis_test) -= (average_a_nabla_trial.dot(jump_test) * average_a_nabla_test.dot(jump_trial)) * w_ref_s[i] * gram_dets_s[i];
+                            //!!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!!
                         }
                     }
-
                 }
-
-
-            }
+                std::cout << "Got here\n";
+                evaluated_edge_(*edge) = true;
+            } // second and third term if
             edge_sub_idx++;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
         return elem_mat;
     }
 
@@ -205,8 +213,8 @@ private:
     //is true if edge has already been evaluated
     EDGESELECTOR evaluated_edge_;
 
-    lf::utils::CodimMeshDataSet<bool> initialize_evaluated_edge(){
-        lf::mesh::utils::CodimMeshDataSet<PolygonPair> result(dgfe_space_ptr->Mesh(), 1, false);
+    lf::mesh::utils::CodimMeshDataSet<bool> initialize_evaluated_edge(){
+        lf::mesh::utils::CodimMeshDataSet<bool> result(dgfe_space_ptr_->Mesh(), 1, false);
         return result;
     }
 
