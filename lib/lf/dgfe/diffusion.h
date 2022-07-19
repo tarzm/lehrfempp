@@ -191,7 +191,6 @@ public:
                         }
                     }
                 }
-                std::cout << "Got here\n";
                 evaluated_edge_(*edge) = true;
             } // second and third term if
             edge_sub_idx++;

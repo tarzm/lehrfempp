@@ -38,13 +38,13 @@ TEST(advection_reaction_diffusion_full_LSE, basicEvaluationPoisson){
 // mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{0,1,2,3}}, nullptr);
 // auto mesh_ptr = mesh_factory_ptr->Build();
 
-//auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
 
 ////get mesh
-std::filesystem::path here = __FILE__;
-auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_100_cells.vtk";
-lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
-auto mesh_ptr = reader.mesh();
+// std::filesystem::path here = __FILE__;
+// auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_100_cells.vtk";
+// lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
+// auto mesh_ptr = reader.mesh();
 
 //dgfe space
 lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
@@ -133,6 +133,38 @@ for (auto edge : mesh_ptr->Entities(1)){
 }
 std::cout << "\n";
 
+std::cout << "PART OF BOUNDARY D:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_d_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
+
+std::cout << "PART OF BOUNDARY N:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_n_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
+
+std::cout << "PART OF BOUNDARY minus:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_minus_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
+
+std::cout << "PART OF BOUNDARY plus:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_plus_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
+
     
 //----------------------END PREPARE BOUNDARY EDGE SETS------------------------
 
@@ -151,63 +183,81 @@ lf::dgfe::MeshFunctionGlobalDGFE m_f{f_lambda};
 //----------------------END PREPARE PRESCRIBED FUNCTIONS------------------------
 
 //----------------------ASSEMBLE GALERKIN MATRIX------------------------
+
 double c_inv = 0.5;
 double c_sigma = 2.0;
-lf::dgfe::DiscontinuityPenalization disc_pen(dgfe_space_ptr, c_inv, c_sigma);
-unsigned n_dofs = dgfe_space_ptr->LocGlobMap().NumDofs();
-//initialization of advection reaction element matrix provider
-lf::dgfe::AdvectionReactionElementMatrixProvider<double, decltype(m_b_coeff), decltype(m_c_coeff), decltype(boundary_edge)>
-                 advectionReactionProvider(dgfe_space_ptr, m_b_coeff, m_c_coeff, boundary_edge, boundary_d_edge, boundary_minus_edge, 10);
 
-//initialization of diffusion element matrix provider
-lf::dgfe::DiffusionElementMatrixProvider<double, decltype(m_a_coeff), decltype(boundary_edge)>
-                    diffusionProvider(dgfe_space_ptr, m_a_coeff, boundary_edge, boundary_d_edge, 10, disc_pen);
-//galerkin matrix initialization
-lf::assemble::COOMatrix<double> A(n_dofs, n_dofs);
-A.setZero();
-//assemble galerkin matrix
-lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), advectionReactionProvider, A);
-lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), diffusionProvider, A);
-//----------------------END ASSEMBLE GALERKIN MATRIX------------------------
+double smallest_error = 20.0;
+double smallest_c_inv = 10.0;
+double smallest_c_sigma = 10.0;
 
+for (c_inv = 0.05; c_inv < 2.0; c_inv += 0.05){
+    for (c_sigma = 0.3; c_sigma < 15.0; c_sigma += 0.3){
+        lf::dgfe::DiscontinuityPenalization disc_pen(dgfe_space_ptr, c_inv, c_sigma);
+        unsigned n_dofs = dgfe_space_ptr->LocGlobMap().NumDofs();
+        //initialization of advection reaction element matrix provider
+        lf::dgfe::AdvectionReactionElementMatrixProvider<double, decltype(m_b_coeff), decltype(m_c_coeff), decltype(boundary_edge)>
+                        advectionReactionProvider(dgfe_space_ptr, m_b_coeff, m_c_coeff, boundary_edge, boundary_d_edge, boundary_minus_edge, 10);
 
-//----------------------ASSEMBLE RHS------------------------
-//initialization of element vector provider
-lf::dgfe::AdvectionReactionDiffusionRHS<double, decltype(m_a_coeff), decltype(m_b_coeff), decltype(boundary_minus_edge), decltype(m_f), decltype(m_gD), decltype(m_f)>
-                        advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_f, m_a_coeff, m_b_coeff, boundary_minus_edge, boundary_d_edge, boundary_n_edge, 10, disc_pen);
-//rhs initialization
-Eigen::VectorXd rhs(n_dofs);
-rhs.setZero();
-//assemble rhs vector
-lf::assemble::AssembleVectorLocally(0, dgfe_space_ptr->LocGlobMap(), advectionReactionDiffusionRHS, rhs);
-//----------------------END ASSEMBLE RHS------------------------
+        //initialization of diffusion element matrix provider
+        lf::dgfe::DiffusionElementMatrixProvider<double, decltype(m_a_coeff), decltype(boundary_edge)>
+                            diffusionProvider(dgfe_space_ptr, m_a_coeff, boundary_edge, boundary_d_edge, 10, disc_pen);
+        //galerkin matrix initialization
+        lf::assemble::COOMatrix<double> A(n_dofs, n_dofs);
+        A.setZero();
+        //assemble galerkin matrix
+        lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), advectionReactionProvider, A);
+        lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), diffusionProvider, A);
+        //----------------------END ASSEMBLE GALERKIN MATRIX------------------------
 
 
-// //----------------------SOLVE LSE------------------------
-// Eigen::SparseMatrix<double> A_crs = A.makeSparse();
-// Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-// solver.compute(A_crs);
-// LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");
-// Eigen::VectorXd sol_vec = solver.solve(rhs);
-// LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
-// //----------------------END SOLVE LSE------------------------
+        //----------------------ASSEMBLE RHS------------------------
+        //initialization of element vector provider
+        lf::dgfe::AdvectionReactionDiffusionRHS<double, decltype(m_a_coeff), decltype(m_b_coeff), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_f)>
+                                advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_f, m_a_coeff, m_b_coeff, boundary_minus_edge, boundary_d_edge, boundary_n_edge, 10, disc_pen);
+        //rhs initialization
+        Eigen::VectorXd rhs(n_dofs);
+        rhs.setZero();
+        //assemble rhs vector
+        lf::assemble::AssembleVectorLocally(0, dgfe_space_ptr->LocGlobMap(), advectionReactionDiffusionRHS, rhs);
+        //----------------------END ASSEMBLE RHS------------------------
 
-Eigen::SparseMatrix<double> A_crs = A.makeSparse();
-Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
-solver.compute(A_crs);
-LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");
-Eigen::VectorXd sol_vec = solver.solve(rhs);
-LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
 
-//----------------------MESH FUNCTION AND ERROR CALCULATION------------------------
-lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
+        // //----------------------SOLVE LSE------------------------
+        // Eigen::SparseMatrix<double> A_crs = A.makeSparse();
+        // Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+        // solver.compute(A_crs);
+        // LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");
+        // Eigen::VectorXd sol_vec = solver.solve(rhs);
+        // LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
+        // //----------------------END SOLVE LSE------------------------
 
-//calculate with mesh function error function
-double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(m_gD)>(dgfe_mesh_function, m_gD, 17);
+        Eigen::SparseMatrix<double> A_crs = A.makeSparse();
+        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+        solver.compute(A_crs);
+        LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");
+        Eigen::VectorXd sol_vec = solver.solve(rhs);
+        LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
 
-std::cout << "Mesh Function error: " << mesh_func_l2_error << "\n";
-std::cout << "C_inv: " << c_inv << " and C_sigma: " << c_sigma << "\n";
+        //----------------------MESH FUNCTION AND ERROR CALCULATION------------------------
+        lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
 
+        //calculate with mesh function error function
+        double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(m_gD)>(dgfe_mesh_function, m_gD, 17);
+
+        std::cout << "Mesh Function error: " << mesh_func_l2_error;
+        std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << "\n\n";
+
+        if (mesh_func_l2_error < smallest_error){
+            smallest_error = mesh_func_l2_error;
+            smallest_c_inv = c_inv;
+            smallest_c_sigma = c_sigma;
+        }
+    }
+}
+
+std::cout << "SMALLEST Mesh Function error: " << smallest_error;
+        std::cout << " with C_inv: " << smallest_c_inv << " and C_sigma: " << smallest_c_sigma << "\n\n";
 }
 
 
