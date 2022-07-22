@@ -95,7 +95,7 @@ SCALAR L2ErrorSubTessellation(lf::dgfe::MeshFunctionDGFE<SCALAR> dgfe_function, 
         auto f_res = f(entity, local);
         std::vector<SCALAR> result(local.cols());
         for (int i = 0; i < local.cols(); i++){
-            result[i] = std::abs(dgfe_res[i] - f_res[i]);
+            result[i] = (dgfe_res[i] - f_res[i]) * (dgfe_res[i] - f_res[i]);
         }
         return result;
     };

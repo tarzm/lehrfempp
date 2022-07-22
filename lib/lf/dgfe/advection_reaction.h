@@ -51,7 +51,6 @@ public:
         Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic> elem_mat(n_basis, n_basis);
         elem_mat.setZero();
 
-
         //local - global mapping
         lf::dgfe::BoundingBox box(cell);
 
@@ -60,30 +59,30 @@ public:
 
         //quadrule setup
         const lf::quad::QuadRule qr_t = qr_cache_.Get(lf::base::RefEl::kTria(), integration_degree_);
-        //get sub-tessellation
-        auto sub_tessellation = subTessellation(&cell);
         // qr points
         const Eigen::MatrixXd zeta_ref_t{qr_t.Points()};
         //weights
         Eigen::VectorXd w_ref_t{qr_t.Weights()};
 
+        //get sub-tessellation of cell
+        auto sub_tessellation = subTessellation(&cell);
 
         //loop over triangles in the sub-tessellation
         for(auto& tria_geo_ptr : sub_tessellation){
-            // qr points mapped to triangle
+            // qr points mapped to global triangle
             Eigen::MatrixXd zeta_global_t{tria_geo_ptr->Global(zeta_ref_t)};
             // qr points mapped back into reference bounding box to retrieve values
             Eigen::MatrixXd zeta_box_t{box.inverseMap(zeta_global_t)};
             //gramian determinants
             Eigen::VectorXd gram_dets_t{tria_geo_ptr->IntegrationElement(zeta_ref_t)};
-
+            //evaluation of the coefficient functions at qr points
             auto b = b_coeff_(cell, zeta_box_t);
             auto c = c_coeff_(cell, zeta_box_t);
+
             //loop over basis functions in trial space
             for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
-                //loop over bsis functions in test space
+                //loop over basis functions in test space
                 for(int basis_test = 0; basis_test < n_basis; basis_test++){
-
                     //sum over qr points
                     for (int i = 0; i < gram_dets_t.size(); i++){
                         //first part [nabla (b * w) + c*w] * v
@@ -93,7 +92,6 @@ public:
                                                              * legendre_basis(basis_test, max_legendre_degree_, zeta_box_t.col(i))
                                                              * w_ref_t[i] * gram_dets_t[i];
                     }
-
                 }
             }
         }
@@ -117,19 +115,20 @@ public:
             //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
             normal *= (int) (cell.RelativeOrientations()[edge_sub_idx]);
 
-            // qr points mapped to segment
+            // qr points mapped to gobal edge
             Eigen::MatrixXd zeta_global_s{edge->Geometry()->Global(zeta_ref_s)};
             // qr points mapped back into reference bounding box to retrieve values
             Eigen::MatrixXd zeta_box_s{box.inverseMap(zeta_global_s)};
             //gramian determinants
             Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
-
+            
+            //coefficient evaluated at qr points
             auto b = b_coeff_(cell, zeta_box_s);
 
             //check wether weigthed sum of qr points satisfies
             //    (b(x) * n(x) < 0)
             //=> if so, edge belongs to the delta_minus_k set
-            double sum;
+            double sum = 0.0;
             for (int i = 0; i < gram_dets_s.size(); i++){
                 sum += b[i].dot(normal) * w_ref_s[i] * gram_dets_s[i];
             }
@@ -154,15 +153,13 @@ public:
 
                         //sum over qr points
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            elem_mat(basis_trial, basis_test) -=  (b[i][0] * normal[0] + b[i][1] * normal[1])
+                            elem_mat(basis_trial, basis_test) -=  (b[i].dot(normal))
                                                                 * ( legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i))
                                                                     - legendre_basis(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) )
                                                                 * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
                                                                 * w_ref_s[i] * gram_dets_s[i];
-                    
                         }
                     }
-
                 }
             }
             // !!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!
@@ -178,7 +175,7 @@ public:
 
                         //sum over qr points
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            elem_mat(basis_trial, basis_test) -=  (b[i][0] * normal[0] + b[i][1] * normal[1])
+                            elem_mat(basis_trial, basis_test) -= (b[i].dot(normal))
                                                                 * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i))
                                                                 * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
                                                                 * w_ref_s[i] * gram_dets_s[i];
@@ -189,16 +186,8 @@ public:
             }
             edge_sub_idx++;
         }
-
-
-
-
-
         return elem_mat;
     }
-
-
-
 
 private:
     std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr_;

@@ -49,7 +49,6 @@ scalar_t legendre_polynomial_dx(size_type n, scalar_t x){
 }
 
 scalar_t legendre_polynomial_2D(size_type degree_x, size_type degree_y, const Eigen::Vector2d &coord){
-    //return lf::fe::legendre(degree_x, coord[0], 1) * lf::fe::legendre(degree_y, coord[1], 1);
     return legendre_polynomial(degree_x, coord[0]) * legendre_polynomial(degree_y, coord[1]);
 }
 

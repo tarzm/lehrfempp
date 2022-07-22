@@ -147,9 +147,6 @@ public:
                 for(int basis_test = 0; basis_test < n_basis; basis_test++){
                     //sum over qr points
                     for (int i = 0; i < gram_dets_s.size(); i++){
-
-                        //std::cout << "Shape of 151: " << get_shape((b[i][0] * normal[0] + b[i][1] * normal[1]) * gD_evaluated[i] * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * w_ref_s[i] * gram_dets_s[i]) << "\n";
-
                         elem_vec(basis_test) -= (b[i].dot(normal)) * gD_evaluated[i] * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * w_ref_s[i] * gram_dets_s[i];
                     }
                 }

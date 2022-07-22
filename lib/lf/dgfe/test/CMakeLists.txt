@@ -11,9 +11,9 @@ set(src
   # mesh_function_global_tests.cc
   #advection_reaction_tests.cc
   #discontinuity_penalization_tests.cc
-  #diffusion_tests.cc
+  diffusion_tests.cc
   #advection_reaction_diffusion_rhs_tests.cc
-  advection_reaction_diffusion_tests.cc
+  #advection_reaction_diffusion_tests.cc
 )
 
 add_executable(lf.dgfe.test ${src})
