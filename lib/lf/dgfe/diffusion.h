@@ -331,18 +331,6 @@ public:
             //gramian determinants
             Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
 
-            //get pointer to polygon on other side of edge
-            // auto polygon_pair = dgfe_space_ptr_->AdjacentPolygons(edge);
-            // auto other_polygon = (polygon_pair.first.first == &cell) ? polygon_pair.second.first : polygon_pair.first.first;
-            // //if edge is on boundary, other_polygon pointer is just to same cell
-            // if (other_polygon == nullptr){
-            //     other_polygon = &cell;
-            // }
-            // //get qr points mapped to other polygon's reference box
-            // lf::dgfe::BoundingBox box_other(*other_polygon);
-            // Eigen::MatrixXd zeta_box_other{box_other.inverseMap(zeta_global_s)};
-            // Eigen::Vector2d normal_other = normal *= -1.0;
-
             //calculate A_F
             Eigen::MatrixXd A_F_mat = Eigen::MatrixXd::Zero(2, gram_dets_s.size());
             for (int i = 0; i < gram_dets_s.size(); i++){
@@ -351,155 +339,92 @@ public:
             SCALAR A_F = A_F_mat.lpNorm<Eigen::Infinity>();
             A_F = A_F * A_F;
 
+            //discontinuity penalization
+            auto disc_pen = disc_pen_(*edge, A_F);
+
+            //!!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!!
             if (!boundary_edge_(*edge)){
                 
-                lf::mesh::Entity const *polygon_pointers[] = {polygon_pair.first.first, polygon_pair.second.first};
-                size_type edge_sub_indices[] = {polygon_pair.first.second, polygon_pair.second.second};
+                //pointers to adjacent polygons and the edge's local index in those
+                auto polygon_plus = polygon_pair.first.first;
+                auto polygon_minus = polygon_pair.second.first;
+                auto edge_sub_idx_plus = polygon_pair.first.second;
+                auto edge_sub_idx_minus = polygon_pair.second.second;
 
-                for (int m = 0; m < 2; m++){
-                    for (int n = 0; n < 2; n++){
-                        elem_mat.setZero();
+                //dof info
+                nonstd::span<const Eigen::Index> dof_plus(dofhandler.GlobalDofIndices(*polygon_plus));
+                nonstd::span<const Eigen::Index> dof_minus(dofhandler.GlobalDofIndices(*polygon_minus));
 
-                        auto polygon_0 = polygon_pointers[m];
-                        auto polygon_1 = polygon_pointers[n];
-                        auto edge_sub_idx_0 = edge_sub_indices[m];
-                        auto edge_sub_idx_1 = edge_sub_indices[n];
+                //local - global mappings
+                lf::dgfe::BoundingBox box_plus(*polygon_plus);
+                lf::dgfe::BoundingBox box_minus(*polygon_minus);
 
-                        //local - global mappings
-                        lf::dgfe::BoundingBox box_0(*polygon_0);
-                        lf::dgfe::BoundingBox box_1(*polygon_1);
-
-                        //mapped qr points
-                        Eigen::MatrixXd zeta_box_0{box_0.inverseMap(zeta_global_s)};
-                        Eigen::MatrixXd zeta_box_1{box_1.inverseMap(zeta_global_s)};
-
-                        auto normal_0 = lf::dgfe::outwardNormal(lf::geometry::Corners(*(edge->Geometry())));
-                        //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
-                        normal_0 *= (int) (polygon_0->RelativeOrientations()[edge_sub_idx_0]);
-                        auto normal_1 = -1.0 * normal_0;
-
-                        //loop over basis functions in trial space
-                        for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
-                            //loop over bsis functions in test space
-                            for(int basis_test = 0; basis_test < n_basis; basis_test++){
-
-                                //sum over qr points
-                                for (int i = 0; i < gram_dets_s.size(); i++){
-
-                                    Eigen::Vector2d jump_trial{legendre_basis(basis_trial, max_legendre_degree_, zeta_box_0.col(i)) * normal_0
-                                                            + legendre_basis(basis_trial, max_legendre_degree_, zeta_box_1.col(i)) * normal_1};
-                                    
-                                    Eigen::Vector2d jump_test{legendre_basis(basis_test, max_legendre_degree_, zeta_box_0.col(i)) * normal_0
-                                                            + legendre_basis(basis_test, max_legendre_degree_, zeta_box_1.col(i)) * normal_1};
-
-                                    //!!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!!
-                                    elem_mat(basis_trial, basis_test) += disc_pen_(*edge, A_F) * jump_trial.dot(jump_test) * w_ref_s[i] * gram_dets_s[i];
-                                    //!!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!!
-                                    
-                                    //!!!!!!!!!!!!! THIRD TERM !!!!!!!!!!!!!!
-                                    Eigen::Vector2d nabla_trial{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_0.col(i)) * box_0.inverseJacobi(0),
-                                                                legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_0.col(i)) * box_0.inverseJacobi(1)};
-
-                                    Eigen::Vector2d nabla_test{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_0.col(i)) * box_0.inverseJacobi(0),
-                                                            legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_0.col(i)) * box_0.inverseJacobi(1)};
-
-                                    Eigen::Vector2d nabla_trial_other{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_1.col(i)) * box_1.inverseJacobi(0),
-                                                                    legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_1.col(i)) * box_1.inverseJacobi(1)};
-
-                                    Eigen::Vector2d nabla_test_other{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_1.col(i)) * box_1.inverseJacobi(0),
-                                                                    legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_1.col(i)) * box_1.inverseJacobi(1)};
-                                                                    
-                                    Eigen::Vector2d average_a_nabla_trial{0.5 * (a_coeff_(cell, zeta_box_0.col(i))[0] * (nabla_trial + nabla_trial_other))};
-
-                                    Eigen::Vector2d average_a_nabla_test{0.5 * (a_coeff_(cell, zeta_box_0.col(i))[0] * (nabla_test + nabla_test_other))};
-
-                                    elem_mat(basis_trial, basis_test) -= (average_a_nabla_trial.dot(jump_test) * average_a_nabla_test.dot(jump_trial)) * w_ref_s[i] * gram_dets_s[i];
-                                    //!!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!!
-                                }
-                            }
-                        }
-
-                        // row indices of for contributions of cells
-                        nonstd::span<const Eigen::Index> row_idx(dofhandler.GlobalDofIndices(*polygon_0));
-                        // Column indices of for contributions of cells
-                        nonstd::span<const Eigen::Index> col_idx(dofhandler.GlobalDofIndices(*polygon_1));
-                        //assembly double loop
-                        for (int i = 0; i < n_basis; i++) {
-                            for (int j = 0; j < n_basis; j++) {
-                            // Add the element at position (i,j) of the local matrix
-                            // to the entry at (row_idx[i], col_idx[j]) of the global matrix
-                            matrix.AddToEntry(row_idx[i], col_idx[j], elem_mat(i, j));
-                            }
-                        }  // end assembly local double loop
-                    }
-                }
-
-
-            }
-
-            //loop over boundary_d_edges
-            if (boundary_d_edge_(*edge)){
-                elem_mat.setZero();
+                //mapped qr points to respective bounding box
+                Eigen::MatrixXd zeta_box_plus{box_plus.inverseMap(zeta_global_s)};
+                Eigen::MatrixXd zeta_box_minus{box_minus.inverseMap(zeta_global_s)};
 
                 //loop over basis functions in trial space
                 for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
                     //loop over bsis functions in test space
                     for(int basis_test = 0; basis_test < n_basis; basis_test++){
-
-                        //sum over qr points
+                        
+                        //First, test functions on plus side are nonzero
+                        SCALAR sum = 0.0;
+                        //plus side trial dofs
                         for (int i = 0; i < gram_dets_s.size(); i++){
-
-                            Eigen::Vector2d jump_trial{legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal
-                                                     + legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal};
-                            
-                            Eigen::Vector2d jump_test{legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * normal
-                                                     + legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * normal};
-                            
-                            //because it is a boundary edge
-                            jump_trial *= 0.5;
-                            jump_test *= 0.5;
-
-                            //!!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!!
-                            elem_mat(basis_trial, basis_test) += disc_pen_(*edge, A_F) * jump_trial.dot(jump_test) * w_ref_s[i] * gram_dets_s[i];
-                            //!!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!!
-                            
-                            //!!!!!!!!!!!!! THIRD TERM !!!!!!!!!!!!!!
-                            Eigen::Vector2d nabla_trial{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
-                                                        legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
-
-                            Eigen::Vector2d nabla_test{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
-                                                       legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
-
-                            Eigen::Vector2d nabla_trial_other{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
-                                                              legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
-
-                            Eigen::Vector2d nabla_test_other{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
-                                                             legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
-                                                            
-                            Eigen::Vector2d average_a_nabla_trial{0.5 * (a_coeff_(cell, zeta_box_s.col(i))[0] * (nabla_trial + nabla_trial_other))};
-
-                            Eigen::Vector2d average_a_nabla_test{0.5 * (a_coeff_(cell, zeta_box_s.col(i))[0] * (nabla_test + nabla_test_other))};
-
-                            elem_mat(basis_trial, basis_test) -= (average_a_nabla_trial.dot(jump_test) * average_a_nabla_test.dot(jump_trial)) * w_ref_s[i] * gram_dets_s[i];
-                            //!!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!!
+                            sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i))
+                                    * w_ref_s[i] * gram_dets_s[i];
                         }
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum * disc_pen);
+                        sum = 0.0;
+                        //minus side trial dofs
+                        for (int i = 0; i < gram_dets_s.size(); i++){
+                            sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i))
+                                    * w_ref_s[i] * gram_dets_s[i];
+                        }
+                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -sum * disc_pen);
+
+                        //Second, test functions on minus side are nonzero
+                        sum = 0.0;
+                        //plus side trial dofs
+                        for (int i = 0; i < gram_dets_s.size(); i++){
+                            sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i))
+                                    * w_ref_s[i] * gram_dets_s[i];
+                        }
+                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -sum * disc_pen);
+                        sum = 0.0;
+                        //minus side trial dofs
+                        for (int i = 0; i < gram_dets_s.size(); i++){
+                            sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i))
+                                    * w_ref_s[i] * gram_dets_s[i];
+                        }
+                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], sum * disc_pen);
                     }
                 }
-                // row indices of for contributions of cells
-                nonstd::span<const Eigen::Index> row_idx(dofhandler.GlobalDofIndices(cell));
-                // Column indices of for contributions of cells
-                nonstd::span<const Eigen::Index> col_idx(dofhandler.GlobalDofIndices(cell));
-                //assembly double loop
-                for (int i = 0; i < n_basis; i++) {
-                    for (int j = 0; j < n_basis; j++) {
-                    // Add the element at position (i,j) of the local matrix
-                    // to the entry at (row_idx[i], col_idx[j]) of the global matrix
-                    matrix.AddToEntry(row_idx[i], col_idx[j], elem_mat(i, j));
-                    }
-                }  // end assembly local double loop
-
-
             }
+            //still second term but for boundary edges => simpler expression
+            if (boundary_d_edge_(*edge)){
+
+                auto polygon_plus = polygon_pair.first.first;
+                //dof info
+                nonstd::span<const Eigen::Index> dof_plus(dofhandler.GlobalDofIndices(*polygon_plus));
+                
+                //loop over basis functions in trial space
+                for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
+                    //loop over bsis functions in test space
+                    for(int basis_test = 0; basis_test < n_basis; basis_test++){
+
+                        SCALAR sum = 0.0;
+                        //sum over qr points
+                        for (int i = 0; i < gram_dets_s.size(); i++){
+                            sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
+                                    * w_ref_s[i] * gram_dets_s[i];
+                        }
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum * disc_pen);
+                    }
+                }
+            }
+            //!!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!!
         }
     }
 
