@@ -471,7 +471,7 @@ public:
                             sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -481,7 +481,7 @@ public:
                             sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -491,7 +491,7 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -501,11 +501,11 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_minus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -0.5 * sum);
 
                         //Secondly, test functions on minus side are nonzero
                         ////////////////////////////////////////////////////
-                        sum = 0.0
+                        sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
                                                              legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
@@ -513,7 +513,7 @@ public:
                             sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_minus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -523,7 +523,7 @@ public:
                             sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_minus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -533,7 +533,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -543,10 +543,44 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_minus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], -0.5 * sum);
                     }
                 }
+                std::cout << "Insider third term, on interior edge\n";
             }
+
+            //still third term but for boundary edges => simpler expression
+            if (boundary_d_edge_(*edge)){
+
+                auto polygon_plus = polygon_pair.first.first;
+                //dof info
+                nonstd::span<const Eigen::Index> dof_plus(dofhandler.GlobalDofIndices(*polygon_plus));
+                
+                //loop over basis functions in trial space
+                for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
+                    //loop over bsis functions in test space
+                    for(int basis_test = 0; basis_test < n_basis; basis_test++){
+
+                        SCALAR sum = 0.0;
+                        //sum over qr points
+                        for (int i = 0; i < gram_dets_s.size(); i++){
+                            
+                            Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
+                                                             legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
+
+                            Eigen::Vector2d nabla_test_plus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
+                                                            legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
+
+                            sum +=      (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * normal)
+                                    +   (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal)
+                                    * w_ref_s[i] * gram_dets_s[i];
+                        }
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -sum);
+                    }
+                }
+                std::cout << "Insider third term, on d boundary\n";
+            }
+                
 
 
         }
