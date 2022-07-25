@@ -126,13 +126,13 @@ TEST(diffusion_assembler, fullDiffusionLSE){
 // mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{0,1,2,3}}, nullptr);
 // auto mesh_ptr = mesh_factory_ptr->Build();
 
-auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+// auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
 
-////get mesh
-// std::filesystem::path here = __FILE__;
-// auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_100_cells.vtk";
-// lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
-// auto mesh_ptr = reader.mesh();
+//get mesh
+std::filesystem::path here = __FILE__;
+auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk";
+lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
+auto mesh_ptr = reader.mesh();
 
 //dgfe space
 lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
@@ -279,6 +279,9 @@ double smallest_error = 20.0;
 double smallest_c_inv = 10.0;
 double smallest_c_sigma = 10.0;
 
+for (c_inv = 0.05; c_inv < 0.5; c_inv += 0.1){
+    for (c_sigma = 5.0; c_sigma < 12.0; c_sigma ++){
+
 lf::dgfe::DiscontinuityPenalization disc_pen(dgfe_space_ptr, c_inv, c_sigma);
 unsigned n_dofs = dgfe_space_ptr->LocGlobMap().NumDofs();
 //initialization of advection reaction element matrix provider
@@ -342,6 +345,8 @@ if (mesh_func_l2_error < smallest_error){
     smallest_c_sigma = c_sigma;
 }
 
+}
+}
 
 std::cout << "SMALLEST Mesh Function error: " << smallest_error;
         std::cout << " with C_inv: " << smallest_c_inv << " and C_sigma: " << smallest_c_sigma << "\n\n";

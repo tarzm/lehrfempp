@@ -546,7 +546,6 @@ public:
                         matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], -0.5 * sum);
                     }
                 }
-                std::cout << "Insider third term, on interior edge\n";
             }
 
             //still third term but for boundary edges => simpler expression
@@ -578,7 +577,6 @@ public:
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -sum);
                     }
                 }
-                std::cout << "Insider third term, on d boundary\n";
             }
                 
 
