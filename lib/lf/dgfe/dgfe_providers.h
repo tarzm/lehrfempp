@@ -382,10 +382,11 @@ class L2ProjectionSqrtANablaBasisLoadVector {
             Eigen::MatrixXd zeta_box{box.inverseMap(zeta_global)};
             //gramian determinants
             Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
-            //loop over basis functions
-
+            
+            //diffusion tensor evaluated at qr points
             auto a_eval = a_coeff_(cell, zeta_box);
 
+            //loop over basis functions
             for (int basis = 0; basis < vector_size; basis++){
 
                 //sum over qr points
@@ -400,19 +401,17 @@ class L2ProjectionSqrtANablaBasisLoadVector {
         return elem_vec;
     }
 
-  ~L2ProjectionSqrtANablaBasisLoadVector() = default;
-
  private:
-  /** @brief An object providing the diffusion tensor */
-  MESH_FUNCTION a_coeff_;
+    /** @brief An object providing the diffusion tensor */
+    MESH_FUNCTION a_coeff_;
 
-  std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_;
+    std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_;
 
-  lf::quad::QuadRuleCache qr_cache_;
+    lf::quad::QuadRuleCache qr_cache_;
 
-  unsigned max_legendre_degree_;
+    unsigned max_legendre_degree_;
     //spefifying whether 0th or 1st dimension of the gradient vector is calculated
-  unsigned dim_;
+    unsigned dim_;
 };
 
 

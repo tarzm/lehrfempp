@@ -25,7 +25,6 @@ namespace lf::dgfe {
  * @brief computes the orthogonal L2 Projection of sqrt(a) * nabla_basis onto the discrete function space V^h
  * 
  * @tparam SCALAR scalar type of the function
- * @param elem_mat a placeholder for the local mass matrix
  * @param zeta_box_t the qr points used for integration mapped to the corresponding polygon
  * @param gram_dets_t gramian determinants used for quadrature rule
  * @param w_ref_t the weights of the quadrature rule

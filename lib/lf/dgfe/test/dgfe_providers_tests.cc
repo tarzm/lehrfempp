@@ -274,7 +274,7 @@ TEST(dgfe_subTessellation_providers, singleSquareO2LoadElementVectorST){
     Eigen::VectorXd rhs(dofhandler.NumDofs());
     rhs.setZero();
     //initialization of vector provider
-    lf::dgfe::DGFELoadElementVectorProvider<double, decltype(load_lambda)> vec_provider(dgfe_space_ptr, lambda_msh_funct);
+    lf::dgfe::DGFELoadElementVectorProvider<double, decltype(lambda_msh_funct)> vec_provider(dgfe_space_ptr, lambda_msh_funct);
     //assemble load vector
     lf::assemble::AssembleVectorLocally(0, dofhandler, vec_provider, rhs);
 
@@ -359,7 +359,68 @@ TEST(dgfe_subTessellation_providers, massMatrixmeshFunction){
     std::cout << "The error of the solution via MeshFunction is: " << mesh_func_l2_error << "\n";
 }
 
-TEST(L2ProjectionSqrtANablaBasisLoadVector, simpleSquare)
+TEST(L2ProjectionSqrtANablaBasisLoadVector, simpleSquare){
+    //UNIT SQUARE SINGLE POLYGON MESH--------------------
+    using coord_t = Eigen::Vector2d;
+    using size_type = lf::mesh::Mesh::size_type;
+    double scale = 1.0;
+    std::unique_ptr<lf::mesh::polytopic2d::MeshFactory> mesh_factory_ptr = std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2);
+    mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 0.0 * scale}));
+    mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 0.0 * scale}));
+    mesh_factory_ptr->AddPoint(coord_t({1.0 * scale, 1.0 * scale}));
+    mesh_factory_ptr->AddPoint(coord_t({0.0 * scale, 1.0 * scale}));
+    mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{0,1,2,3}}, nullptr);
+    auto mesh_ptr = mesh_factory_ptr->Build();
+
+    //setup dgfe space
+    std::shared_ptr<lf::dgfe::DGFESpace> dgfe_space_ptr(new lf::dgfe::DGFESpace(mesh_ptr, 2));
+    unsigned n_dofs = dgfe_space_ptr->LocGlobMap().NumDofs();
+
+    // 2x2 diffusion tensor A(x)
+    auto a_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Matrix<double, 2, 2> {
+        return (Eigen::Matrix<double, 2, 2>() << 0.0, 0.0, 0.0, 0.0).finished();
+    };
+    lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
+
+    //l2 projection load vector provider setup
+    lf::dgfe::L2ProjectionSqrtANablaBasisLoadVector<double, decltype(m_a_coeff)> l2_projection_provider_0(dgfe_space_ptr, m_a_coeff, 0);
+    lf::dgfe::L2ProjectionSqrtANablaBasisLoadVector<double, decltype(m_a_coeff)> l2_projection_provider_1(dgfe_space_ptr, m_a_coeff, 1);
+
+    //initialization of element matrix provider
+    lf::dgfe::DGFEMassElementMatrixST<double> massMatrixProvider(10, 2); 
+
+    //galerkin matrix initialization
+    lf::assemble::COOMatrix<double> M(n_dofs, n_dofs);
+    M.setZero();
+
+    //assemble mass matrix
+    lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), massMatrixProvider, M);
+
+    //rhs setup
+    Eigen::VectorXd rhs_0(n_dofs);
+    Eigen::VectorXd rhs_1(n_dofs);
+    rhs_0.setZero();
+    rhs_1.setZero(); 
+
+    //assemble both rhs vectors
+    lf::assemble::AssembleVectorLocally(0, dgfe_space_ptr->LocGlobMap(), l2_projection_provider_0, rhs_0);
+    lf::assemble::AssembleVectorLocally(0, dgfe_space_ptr->LocGlobMap(), l2_projection_provider_1, rhs_1);
+
+    //solve LSE
+    Eigen::SparseMatrix<double> M_crs = M.makeSparse();
+    Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+    solver.compute(M_crs);
+    LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");
+    Eigen::VectorXd sol_vec_0 = solver.solve(rhs_0);
+    LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
+    Eigen::VectorXd sol_vec_1 = solver.solve(rhs_1);
+    LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
+
+
+
+
+
+}
 
 // TEST(dgfe_O1_providers, O1massMatrixAnd01LocalLoadVector){
 
