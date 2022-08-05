@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 #used if no GUI is available
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 
 #fix figure size
-#plt.rcParams['figure.figsize'] = [50, 50]
+plt.rcParams['figure.figsize'] = [20, 20]
 
 if len(argv) < 2:
     print('usage: python plot_mesh.py mesh.csv')
@@ -114,7 +114,7 @@ plot_cells(polygons)
 
 plt.axis('off')
 
-out_file = "Mesh.png"
+out_file = "polytopicTestMesh2.png"
 
-plt.show()
-#plt.savefig(out_file, bbox_inches='tight')
+#plt.show()
+plt.savefig(out_file, bbox_inches='tight')

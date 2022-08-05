@@ -191,6 +191,7 @@ class DGFEMassElementMatrixST {
         unsigned max_legendre_degree_;
 };
 
+
 /**
  * @ingroup entity_vector_provider
  * @headerfile lf/dgfe/dgfe.h
@@ -213,7 +214,7 @@ class DGFEMassElementMatrixST {
  * This class complies with the requirements for the template parameter
  * `ELEM_VEC_COMP` of the function assemble::AssembleVectorLocally().
  */
-template <typename SCALAR, typename FUNCTOR>
+template <typename SCALAR, typename MESH_FUNCTION>
 class DGFELoadElementVectorProvider {
 
  public:
@@ -240,7 +241,7 @@ class DGFELoadElementVectorProvider {
    * degree of the finite element space.
    */
   DGFELoadElementVectorProvider(
-      std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space, lf::dgfe::MeshFunctionGlobalDGFE<FUNCTOR> f) : f_(std::move(f)), dgfe_space_(std::move(dgfe_space)), max_legendre_degree_(dgfe_space_->MaxLegendreDegree()) {}
+      std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space, MESH_FUNCTION f) : f_(std::move(f)), dgfe_space_(std::move(dgfe_space)), max_legendre_degree_(dgfe_space_->MaxLegendreDegree()) {}
   /** @brief all cells are active */
   bool isActive(const lf::mesh::Entity & /*cell*/) const { return true; }
 
@@ -255,7 +256,7 @@ class DGFELoadElementVectorProvider {
         LF_VERIFY_MSG(cell.RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for Polygons");
 
         //degree of quadrule is fixed as the maximum degree of the basis functions plus 13
-        const lf::quad::QuadRule qr = qr_cache_.Get(lf::base::RefEl::kTria(), 12 + max_legendre_degree_* max_legendre_degree_);
+        const lf::quad::QuadRule qr = qr_cache_.Get(lf::base::RefEl::kTria(), 13 + max_legendre_degree_* max_legendre_degree_);
 
         //get sub-tessellation
         auto sub_tessellation = subTessellation(&cell);
@@ -302,7 +303,7 @@ class DGFELoadElementVectorProvider {
 
  private:
   /** @brief An object providing the source function */
-  lf::dgfe::MeshFunctionGlobalDGFE<FUNCTOR> f_;
+  MESH_FUNCTION f_;
 
   std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_;
 
@@ -311,6 +312,108 @@ class DGFELoadElementVectorProvider {
   unsigned max_legendre_degree_;
 };
 
+template <typename SCALAR, typename MESH_FUNCTION>
+class L2ProjectionSqrtANablaBasisLoadVector {
+
+ public:
+  using ElemVec = Eigen::Matrix<scalar_t, Eigen::Dynamic, 1>;
+
+  /** @name standard constructors
+   *@{*/
+  L2ProjectionSqrtANablaBasisLoadVector(const L2ProjectionSqrtANablaBasisLoadVector &) =
+      delete;
+  L2ProjectionSqrtANablaBasisLoadVector(L2ProjectionSqrtANablaBasisLoadVector &&) noexcept =
+      default;
+  L2ProjectionSqrtANablaBasisLoadVector &operator=(
+      const L2ProjectionSqrtANablaBasisLoadVector &) = delete;
+  L2ProjectionSqrtANablaBasisLoadVector &operator=(
+      L2ProjectionSqrtANablaBasisLoadVector &&) = delete;
+  /**@}*/
+
+  /** @brief Constructor, performs precomputations
+   *
+   * @param fe_space specification of local shape functions
+   * @param f MeshFunctionGlobalDGFE object for source function
+   *
+   * Uses quadrature rule of double the degree of exactness compared to the
+   * degree of the finite element space.
+   */
+  L2ProjectionSqrtANablaBasisLoadVector(
+      std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space, MESH_FUNCTION a_coeff, unsigned dim) : a_coeff_(a_coeff), dgfe_space_(std::move(dgfe_space)),
+                             max_legendre_degree_(dgfe_space_->MaxLegendreDegree()), dim_(dim) {
+                                LF_VERIFY_MSG(dim == 1 || dim == 0, "Desired dimension of gradient has to be either 0 or 1");
+                             }
+
+  /** @brief all cells are active */
+  bool isActive(const lf::mesh::Entity & /*cell*/) const { return true; }
+
+    /**
+     * @brief Main method for computing the element vector
+     *
+     * @param cell current cell for which the element vector is desired
+     * @return local load vector as column vector 
+     *
+     */
+    ElemVec Eval(const lf::mesh::Entity &cell) const {
+        LF_VERIFY_MSG(cell.RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for Polygons");
+
+        //degree of quadrule is fixed as the maximum degree of the basis functions plus 13
+        const lf::quad::QuadRule qr = qr_cache_.Get(lf::base::RefEl::kTria(), 13 + max_legendre_degree_* max_legendre_degree_);
+
+        //get sub-tessellation
+        auto sub_tessellation = subTessellation(&cell);
+        // qr points
+        const Eigen::MatrixXd zeta_ref{qr.Points()};
+        //weights
+        Eigen::VectorXd w_ref{qr.Weights()};
+
+        //initialize element vector
+        unsigned vector_size = (max_legendre_degree_ == 1) ? 4 : 9;
+        Eigen::Matrix<scalar_t, Eigen::Dynamic, 1> elem_vec(vector_size, 1);
+        elem_vec.setZero();
+
+        lf::dgfe::BoundingBox box(cell);
+
+        //loop over triangles in the sub-tessellation
+        for(auto& tria_geo_ptr : sub_tessellation){
+            // qr points mapped to triangle
+            Eigen::MatrixXd zeta_global{tria_geo_ptr->Global(zeta_ref)};
+            // qr points mapped back into reference bounding box to retrieve values
+            Eigen::MatrixXd zeta_box{box.inverseMap(zeta_global)};
+            //gramian determinants
+            Eigen::VectorXd gram_dets{tria_geo_ptr->IntegrationElement(zeta_ref)};
+            //loop over basis functions
+
+            auto a_eval = a_coeff_(cell, zeta_box);
+
+            for (int basis = 0; basis < vector_size; basis++){
+
+                //sum over qr points
+                for (int i = 0; i < qr.Points().cols(); i++){
+                    Eigen::Vector2d nabla_basis{legendre_basis_dx(basis, max_legendre_degree_, zeta_box.col(i)) * box.inverseJacobi(0),
+                                                legendre_basis_dy(basis, max_legendre_degree_, zeta_box.col(i)) * box.inverseJacobi(1)};
+                
+                    elem_vec(basis) += ((a_eval[i].sqrt()).row(dim_)).dot(nabla_basis) * w_ref[i] * gram_dets[i];
+                }
+            }
+        }
+        return elem_vec;
+    }
+
+  ~L2ProjectionSqrtANablaBasisLoadVector() = default;
+
+ private:
+  /** @brief An object providing the diffusion tensor */
+  MESH_FUNCTION a_coeff_;
+
+  std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_;
+
+  lf::quad::QuadRuleCache qr_cache_;
+
+  unsigned max_legendre_degree_;
+    //spefifying whether 0th or 1st dimension of the gradient vector is calculated
+  unsigned dim_;
+};
 
 
 

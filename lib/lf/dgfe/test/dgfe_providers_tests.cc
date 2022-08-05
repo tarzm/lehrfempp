@@ -9,6 +9,7 @@
 #include <cmath>
 #include <filesystem>
 #include <limits>
+#include <typeinfo>
 
 #include <gtest/gtest.h>
 #include <lf/fe/fe.h>
@@ -299,13 +300,13 @@ TEST(dgfe_subTessellation_providers, singleSquareO2LoadElementVectorST){
 
 TEST(dgfe_subTessellation_providers, massMatrixmeshFunction){
     //SIMPLE TEST MESH ----------------------------------
-    //auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+    auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
 
-    //get mesh
-    std::filesystem::path here = __FILE__;
-    auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_100_cells.vtk";
-    lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
-    auto mesh_ptr = reader.mesh();
+    // //get mesh
+    // std::filesystem::path here = __FILE__;
+    // auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_400_cells.vtk";
+    // lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
+    // auto mesh_ptr = reader.mesh();
 
 
     //setup of dofhandler
@@ -321,7 +322,7 @@ TEST(dgfe_subTessellation_providers, massMatrixmeshFunction){
     M.setZero();
 
     //initialization of element matrix provider
-    lf::dgfe::DGFEMassElementMatrixST<double> massMatrixProvider(7, 2);
+    lf::dgfe::DGFEMassElementMatrixST<double> massMatrixProvider(10, 2);
 
     //assemble mass matrix
     lf::assemble::AssembleMatrixLocally(0, dofhandler, dofhandler, massMatrixProvider, M);
@@ -337,7 +338,7 @@ TEST(dgfe_subTessellation_providers, massMatrixmeshFunction){
     Eigen::VectorXd rhs(dofhandler.NumDofs());
     rhs.setZero();
     //initialization of vector provider
-    lf::dgfe::DGFELoadElementVectorProvider<double, decltype(load_lambda)> vec_provider(dgfe_space_ptr, lambda_msh_funct);
+    lf::dgfe::DGFELoadElementVectorProvider<double, decltype(lambda_msh_funct)> vec_provider(dgfe_space_ptr, lambda_msh_funct);
     //assemble load vector
     lf::assemble::AssembleVectorLocally(0, dofhandler, vec_provider, rhs);
 
@@ -353,13 +354,12 @@ TEST(dgfe_subTessellation_providers, massMatrixmeshFunction){
     lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
 
     //calculate with mesh function error function
-    double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(lambda_msh_funct)>(dgfe_mesh_function, lambda_msh_funct, 10);
+    double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dgfe_mesh_function), decltype(lambda_msh_funct)>(dgfe_mesh_function, lambda_msh_funct, mesh_ptr, 30);
     
     std::cout << "The error of the solution via MeshFunction is: " << mesh_func_l2_error << "\n";
-
 }
 
-
+TEST(L2ProjectionSqrtANablaBasisLoadVector, simpleSquare)
 
 // TEST(dgfe_O1_providers, O1massMatrixAnd01LocalLoadVector){
 

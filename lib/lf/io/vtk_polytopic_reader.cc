@@ -173,7 +173,6 @@ VtkPolytopicReader::VtkPolytopicReader(std::unique_ptr<mesh::polytopic2d::MeshFa
         //add the polygon
         mesh_factory_->AddEntity(lf::base::RefEl::kPolygon(), node_indices, nullptr);
     }
-
     mesh_ = mesh_factory_->Build();
 }
 

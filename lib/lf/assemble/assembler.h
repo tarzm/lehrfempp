@@ -138,6 +138,7 @@ void AssembleMatrixLocally(dim_t codim, const DofHandler &dof_handler_trial,
       // Request local matrix from entity_matrix_provider object. In the
       // case codim = 0, when `entity` is a cell, this is the element matrix
       const auto elem_mat{entity_matrix_provider.Eval(*entity)};
+
       LF_ASSERT_MSG(elem_mat.rows() >= nrows_loc,
                     "nrows mismatch " << elem_mat.rows() << " <-> " << nrows_loc
                                       << ", entity " << mesh->Index(*entity));

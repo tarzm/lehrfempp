@@ -4,14 +4,14 @@ set(src
   # integration_tests.cc
   # bounding_box_tests.cc
   # legendre_dgfe_tests.cc
-  # dgfe_providers_tests.cc
+  #dgfe_providers_tests.cc
   # dgfe_space_tests.cc
-  # mesh_function_dgfe_tests.cc
+  mesh_function_dgfe_tests.cc
   # sub_tessellation_tests.cc
-  # mesh_function_global_tests.cc
+  mesh_function_global_tests.cc
   #advection_reaction_tests.cc
   #discontinuity_penalization_tests.cc
-  diffusion_tests.cc
+  #diffusion_tests.cc
   #advection_reaction_diffusion_rhs_tests.cc
   #advection_reaction_diffusion_tests.cc
 )

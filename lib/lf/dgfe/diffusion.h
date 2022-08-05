@@ -19,6 +19,7 @@
 #include "mesh_function_dgfe.h"
 #include "mesh_function_global.h"
 #include "discontinuity_penalization.h"
+#include "auxiliary_operators.h"
 
 namespace lf::dgfe {
 
@@ -341,6 +342,8 @@ public:
 
             //discontinuity penalization
             auto disc_pen = disc_pen_(*edge, A_F);
+
+            
 
             //!!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!!
             if (!boundary_edge_(*edge)){

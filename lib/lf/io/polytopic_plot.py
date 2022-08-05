@@ -24,10 +24,6 @@ x = input[:,0]
 y = input[:,1]
 z = input[:,2]
 
-print(f'input has shape {input.shape}')
-print(f'z has shape {z.shape}')
-
-
 
 X, Y = np.meshgrid(x,y)
 

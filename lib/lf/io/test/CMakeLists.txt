@@ -6,6 +6,7 @@ set(sources
   gmsh_reader_tests.cc
   vtk_writer_tests.cc
   vtk_polytopic_reader_tests.cc
+  numpy_polytopic_writer_tests.cc
 )
 
 add_executable(lf.io.test ${sources})

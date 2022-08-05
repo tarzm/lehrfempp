@@ -578,6 +578,7 @@ Mesh::Mesh(dim_t dim_world, NodeCoordList nodes, EdgeList edges, CellList cells,
     // Building edge by adding another element to the edge vector.
     segments_.emplace_back(edge.second.edge_global_index,
                            std::move(edge_geo_ptr), p0_ptr, p1_ptr);
+    
   }  // end loop over all edges
   LF_ASSERT_MSG(edge_index == no_of_edges, "Edge index mismatch");
 

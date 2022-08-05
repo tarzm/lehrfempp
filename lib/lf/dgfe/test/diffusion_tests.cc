@@ -126,13 +126,13 @@ TEST(diffusion_assembler, fullDiffusionLSE){
 // mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type,4>{{0,1,2,3}}, nullptr);
 // auto mesh_ptr = mesh_factory_ptr->Build();
 
-// auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
 
 //get mesh
-std::filesystem::path here = __FILE__;
-auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk";
-lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
-auto mesh_ptr = reader.mesh();
+// std::filesystem::path here = __FILE__;
+// auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk";
+// lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
+// auto mesh_ptr = reader.mesh();
 
 //dgfe space
 lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
@@ -334,7 +334,7 @@ LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
 lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
 
 //calculate with mesh function error function
-double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(m_gD)>(dgfe_mesh_function, m_gD, 17);
+double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(m_gD), decltype(dgfe_mesh_function)>(dgfe_mesh_function, m_gD, mesh_ptr, 17);
 
 std::cout << "Mesh Function error: " << mesh_func_l2_error;
 std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << "\n\n";

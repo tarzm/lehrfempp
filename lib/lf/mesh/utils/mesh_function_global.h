@@ -86,10 +86,8 @@ class MeshFunctionGlobal {
         result.push_back(f_(global_points.col(i)));
       }
       return result;
-    } else { //is polygon => just return value of f_(local)
-      std::vector<F_return_type> result;
-      result.push_back(f_(local));
-      return result;
+    } else { //is polygon => does not work on polygons
+      LF_ASSERT_MSG(false, "This class does not work in the DGFE setting and for Polygons, use lf::dgfe::MeshFunctionGlobalDGFE");
     }                                 
   }
 

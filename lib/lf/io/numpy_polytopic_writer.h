@@ -58,7 +58,7 @@ public:
             auto corners = lf::mesh::polytopic2d::Corners(cell);
             Eigen::MatrixXd mean = corners.rowwise().mean();
             auto value_vec = meshFunction(*cell, mean); //this is a vector
-            out_file << corners(0,0) << " " << corners(1,0) << " " << value_vec[0] << "\n";
+            out_file << mean(0,0) << " " << mean(1,0) << " " << value_vec[0] << "\n";
         }
 
 
