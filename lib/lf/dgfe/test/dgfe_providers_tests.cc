@@ -383,8 +383,8 @@ TEST(L2ProjectionSqrtANablaBasisLoadVector, simpleSquare){
     lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
 
     //l2 projection load vector provider setup
-    lf::dgfe::L2ProjectionSqrtANablaBasisLoadVector<double, decltype(m_a_coeff)> l2_projection_provider_0(dgfe_space_ptr, m_a_coeff, 0);
-    lf::dgfe::L2ProjectionSqrtANablaBasisLoadVector<double, decltype(m_a_coeff)> l2_projection_provider_1(dgfe_space_ptr, m_a_coeff, 1);
+    lf::dgfe::L2ProjectionSqrtANablaBasisLoadVector<double, decltype(m_a_coeff)> l2_projection_provider_0(dgfe_space_ptr, m_a_coeff, 0, 0, 10);
+    lf::dgfe::L2ProjectionSqrtANablaBasisLoadVector<double, decltype(m_a_coeff)> l2_projection_provider_1(dgfe_space_ptr, m_a_coeff, 1, 0, 10);
 
     //initialization of element matrix provider
     lf::dgfe::DGFEMassElementMatrixST<double> massMatrixProvider(10, 2); 
@@ -415,9 +415,6 @@ TEST(L2ProjectionSqrtANablaBasisLoadVector, simpleSquare){
     LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
     Eigen::VectorXd sol_vec_1 = solver.solve(rhs_1);
     LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
-
-
-
 
 
 }

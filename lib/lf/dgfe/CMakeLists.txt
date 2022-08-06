@@ -8,7 +8,6 @@ set(sources
     dgfe_space.h
     dgfe_space.cc
     dgfe_providers.h
-    dgfe_providers.cc
     mesh_function_dgfe.h
     mesh_function_global.h
     sub_tessellation.h

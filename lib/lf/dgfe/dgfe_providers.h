@@ -20,96 +20,6 @@
 
 namespace lf::dgfe {
 
-//polyomial expansion of a function in 2D
-//format: {[coefficient, (degree x, degree y)], [coefficient, (degree x, degree y)], ... }
-using Polynomial = std::vector<std::pair<scalar_t, std::pair<size_type, size_type>>>;
-
-
-/**
- * @ingroup entity_matrix_provider
- * @headerfile lf/dgfe/dgfe_providers.h
- * @brief Computing the element matrix for the mass matrix
- *
- * This class complies with the requirements for the type
- * `ENTITY_MATRIX_PROVIDER` given as a template parameter to define an
- * incarnation of the function
- * @ref AssembleMatrixLocally().
- */
-class DGFEO1MassElementMatrix {
-    public:
-        /**
-         * @brief All cells are considered active in the default implementation
-         */
-        [[nodiscard]] bool isActive(const lf::mesh::Entity & /*cell*/) const {
-            return true;
-        }
-
-        /**
-         * @brief main routine for the computation of element matrices
-         *
-         * @param cell reference to the polytopic cell for
-         *        which the element matrix should be computed.
-         * @return a 4x4 matrix
-         */
-        [[nodiscard]] Eigen::Matrix<scalar_t, 4, 4> Eval(const lf::mesh::Entity &cell) const;
-};
-
-class DGFEO1LocalLoadVector {
-    public:
-        using ElemVec = Eigen::Matrix<scalar_t, 4, 1>;
-
-        DGFEO1LocalLoadVector(Polynomial polynomial) : polynomial_(polynomial) {}
-
-        bool isActive(const lf::mesh::Entity & /*cell*/) const {
-            return true;
-        }
-
-        ElemVec Eval(const lf::mesh::Entity &cell) const;
-
-    private:
-        Polynomial polynomial_;
-
-
-};
-
-class DGFEO2MassElementMatrix {
-    public:
-        /**
-         * @brief All cells are considered active in the default implementation
-         */
-        [[nodiscard]] bool isActive(const lf::mesh::Entity & /*cell*/) const {
-            return true;
-        }
-
-        /**
-         * @brief main routine for the computation of element matrices
-         *
-         * @param cell reference to the polytopic cell for
-         *        which the element matrix should be computed.
-         * @return a 9x9 matrix
-         */
-        [[nodiscard]] Eigen::Matrix<scalar_t, 9, 9> Eval(const lf::mesh::Entity &cell) const;
-};
-
-class DGFEO2LocalLoadVector {
-    public:
-        using ElemVec = Eigen::Matrix<scalar_t, 9, 1>;
-        
-
-        DGFEO2LocalLoadVector(Polynomial polynomial) : polynomial_(polynomial) {}
-
-        bool isActive(const lf::mesh::Entity & /*cell*/) const {
-            return true;
-        }
-
-        ElemVec Eval(const lf::mesh::Entity &cell) const;
-
-    private:
-        Polynomial polynomial_;
-
-
-};
-
 /**
  * @ingroup entity_matrix_provider
  * @headerfile lf/dgfe/dgfe_providers.h
@@ -316,7 +226,6 @@ template <typename SCALAR, typename MESH_FUNCTION>
 class L2ProjectionSqrtANablaBasisLoadVector {
 
  public:
-  using ElemVec = Eigen::Matrix<scalar_t, Eigen::Dynamic, 1>;
 
   /** @name standard constructors
    *@{*/
@@ -339,9 +248,11 @@ class L2ProjectionSqrtANablaBasisLoadVector {
    * degree of the finite element space.
    */
   L2ProjectionSqrtANablaBasisLoadVector(
-      std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space, MESH_FUNCTION a_coeff, unsigned dim) : a_coeff_(a_coeff), dgfe_space_(std::move(dgfe_space)),
-                             max_legendre_degree_(dgfe_space_->MaxLegendreDegree()), dim_(dim) {
+      std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space, MESH_FUNCTION a_coeff, unsigned dim, unsigned basis, unsigned max_integration_degree) : a_coeff_(a_coeff), dgfe_space_(std::move(dgfe_space)),
+                             max_legendre_degree_(dgfe_space_->MaxLegendreDegree()), dim_(dim), basis_(basis), max_integration_degree_(max_integration_degree) {
                                 LF_VERIFY_MSG(dim == 1 || dim == 0, "Desired dimension of gradient has to be either 0 or 1");
+                                LF_VERIFY_MSG(0 <= basis_ && basis <= (max_legendre_degree_ + 1) * (max_legendre_degree_ + 1),
+                                                 "basis function index needs to be within the range of number of local dofs");
                              }
 
   /** @brief all cells are active */
@@ -354,11 +265,11 @@ class L2ProjectionSqrtANablaBasisLoadVector {
      * @return local load vector as column vector 
      *
      */
-    ElemVec Eval(const lf::mesh::Entity &cell) const {
+    Eigen::Matrix<SCALAR, Eigen::Dynamic, 1> Eval(const lf::mesh::Entity &cell) const {
         LF_VERIFY_MSG(cell.RefEl() == lf::base::RefEl::kPolygon(), "Only implemented for Polygons");
 
         //degree of quadrule is fixed as the maximum degree of the basis functions plus 13
-        const lf::quad::QuadRule qr = qr_cache_.Get(lf::base::RefEl::kTria(), 13 + max_legendre_degree_* max_legendre_degree_);
+        const lf::quad::QuadRule qr = qr_cache_.Get(lf::base::RefEl::kTria(), max_integration_degree_);
 
         //get sub-tessellation
         auto sub_tessellation = subTessellation(&cell);
@@ -369,7 +280,7 @@ class L2ProjectionSqrtANablaBasisLoadVector {
 
         //initialize element vector
         unsigned vector_size = (max_legendre_degree_ == 1) ? 4 : 9;
-        Eigen::Matrix<scalar_t, Eigen::Dynamic, 1> elem_vec(vector_size, 1);
+        Eigen::Matrix<SCALAR, Eigen::Dynamic, 1> elem_vec(vector_size, 1);
         elem_vec.setZero();
 
         lf::dgfe::BoundingBox box(cell);
@@ -386,15 +297,17 @@ class L2ProjectionSqrtANablaBasisLoadVector {
             //diffusion tensor evaluated at qr points
             auto a_eval = a_coeff_(cell, zeta_box);
 
+        
             //loop over basis functions
-            for (int basis = 0; basis < vector_size; basis++){
+            for (int basis_test = 0; basis_test < vector_size; basis_test++){
 
                 //sum over qr points
                 for (int i = 0; i < qr.Points().cols(); i++){
-                    Eigen::Vector2d nabla_basis{legendre_basis_dx(basis, max_legendre_degree_, zeta_box.col(i)) * box.inverseJacobi(0),
-                                                legendre_basis_dy(basis, max_legendre_degree_, zeta_box.col(i)) * box.inverseJacobi(1)};
+
+                    Eigen::Vector2d nabla_basis{legendre_basis_dx(basis_, max_legendre_degree_, zeta_box.col(i)) * box.inverseJacobi(0),
+                                                legendre_basis_dy(basis_, max_legendre_degree_, zeta_box.col(i)) * box.inverseJacobi(1)};
                 
-                    elem_vec(basis) += ((a_eval[i].sqrt()).row(dim_)).dot(nabla_basis) * w_ref[i] * gram_dets[i];
+                    elem_vec(basis_test) += ((a_eval[i].sqrt()).row(dim_)).dot(nabla_basis) * legendre_basis(basis_test, max_legendre_degree_, zeta_box.col(i)) * w_ref[i] * gram_dets[i];
                 }
             }
         }
@@ -409,9 +322,13 @@ class L2ProjectionSqrtANablaBasisLoadVector {
 
     lf::quad::QuadRuleCache qr_cache_;
 
+    unsigned max_integration_degree_;
+
     unsigned max_legendre_degree_;
     //spefifying whether 0th or 1st dimension of the gradient vector is calculated
     unsigned dim_;
+    //index of the basis function whose gradient should be projected
+    unsigned basis_;
 };
 
 
