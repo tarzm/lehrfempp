@@ -28,13 +28,15 @@ class DiffusionElementMatrixProvider {
 
 public: 
 
+    using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>, std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>>;
+
     DiffusionElementMatrixProvider(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, DIFFUSION_COEFF a_coeff,
                                     EDGESELECTOR boundary_edge, EDGESELECTOR boundary_d_edge, unsigned integration_degree,
-                                    lf::dgfe::DiscontinuityPenalization disc_pen)
+                                    lf::dgfe::DiscontinuityPenalization disc_pen, l2_proj_sqrt_a_nabla_basis &l2_proj)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
          max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), a_coeff_(a_coeff),
          boundary_edge_(std::move(boundary_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
-         disc_pen_(disc_pen), evaluated_edge_(std::move(initialize_evaluated_edge())) {
+         disc_pen_(disc_pen), evaluated_edge_(std::move(initialize_evaluated_edge())), l2_projection_(l2_proj) {
             LF_VERIFY_MSG(dgfe_space_ptr_ != nullptr, "No DGFE space defined");
     }
 
@@ -212,6 +214,8 @@ private:
     //used to make sure the second and third term is only evaluated once per edge
     //is true if edge has already been evaluated
     EDGESELECTOR evaluated_edge_;
+    l2_proj_sqrt_a_nabla_basis &l2_projection_;
+
 
     lf::mesh::utils::CodimMeshDataSet<bool> initialize_evaluated_edge(){
         lf::mesh::utils::CodimMeshDataSet<bool> result(dgfe_space_ptr_->Mesh(), 1, false);
@@ -224,13 +228,15 @@ template<typename TMPMATRIX, typename SCALAR, typename DIFFUSION_COEFF, typename
 class DiffusionMatrixAssembler{
 
 public:
+    using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>, std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>>;
+
     DiffusionMatrixAssembler(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, DIFFUSION_COEFF a_coeff,
                                     EDGESELECTOR boundary_edge, EDGESELECTOR boundary_d_edge, unsigned integration_degree,
-                                    lf::dgfe::DiscontinuityPenalization disc_pen)
+                                    lf::dgfe::DiscontinuityPenalization disc_pen, l2_proj_sqrt_a_nabla_basis l2_proj)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
          max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), a_coeff_(a_coeff),
          boundary_edge_(std::move(boundary_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
-         disc_pen_(disc_pen), evaluated_edge_(std::move(initialize_evaluated_edge())) {
+         disc_pen_(disc_pen), evaluated_edge_(std::move(initialize_evaluated_edge())), l2_projection_(l2_proj) {
             LF_VERIFY_MSG(dgfe_space_ptr_ != nullptr, "No DGFE space defined");
     }
 
@@ -602,6 +608,7 @@ private:
     //used to make sure the second and third term is only evaluated once per edge
     //is true if edge has already been evaluated
     EDGESELECTOR evaluated_edge_;
+    l2_proj_sqrt_a_nabla_basis &l2_projection_;
 
     lf::mesh::utils::CodimMeshDataSet<bool> initialize_evaluated_edge(){
         lf::mesh::utils::CodimMeshDataSet<bool> result(dgfe_space_ptr_->Mesh(), 1, false);

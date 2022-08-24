@@ -37,14 +37,18 @@ template<typename SCALAR, typename DIFFUSION_COEFF, typename ADVECTION_COEFF, ty
 class AdvectionReactionDiffusionRHS {
 
 public:
+
+    using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>, std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>>;
+
     AdvectionReactionDiffusionRHS(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, FUNCTOR_F f, FUNCTOR_G_D gD, FUNCTOR_G_N gN,
                                     DIFFUSION_COEFF a_coeff, ADVECTION_COEFF b_coeff, 
                                     EDGESELECTOR boundary_minus_edge, EDGESELECTOR boundary_d_edge,
-                                    EDGESELECTOR boundary_n_edge, unsigned integration_degree, lf::dgfe::DiscontinuityPenalization disc_pen)
+                                    EDGESELECTOR boundary_n_edge, unsigned integration_degree, lf::dgfe::DiscontinuityPenalization disc_pen,
+                                    l2_proj_sqrt_a_nabla_basis &l2_proj)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
          max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), b_coeff_(b_coeff), a_coeff_(a_coeff),
          boundary_minus_edge_(std::move(boundary_minus_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
-         boundary_n_edge_(std::move(boundary_n_edge)), f_(f), gD_(gD), gN_(gN), disc_pen_(disc_pen) {
+         boundary_n_edge_(std::move(boundary_n_edge)), f_(f), gD_(gD), gN_(gN), disc_pen_(disc_pen), l2_projection_(l2_proj) {
             LF_VERIFY_MSG(dgfe_space_ptr_ != nullptr, "No DGFE space defined");
             LF_VERIFY_MSG(dgfe_space_ptr_ == disc_pen_.dgfeSpace(), "Space in constructor and space of discontinuity penalization do not match");
     }
@@ -219,6 +223,7 @@ private:
     EDGESELECTOR boundary_d_edge_;
     EDGESELECTOR boundary_n_edge_;
     lf::dgfe::DiscontinuityPenalization disc_pen_;
+    l2_proj_sqrt_a_nabla_basis &l2_projection_;
 };
 
 
