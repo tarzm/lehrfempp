@@ -111,7 +111,7 @@ TEST(meshFunctionGrad, singleSquareO2L2ErrorSubTessellation){
 TEST(meshFunctionGrad, LSETest){
     //get mesh
     std::filesystem::path here = __FILE__;
-    auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_2000_cells.vtk";
+    auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_100_cells.vtk";
     lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
     auto mesh_ptr = reader.mesh();
 

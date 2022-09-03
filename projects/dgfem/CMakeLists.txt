@@ -1,12 +1,13 @@
 # Set sources
-set(SOURCES 
+set(SOURCES
+  run_convergence.h
   #fe_experiments.cc
   #manifactured_solution.cc
   )
 
 # Define executable
 #add_executable(projects.dgfem.meshes fe_experiments ${SOURCES})
-add_executable(projects.dgfem.manifactured_solution manifactured_solution.cc ${SOURCES})
+add_executable(projects.dgfem.quadratic_dirichlet quadratic_dirichlet.cc ${SOURCES})
 
 
 # link executable with required modules
@@ -27,7 +28,7 @@ add_executable(projects.dgfem.manifactured_solution manifactured_solution.cc ${S
 #   )
 
 # link executable with required modules
-target_link_libraries(projects.dgfem.manifactured_solution
+target_link_libraries(projects.dgfem.quadratic_dirichlet
   PUBLIC Boost::program_options  Eigen3::Eigen
   lf.assemble
   lf.base
@@ -45,4 +46,4 @@ target_link_libraries(projects.dgfem.manifactured_solution
   )
 
 #set_target_properties(projects.dgfem.meshes PROPERTIES FOLDER "projects/dgfem")
-set_target_properties(projects.dgfem.manifactured_solution PROPERTIES FOLDER "projects/dgfem")
+set_target_properties(projects.dgfem.quadratic_dirichlet PROPERTIES FOLDER "projects/dgfem")

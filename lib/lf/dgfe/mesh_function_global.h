@@ -46,6 +46,10 @@ public:
         return result;                               
     }
 
+    F lambda(){
+        return f_;
+    }
+
     ~MeshFunctionGlobalDGFE() = default;
 
 private:

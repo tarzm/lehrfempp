@@ -180,12 +180,15 @@ auto f_lambda = [](Eigen::Vector2d x) -> double {
     return -6.0;
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_f{f_lambda};
+
+//Setup l2 projection of sqrt(A) * nabla(basis)
+auto l2_projection = lf::dgfe::L2ProjectionSqrtANablaBasis<double>(dgfe_space_ptr, m_a_coeff, 20);
 //----------------------END PREPARE PRESCRIBED FUNCTIONS------------------------
 
 //----------------------ASSEMBLE GALERKIN MATRIX------------------------
 
-double c_inv = 0.15;
-double c_sigma = 6.0;
+double c_inv = 0.35;
+double c_sigma = 11.0;
 
 double smallest_error = 20.0;
 double smallest_c_inv = 10.0;
@@ -197,22 +200,24 @@ unsigned n_dofs = dgfe_space_ptr->LocGlobMap().NumDofs();
 lf::dgfe::AdvectionReactionElementMatrixProvider<double, decltype(m_b_coeff), decltype(m_c_coeff), decltype(boundary_edge)>
                 advectionReactionProvider(dgfe_space_ptr, m_b_coeff, m_c_coeff, boundary_edge, boundary_d_edge, boundary_minus_edge, 10);
 
-//initialization of diffusion element matrix provider
-lf::dgfe::DiffusionElementMatrixProvider<double, decltype(m_a_coeff), decltype(boundary_edge)>
-                    diffusionProvider(dgfe_space_ptr, m_a_coeff, boundary_edge, boundary_d_edge, 10, disc_pen);
 //galerkin matrix initialization
 lf::assemble::COOMatrix<double> A(n_dofs, n_dofs);
 A.setZero();
+
+//assembler initialization
+lf::dgfe::DiffusionMatrixAssembler<decltype(A), double, decltype(m_a_coeff), decltype(boundary_edge)>
+                diffusionAssembler(dgfe_space_ptr, m_a_coeff, boundary_edge, boundary_d_edge, 10, disc_pen, l2_projection);
+
 //assemble galerkin matrix
-lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), advectionReactionProvider, A);
-lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), diffusionProvider, A);
+//lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), advectionReactionProvider, A);
+diffusionAssembler.assemble(A); 
 //----------------------END ASSEMBLE GALERKIN MATRIX------------------------
 
 
 //----------------------ASSEMBLE RHS------------------------
 //initialization of element vector provider
 lf::dgfe::AdvectionReactionDiffusionRHS<double, decltype(m_a_coeff), decltype(m_b_coeff), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_f)>
-                        advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_f, m_a_coeff, m_b_coeff, boundary_minus_edge, boundary_d_edge, boundary_n_edge, 10, disc_pen);
+                        advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_f, m_a_coeff, m_b_coeff, boundary_minus_edge, boundary_d_edge, boundary_n_edge, 10, disc_pen, l2_projection);
 //rhs initialization
 Eigen::VectorXd rhs(n_dofs);
 rhs.setZero();
@@ -241,7 +246,7 @@ LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
 lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
 
 //calculate with mesh function error function
-double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(m_gD)>(dgfe_mesh_function, m_gD, 17);
+double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dgfe_mesh_function), decltype(m_gD)>(dgfe_mesh_function, m_gD, mesh_ptr,  17);
 
 std::cout << "Mesh Function error: " << mesh_func_l2_error;
 std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << "\n\n";
