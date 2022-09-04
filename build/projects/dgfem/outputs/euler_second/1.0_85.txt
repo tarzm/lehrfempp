@@ -1,0 +1,54 @@
+Sender: LSF System <lsfadmin@eu-g1-010-1>
+Subject: Job 230790974: <'1.0_85'> in cluster <euler> Done
+
+Job <'1.0_85'> was submitted from host <eu-login-33> by user <tamaurer> in cluster <euler> at Sun Sep  4 17:33:38 2022
+Job was executed on host(s) <eu-g1-010-1>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sun Sep  4 17:33:53 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sun Sep  4 17:33:53 2022
+Terminated at Sun Sep  4 17:40:37 2022
+Results reported at Sun Sep  4 17:40:37 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic euler_second 1.0 85 4 8 16 32 64 128
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   403.16 sec.
+    Max Memory :                                 20 MB
+    Average Memory :                             6.38 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               1004.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   432 sec.
+    Turnaround time :                            419 sec.
+
+The output (if any) follows:
+
+C_inv: 1 and C_sigma: 85
+
+Mesh Function error: 0.00224944 with C_inv: 1 and C_sigma: 85 run with 4 cells
+
+
+Mesh Function error: 0.00279045 with C_inv: 1 and C_sigma: 85 run with 8 cells
+
+
+Mesh Function error: 0.00264421 with C_inv: 1 and C_sigma: 85 run with 16 cells
+
+
+Mesh Function error: 0.00209761 with C_inv: 1 and C_sigma: 85 run with 32 cells
+
+
+Mesh Function error: 0.00144597 with C_inv: 1 and C_sigma: 85 run with 64 cells
+
+
+Mesh Function error: 0.00134461 with C_inv: 1 and C_sigma: 85 run with 128 cells
+

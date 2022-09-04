@@ -1,0 +1,54 @@
+Sender: LSF System <lsfadmin@eu-g1-041-3>
+Subject: Job 230791002: <'1.9_55'> in cluster <euler> Done
+
+Job <'1.9_55'> was submitted from host <eu-login-33> by user <tamaurer> in cluster <euler> at Sun Sep  4 17:33:46 2022
+Job was executed on host(s) <eu-g1-041-3>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sun Sep  4 17:41:45 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sun Sep  4 17:41:45 2022
+Terminated at Sun Sep  4 17:49:04 2022
+Results reported at Sun Sep  4 17:49:04 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic euler_second 1.9 55 4 8 16 32 64 128
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   438.50 sec.
+    Max Memory :                                 19 MB
+    Average Memory :                             7.47 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               1005.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   441 sec.
+    Turnaround time :                            918 sec.
+
+The output (if any) follows:
+
+C_inv: 1.9 and C_sigma: 55
+
+Mesh Function error: 0.00183844 with C_inv: 1.9 and C_sigma: 55 run with 4 cells
+
+
+Mesh Function error: 0.00230689 with C_inv: 1.9 and C_sigma: 55 run with 8 cells
+
+
+Mesh Function error: 0.00217212 with C_inv: 1.9 and C_sigma: 55 run with 16 cells
+
+
+Mesh Function error: 0.00171897 with C_inv: 1.9 and C_sigma: 55 run with 32 cells
+
+
+Mesh Function error: 0.00116539 with C_inv: 1.9 and C_sigma: 55 run with 64 cells
+
+
+Mesh Function error: 0.00108586 with C_inv: 1.9 and C_sigma: 55 run with 128 cells
+

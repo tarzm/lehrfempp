@@ -1,0 +1,54 @@
+Sender: LSF System <lsfadmin@eu-g1-041-2>
+Subject: Job 230790931: <'0.1_25'> in cluster <euler> Done
+
+Job <'0.1_25'> was submitted from host <eu-login-33> by user <tamaurer> in cluster <euler> at Sun Sep  4 17:33:30 2022
+Job was executed on host(s) <eu-g1-041-2>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sun Sep  4 17:33:53 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sun Sep  4 17:33:53 2022
+Terminated at Sun Sep  4 17:41:40 2022
+Results reported at Sun Sep  4 17:41:40 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic euler_second 0.1 25 4 8 16 32 64 128
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   465.26 sec.
+    Max Memory :                                 25 MB
+    Average Memory :                             11.33 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               999.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   471 sec.
+    Turnaround time :                            490 sec.
+
+The output (if any) follows:
+
+C_inv: 0.1 and C_sigma: 25
+
+Mesh Function error: 1.05781 with C_inv: 0.1 and C_sigma: 25 run with 4 cells
+
+
+Mesh Function error: 3.80795 with C_inv: 0.1 and C_sigma: 25 run with 8 cells
+
+
+Mesh Function error: 0.426466 with C_inv: 0.1 and C_sigma: 25 run with 16 cells
+
+
+Mesh Function error: 0.30849 with C_inv: 0.1 and C_sigma: 25 run with 32 cells
+
+
+Mesh Function error: 0.0472391 with C_inv: 0.1 and C_sigma: 25 run with 64 cells
+
+
+Mesh Function error: 0.0177233 with C_inv: 0.1 and C_sigma: 25 run with 128 cells
+
