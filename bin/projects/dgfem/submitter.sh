@@ -57,7 +57,7 @@ do
     for ((C_SIGMA = 5; C_SIGMA <= 100; C_SIGMA += 5))
     do
 
-    bsub "${BASE_COMMAND}" -J '${C_INV} ${C_SIGMA}' "<" $EXEC_NAME $RUN_NAME $C_INV $C_SIGMA $N_CELLS
+    echo bsub "${BASE_COMMAND}" -J "'${C_INV} ${C_SIGMA}'" "<" $EXEC_NAME $RUN_NAME $C_INV $C_SIGMA $N_CELLS
 
     done
 
