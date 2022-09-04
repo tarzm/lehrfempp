@@ -190,8 +190,9 @@ lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
 //calculate with mesh function error function
 double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dgfe_mesh_function), decltype(m_true)>(dgfe_mesh_function, m_true, mesh_ptr, 30);
 
+std::cout << "\n";
 std::cout << "Mesh Function error: " << mesh_func_l2_error;
-std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << "\n\n";
+std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << " run with " << mesh_ptr->NumEntities(0) << " cells" << "\n\n";
 //----------------------END MESH FUNCTION AND ERROR CALCULATION------------------------
 
 
