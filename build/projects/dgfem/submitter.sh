@@ -9,7 +9,7 @@ DIR_RUN=${DIR_MEAS}/$1
 DIR_OUT=outputs
 DIR_OUT_RUN=outputs/$1
 
-N_CELLS="4 8 16"
+N_CELLS="4 8 16 32 64 128 256 512 1028"
 MODEL_COMMAND="-R 'select[model=EPYC_7742]'"
 EXEC_NAME=./projects.dgfem.quadratic_dirichlet
 
@@ -52,9 +52,9 @@ if [ ! -d "$DIR_OUT_RUN" ]; then
 fi
 
 
-for C_INV in $(seq 0.1 1.0 2.0)
+for C_INV in $(seq 1.0 0.3 5.0)
 do
-    for ((C_SIGMA = 5; C_SIGMA <= 100; C_SIGMA += 50))
+    for ((C_SIGMA = 30; C_SIGMA <= 170; C_SIGMA += 10))
     do
 
     bsub -n 1 -oo outputs/$1/${C_INV}_${C_SIGMA}.txt -W 04:00 -R 'select[model=EPYC_7742]' -J \'${C_INV}_${C_SIGMA}\'  ./quadratic $1 $C_INV $C_SIGMA $N_CELLS

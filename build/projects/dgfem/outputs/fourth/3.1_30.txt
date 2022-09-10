@@ -1,0 +1,70 @@
+Sender: LSF System <lsfadmin@eu-g1-003-2>
+Subject: Job 231227980: <'3.1_30'> in cluster <euler> Exited
+
+Job <'3.1_30'> was submitted from host <eu-login-10> by user <tamaurer> in cluster <euler> at Sat Sep 10 18:01:06 2022
+Job was executed on host(s) <eu-g1-003-2>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sat Sep 10 19:01:14 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sat Sep 10 19:01:14 2022
+Terminated at Sat Sep 10 19:31:33 2022
+Results reported at Sat Sep 10 19:31:33 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic fourth 3.1 30 4 8 16 32 64 128 256 512 1028
+------------------------------------------------------------
+
+Exited with exit code 134.
+
+Resource usage summary:
+
+    CPU time :                                   1813.84 sec.
+    Max Memory :                                 95 MB
+    Average Memory :                             26.89 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               929.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   1826 sec.
+    Turnaround time :                            5427 sec.
+
+The output (if any) follows:
+
+C_inv: 3.1 and C_sigma: 30
+
+Mesh Function error: 0.00205931 with C_inv: 3.1 and C_sigma: 30 run with 4 cells
+
+
+Mesh Function error: 0.00256801 with C_inv: 3.1 and C_sigma: 30 run with 8 cells
+
+
+Mesh Function error: 0.00242631 with C_inv: 3.1 and C_sigma: 30 run with 16 cells
+
+
+Mesh Function error: 0.00192222 with C_inv: 3.1 and C_sigma: 30 run with 32 cells
+
+
+Mesh Function error: 0.0013155 with C_inv: 3.1 and C_sigma: 30 run with 64 cells
+
+
+Mesh Function error: 0.00122375 with C_inv: 3.1 and C_sigma: 30 run with 128 cells
+
+
+Mesh Function error: 0.00122596 with C_inv: 3.1 and C_sigma: 30 run with 256 cells
+
+
+Mesh Function error: 0.0010157 with C_inv: 3.1 and C_sigma: 30 run with 512 cells
+
+***** Internal Program Error - assertion (inFile) failed:
+/cluster/home/tamaurer/lehrfempp/lehrfempp/lib/lf/io/vtk_polytopic_reader.cc(52): Unable to open file
+Backtrace:
+ 0# 0x0000000000575593 in ./quadratic
+ 1# 0x000000000057E470 in ./quadratic
+ 2# 0x0000000000408A83 in ./quadratic
+ 3# __libc_start_main in /lib64/libc.so.6
+ 4# 0x00000000004083F9 in ./quadratic
+
+/cluster/shadow/.lsbatch/1662825666.231227980: line 8: 38653 Aborted                 (core dumped) ./quadratic fourth 3.1 30 4 8 16 32 64 128 256 512 1028

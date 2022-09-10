@@ -1,0 +1,41 @@
+Sender: LSF System <lsfadmin@eu-g1-038-4>
+Subject: Job 230789951: <'0.9_10'> in cluster <euler> Done
+
+Job <'0.9_10'> was submitted from host <eu-login-33> by user <tamaurer> in cluster <euler> at Sun Sep  4 16:44:44 2022
+Job was executed on host(s) <eu-g1-038-4>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sun Sep  4 16:45:20 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sun Sep  4 16:45:20 2022
+Terminated at Sun Sep  4 16:46:02 2022
+Results reported at Sun Sep  4 16:46:02 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic 0.9 10 4 8 16
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   40.84 sec.
+    Max Memory :                                 6 MB
+    Average Memory :                             2.00 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               1018.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   41 sec.
+    Turnaround time :                            78 sec.
+
+The output (if any) follows:
+
+C_inv: 10 and C_sigma: 4
+Mesh Function error: 0.00570847 with C_inv: 10 and C_sigma: 4
+
+Unable to open fileMesh Function error: 0.00557982 with C_inv: 10 and C_sigma: 4
+
+Unable to open file
