@@ -9,7 +9,7 @@ DIR_RUN=${DIR_MEAS}/$1
 DIR_OUT=outputs
 DIR_OUT_RUN=outputs/$1
 
-N_CELLS="4 8 16 32 64 128 256 512 1028"
+N_CELLS="4 8 16 32 64 128 256 512 1024"
 MODEL_COMMAND="-R 'select[model=EPYC_7742]'"
 EXEC_NAME=./projects.dgfem.quadratic_dirichlet
 
