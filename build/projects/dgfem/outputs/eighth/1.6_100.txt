@@ -1,0 +1,63 @@
+Sender: LSF System <lsfadmin@eu-g1-011-3>
+Subject: Job 231316099: <'1.6_100'> in cluster <euler> Done
+
+Job <'1.6_100'> was submitted from host <eu-login-08> by user <tamaurer> in cluster <euler> at Sun Sep 11 18:36:36 2022
+Job was executed on host(s) <eu-g1-011-3>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sun Sep 11 18:37:08 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sun Sep 11 18:37:08 2022
+Terminated at Sun Sep 11 19:31:33 2022
+Results reported at Sun Sep 11 19:31:33 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic eighth 1.6 100 4 8 16 32 64 128 256 512 1024
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   3259.82 sec.
+    Max Memory :                                 160 MB
+    Average Memory :                             32.86 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               864.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   3288 sec.
+    Turnaround time :                            3297 sec.
+
+The output (if any) follows:
+
+C_inv: 1.6 and C_sigma: 100
+
+Mesh Function error: 0.00122882 with C_inv: 1.6 and C_sigma: 100 run with 4 cells
+
+
+Mesh Function error: 0.00156366 with C_inv: 1.6 and C_sigma: 100 run with 8 cells
+
+
+Mesh Function error: 0.00146077 with C_inv: 1.6 and C_sigma: 100 run with 16 cells
+
+
+Mesh Function error: 0.00115705 with C_inv: 1.6 and C_sigma: 100 run with 32 cells
+
+
+Mesh Function error: 0.000758105 with C_inv: 1.6 and C_sigma: 100 run with 64 cells
+
+
+Mesh Function error: 0.00071749 with C_inv: 1.6 and C_sigma: 100 run with 128 cells
+
+
+Mesh Function error: 0.000677653 with C_inv: 1.6 and C_sigma: 100 run with 256 cells
+
+
+Mesh Function error: 0.00052925 with C_inv: 1.6 and C_sigma: 100 run with 512 cells
+
+
+Mesh Function error: 0.000510738 with C_inv: 1.6 and C_sigma: 100 run with 1024 cells
+
