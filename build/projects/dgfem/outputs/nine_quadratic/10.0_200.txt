@@ -1,0 +1,63 @@
+Sender: LSF System <lsfadmin@eu-g1-033-4>
+Subject: Job 231415313: <'10.0_200'> in cluster <euler> Done
+
+Job <'10.0_200'> was submitted from host <eu-login-42> by user <tamaurer> in cluster <euler> at Mon Sep 12 18:48:14 2022
+Job was executed on host(s) <eu-g1-033-4>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Mon Sep 12 21:50:37 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Mon Sep 12 21:50:37 2022
+Terminated at Mon Sep 12 22:56:07 2022
+Results reported at Mon Sep 12 22:56:07 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic nine_quadratic 10.0 200 4 8 16 32 64 128 256 512 1024
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   3922.79 sec.
+    Max Memory :                                 163 MB
+    Average Memory :                             32.75 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               861.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   3953 sec.
+    Turnaround time :                            14873 sec.
+
+The output (if any) follows:
+
+C_inv: 10 and C_sigma: 200
+
+Mesh Function error: 0.000186268 with C_inv: 10 and C_sigma: 200 run with 4 cells
+
+
+Mesh Function error: 0.000166869 with C_inv: 10 and C_sigma: 200 run with 8 cells
+
+
+Mesh Function error: 0.000206905 with C_inv: 10 and C_sigma: 200 run with 16 cells
+
+
+Mesh Function error: 0.000144113 with C_inv: 10 and C_sigma: 200 run with 32 cells
+
+
+Mesh Function error: 0.000107642 with C_inv: 10 and C_sigma: 200 run with 64 cells
+
+
+Mesh Function error: 0.000112387 with C_inv: 10 and C_sigma: 200 run with 128 cells
+
+
+Mesh Function error: 7.23327e-05 with C_inv: 10 and C_sigma: 200 run with 256 cells
+
+
+Mesh Function error: 5.15337e-05 with C_inv: 10 and C_sigma: 200 run with 512 cells
+
+
+Mesh Function error: 5.81594e-05 with C_inv: 10 and C_sigma: 200 run with 1024 cells
+

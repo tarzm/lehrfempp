@@ -1,0 +1,36 @@
+Sender: LSF System <lsfadmin@eu-g1-014-4>
+Subject: Job 231315701: <'1.0_170'> in cluster <euler> Exited
+
+Job <'1.0_170'> was submitted from host <eu-login-37> by user <tamaurer> in cluster <euler> at Sun Sep 11 18:31:23 2022
+Job was executed on host(s) <eu-g1-014-4>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sun Sep 11 18:31:39 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sun Sep 11 18:31:39 2022
+Terminated at Sun Sep 11 18:33:11 2022
+Results reported at Sun Sep 11 18:33:11 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic fifth 1.0 170 4 8 16 32 64 128 256 512 1028
+------------------------------------------------------------
+
+TERM_OWNER: job killed by owner.
+Exited with exit code 130.
+
+Resource usage summary:
+
+    CPU time :                                   90.17 sec.
+    Max Memory :                                 8 MB
+    Average Memory :                             7.20 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               1016.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   93 sec.
+    Turnaround time :                            108 sec.
+
+The output (if any) follows:
+

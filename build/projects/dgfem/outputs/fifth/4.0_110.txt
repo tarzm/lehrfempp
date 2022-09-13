@@ -1,0 +1,32 @@
+Sender: LSF System <lsfadmin@eu-g1-039-4>
+Subject: Job 231315846: <'4.0_110'> in cluster <euler> Exited
+
+Job <'4.0_110'> was submitted from host <eu-login-37> by user <tamaurer> in cluster <euler> at Sun Sep 11 18:32:02 2022
+Job was executed on host(s) <eu-g1-039-4>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Sun Sep 11 18:33:13 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Sun Sep 11 18:33:13 2022
+Terminated at Sun Sep 11 18:33:14 2022
+Results reported at Sun Sep 11 18:33:14 2022
+Cannot open your job file: /cluster/shadow/.lsbatch/1662913922.231315846
+TERM_OWNER: job killed by owner.
+Exited with signal termination: 2.
+
+Resource usage summary:
+
+    CPU time :                                   0.00 sec.
+    Max Memory :                                 4 MB
+    Average Memory :                             4.00 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               1020.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                3
+    Run time :                                   0 sec.
+    Turnaround time :                            72 sec.
+
+
+PS:
+
+Unable to read output data from the stdout buffer file </cluster/shadow/.lsbatch/1662913922.231315846.out>: your job was probably aborted prematurely.
+

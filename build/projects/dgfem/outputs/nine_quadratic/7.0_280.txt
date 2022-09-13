@@ -1,0 +1,63 @@
+Sender: LSF System <lsfadmin@eu-g1-008-2>
+Subject: Job 231415259: <'7.0_280'> in cluster <euler> Done
+
+Job <'7.0_280'> was submitted from host <eu-login-42> by user <tamaurer> in cluster <euler> at Mon Sep 12 18:47:59 2022
+Job was executed on host(s) <eu-g1-008-2>, in queue <normal.4h>, as user <tamaurer> in cluster <euler> at Mon Sep 12 20:50:28 2022
+</cluster/home/tamaurer> was used as the home directory.
+</cluster/home/tamaurer/lehrfempp/lehrfempp/build/projects/dgfem> was used as the working directory.
+Started at Mon Sep 12 20:50:28 2022
+Terminated at Mon Sep 12 21:47:58 2022
+Results reported at Mon Sep 12 21:47:58 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+./quadratic nine_quadratic 7.0 280 4 8 16 32 64 128 256 512 1024
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   3444.62 sec.
+    Max Memory :                                 161 MB
+    Average Memory :                             34.04 MB
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               863.00 MB
+    Max Swap :                                   -
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   3478 sec.
+    Turnaround time :                            10799 sec.
+
+The output (if any) follows:
+
+C_inv: 7 and C_sigma: 280
+
+Mesh Function error: 0.00018895 with C_inv: 7 and C_sigma: 280 run with 4 cells
+
+
+Mesh Function error: 0.000169706 with C_inv: 7 and C_sigma: 280 run with 8 cells
+
+
+Mesh Function error: 0.000209509 with C_inv: 7 and C_sigma: 280 run with 16 cells
+
+
+Mesh Function error: 0.000146315 with C_inv: 7 and C_sigma: 280 run with 32 cells
+
+
+Mesh Function error: 0.000108929 with C_inv: 7 and C_sigma: 280 run with 64 cells
+
+
+Mesh Function error: 0.000113785 with C_inv: 7 and C_sigma: 280 run with 128 cells
+
+
+Mesh Function error: 7.33077e-05 with C_inv: 7 and C_sigma: 280 run with 256 cells
+
+
+Mesh Function error: 5.22995e-05 with C_inv: 7 and C_sigma: 280 run with 512 cells
+
+
+Mesh Function error: 5.88456e-05 with C_inv: 7 and C_sigma: 280 run with 1024 cells
+
