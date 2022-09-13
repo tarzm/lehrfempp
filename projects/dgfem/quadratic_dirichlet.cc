@@ -53,6 +53,11 @@ auto gD_lambda = [](Eigen::Vector2d x) -> double {
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_gD{gD_lambda};
 
+auto gN_lambda = [](Eigen::Vector2d x) -> double {
+    return 1 + x[0] * x[0] + 2 * x[1] * x[1];
+};
+lf::dgfe::MeshFunctionGlobalDGFE m_gN{gN_lambda};
+
 // Scalar valued prescribed function f
 auto f_lambda = [](Eigen::Vector2d x) -> double {
     return -6.0;
@@ -82,7 +87,7 @@ for (int i = 4; i < argc; i++){
     auto l2_projection = lf::dgfe::L2ProjectionSqrtANablaBasis<double>(dgfe_space_ptr, m_a_coeff, 20);
 
     //run it
-    run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_f, m_gD);
+    run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
 
 }
 
