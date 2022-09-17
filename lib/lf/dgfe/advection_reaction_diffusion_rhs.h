@@ -33,14 +33,14 @@ std::string get_shape(const Eigen::EigenBase<Derived>& x)
     return oss.str();
 }
 
-template<typename SCALAR, typename DIFFUSION_COEFF, typename ADVECTION_COEFF, typename EDGESELECTOR, typename MESHFUNC_gN, typename MESHFUNC_F, typename MESHFUNC_gD>
+template<typename SCALAR, typename DIFFUSION_COEFF, typename ADVECTION_COEFF, typename EDGESELECTOR, typename MESHFUNC_F, typename MESHFUNC_gD, typename MESHFUNC_gN>
 class AdvectionReactionDiffusionRHS {
 
 public:
 
     using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>, std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>>;
 
-    AdvectionReactionDiffusionRHS(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, MESHFUNC_F f, MESHFUNC_gD gD, MESHFUNC_F gN,
+    AdvectionReactionDiffusionRHS(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, MESHFUNC_F f, MESHFUNC_gD gD, MESHFUNC_gN gN,
                                     DIFFUSION_COEFF a_coeff, ADVECTION_COEFF b_coeff, 
                                     EDGESELECTOR boundary_minus_edge, EDGESELECTOR boundary_d_edge,
                                     EDGESELECTOR boundary_n_edge, unsigned integration_degree, lf::dgfe::DiscontinuityPenalization disc_pen,
