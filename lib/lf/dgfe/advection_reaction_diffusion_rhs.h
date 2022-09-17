@@ -33,14 +33,14 @@ std::string get_shape(const Eigen::EigenBase<Derived>& x)
     return oss.str();
 }
 
-template<typename SCALAR, typename DIFFUSION_COEFF, typename ADVECTION_COEFF, typename EDGESELECTOR, typename FUNCTOR_F, typename FUNCTOR_G_D, typename FUNCTOR_G_N>
+template<typename SCALAR, typename DIFFUSION_COEFF, typename ADVECTION_COEFF, typename EDGESELECTOR, typename MESHFUNC_gN, typename MESHFUNC_F, typename MESHFUNC_gD>
 class AdvectionReactionDiffusionRHS {
 
 public:
 
     using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>, std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>>;
 
-    AdvectionReactionDiffusionRHS(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, FUNCTOR_F f, FUNCTOR_G_D gD, FUNCTOR_G_N gN,
+    AdvectionReactionDiffusionRHS(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, MESHFUNC_F f, MESHFUNC_gD gD, MESHFUNC_F gN,
                                     DIFFUSION_COEFF a_coeff, ADVECTION_COEFF b_coeff, 
                                     EDGESELECTOR boundary_minus_edge, EDGESELECTOR boundary_d_edge,
                                     EDGESELECTOR boundary_n_edge, unsigned integration_degree, lf::dgfe::DiscontinuityPenalization disc_pen,
@@ -143,7 +143,7 @@ public:
             bool delta_minus_k = (sum < 0) ? true : false;
 
             // !!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!
-            //    - ( b * n ) * g_D * v^+   over all edges which are either on boundary_D or boundary_minus and belong to delta_minus_k
+            //    - ( b * n ) * gD * v^+   over all edges which are either on boundary_D or boundary_minus and belong to delta_minus_k
 
             if (delta_minus_k && (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge))){
 
@@ -214,9 +214,9 @@ private:
     unsigned integration_degree_;
     unsigned max_legendre_degree_;
     lf::quad::QuadRuleCache qr_cache_;
-    FUNCTOR_F f_;
-    FUNCTOR_G_D gD_;
-    FUNCTOR_G_N gN_;
+    MESHFUNC_F f_;
+    MESHFUNC_gD gD_;
+    MESHFUNC_gN gN_;
     DIFFUSION_COEFF a_coeff_;
     ADVECTION_COEFF b_coeff_;
     EDGESELECTOR boundary_minus_edge_;

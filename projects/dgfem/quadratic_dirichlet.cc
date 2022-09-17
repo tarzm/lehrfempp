@@ -68,7 +68,7 @@ lf::dgfe::MeshFunctionGlobalDGFE m_f{f_lambda};
 
 
 //-----------------------RUN  IT------------------------------------------
-
+//loop over meshes
 for (int i = 4; i < argc; i++){
 
     std::string num_cells = argv[i];
