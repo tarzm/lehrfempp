@@ -31,7 +31,7 @@
 using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<double>>, std::vector<lf::dgfe::MeshFunctionDGFE<double>>>;
 
 
-template<typename MESHFUNC_A, typename MESHFUNC_B, typename MESHFUNC_C, typename MESHFUNC_gD, typename MESHFUNC_gN, typename MESHFUNC_f, typename MESHFUNC_true>
+template<typename MESHFUNC_A, typename MESHFUNC_B, typename MESHFUNC_C, typename MESHFUNC_gN, typename MESHFUNC_gD,  typename MESHFUNC_f, typename MESHFUNC_true>
 void run_convergence(double c_inv, double c_sigma, unsigned integration_degree, std::string run_name, std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, l2_proj_sqrt_a_nabla_basis l2_projection,
                      MESHFUNC_A &m_a, MESHFUNC_B &m_b, MESHFUNC_C &m_c, MESHFUNC_gD &m_gD, MESHFUNC_gN &m_gN, MESHFUNC_f &m_f, MESHFUNC_true &m_true){
 
@@ -83,59 +83,54 @@ for (auto edge : mesh_ptr->Entities(1)){
 //assemble boundary d and boundary n
 for (auto edge : mesh_ptr->Entities(1)){
     if (boundary_0_edge(*edge)){
-        //normal n
-        // auto corners = lf::geometry::Corners(*(edge->Geometry()));
-        // auto normal = lf::dgfe::outwardNormal(corners);
-        // auto avg_corners = corners.rowwise().mean();
-        // auto b = b_coeff_lambda(avg_corners);
-        // if(b.dot(normal) < 0){
-        //     boundary_minus_edge(*edge) = true;
-        // } else {
-        //     boundary_plus_edge(*edge) = true;
-        // }
-        boundary_d_edge(*edge) = true;
+        auto corners = lf::geometry::Corners(*(edge->Geometry()));
+        if (corners(0,0) == 1.0 && corners(0,1) == 1.0){
+            boundary_n_edge(*edge) = true;
+        } else {
+            boundary_d_edge(*edge) = true;
+        }
     }
 }
 
-// std::cout << "PART OF BOUNDARY 0:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_0_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY 0:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_0_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
-// std::cout << "PART OF BOUNDARY D:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_d_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY D:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_d_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
-// std::cout << "PART OF BOUNDARY N:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_n_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY N:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_n_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
-// std::cout << "PART OF BOUNDARY minus:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_minus_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY minus:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_minus_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
-// std::cout << "PART OF BOUNDARY plus:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_plus_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY plus:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_plus_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
     
 //----------------------END PREPARE BOUNDARY EDGE SETS------------------------
@@ -164,7 +159,7 @@ diffusionAssembler.assemble(A);
 
 //----------------------ASSEMBLE RHS------------------------
 //initialization of element vector provider
-lf::dgfe::AdvectionReactionDiffusionRHS<double, decltype(m_a), decltype(m_b), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_f)>
+lf::dgfe::AdvectionReactionDiffusionRHS<double, decltype(m_a), decltype(m_b), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_gN)>
                         advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_gN, m_a, m_b, boundary_minus_edge, boundary_d_edge, boundary_n_edge, integration_degree, disc_pen, l2_projection);
 //rhs initialization
 Eigen::VectorXd rhs(n_dofs);
@@ -215,7 +210,7 @@ if (file.is_open()){
     file << std::to_string(mesh_func_l2_error);
     file.close();
 } else {
-    std::cout << "Unable to open file";
+    std::cout << "Unable to open file \n";
 }
 //----------------------END WRITE ERROR TO FILE------------------------
 
