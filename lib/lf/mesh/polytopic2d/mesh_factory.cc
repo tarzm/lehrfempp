@@ -75,4 +75,36 @@ std::shared_ptr<mesh::Mesh> MeshFactory::Build(){
     return std::shared_ptr<mesh::Mesh>(mesh_ptr);
 }
 
+
+std::shared_ptr<lf::mesh::Mesh> polytopicFromHybrid2D(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr){
+    using coord_t = Eigen::Vector2d;
+    using size_type = lf::mesh::Mesh::size_type;
+
+    // Obtain mesh factory
+    std::unique_ptr<lf::mesh::polytopic2d::MeshFactory> mesh_factory_ptr = std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2);
+
+    //Add all nodes
+    for (auto point : mesh_ptr->Entities(2)){
+        auto coord = lf::geometry::Corners(*(point->Geometry()));
+        mesh_factory_ptr->AddPoint(coord);
+    }
+
+    //Add all polygons
+    for (auto cell : mesh_ptr->Entities(0)){
+        std::vector<unsigned> node_indices;
+        //loop over nodes of cell
+        for (auto point : cell->SubEntities(2)){
+            node_indices.push_back(mesh_ptr->Index(*point));
+        }
+        if(cell->RefEl() == lf::base::RefEl::kTria()){
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type, 3>{node_indices[0], node_indices[1], node_indices[2]}, nullptr);
+        } else { //Quad
+            mesh_factory_ptr->AddEntity(lf::base::RefEl::kPolygon(), std::array<size_type, 4>{node_indices[0], node_indices[1], node_indices[2], node_indices[3]}, nullptr);
+        }
+        
+    }
+
+    return mesh_factory_ptr->Build();
+}
+
 } //namespace lf::mesh::polytopic2d

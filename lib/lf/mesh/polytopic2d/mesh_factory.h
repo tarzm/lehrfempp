@@ -77,6 +77,13 @@ class MeshFactory : public mesh::MeshFactory{
 
 };
 
+/**
+ * @brief returns a polytopic 2D mesh from a hybrid 2D mesh
+ * 
+ * @return lf::mesh::polytopic2d::Mesh 
+ */
+std::shared_ptr<lf::mesh::Mesh> polytopicFromHybrid2D(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr);
+
 } //namespace lf::mesh::polytoppic2d
 
 #endif // MESH_FACTORY_POLYTOPIC2D_H
