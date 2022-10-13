@@ -32,7 +32,7 @@ using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionD
 
 
 template<typename MESHFUNC_A, typename MESHFUNC_B, typename MESHFUNC_C, typename MESHFUNC_gN, typename MESHFUNC_gD,  typename MESHFUNC_f, typename MESHFUNC_true>
-void run_convergence(double c_inv, double c_sigma, unsigned integration_degree, std::string run_name, std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, l2_proj_sqrt_a_nabla_basis l2_projection,
+double run_convergence(double c_inv, double c_sigma, unsigned integration_degree, std::string run_name, std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, l2_proj_sqrt_a_nabla_basis l2_projection,
                      MESHFUNC_A &m_a, MESHFUNC_B &m_b, MESHFUNC_C &m_c, MESHFUNC_gD &m_gD, MESHFUNC_gN &m_gN, MESHFUNC_f &m_f, MESHFUNC_true &m_true){
 
 auto n_cells = dgfe_space_ptr->Mesh()->NumEntities(0);
@@ -92,45 +92,45 @@ for (auto edge : mesh_ptr->Entities(1)){
     }
 }
 
-std::cout << "PART OF BOUNDARY 0:\n";
-for (auto edge : mesh_ptr->Entities(1)){
-    if(boundary_0_edge(*edge)){
-        std::cout << mesh_ptr->Index(*edge) << " ";
-    }
-}
-std::cout << "\n";
+// std::cout << "PART OF BOUNDARY 0:\n";
+// for (auto edge : mesh_ptr->Entities(1)){
+//     if(boundary_0_edge(*edge)){
+//         std::cout << mesh_ptr->Index(*edge) << " ";
+//     }
+// }
+// std::cout << "\n";
 
-std::cout << "PART OF BOUNDARY D:\n";
-for (auto edge : mesh_ptr->Entities(1)){
-    if(boundary_d_edge(*edge)){
-        std::cout << mesh_ptr->Index(*edge) << " ";
-    }
-}
-std::cout << "\n";
+// std::cout << "PART OF BOUNDARY D:\n";
+// for (auto edge : mesh_ptr->Entities(1)){
+//     if(boundary_d_edge(*edge)){
+//         std::cout << mesh_ptr->Index(*edge) << " ";
+//     }
+// }
+// std::cout << "\n";
 
-std::cout << "PART OF BOUNDARY N:\n";
-for (auto edge : mesh_ptr->Entities(1)){
-    if(boundary_n_edge(*edge)){
-        std::cout << mesh_ptr->Index(*edge) << " ";
-    }
-}
-std::cout << "\n";
+// std::cout << "PART OF BOUNDARY N:\n";
+// for (auto edge : mesh_ptr->Entities(1)){
+//     if(boundary_n_edge(*edge)){
+//         std::cout << mesh_ptr->Index(*edge) << " ";
+//     }
+// }
+// std::cout << "\n";
 
-std::cout << "PART OF BOUNDARY minus:\n";
-for (auto edge : mesh_ptr->Entities(1)){
-    if(boundary_minus_edge(*edge)){
-        std::cout << mesh_ptr->Index(*edge) << " ";
-    }
-}
-std::cout << "\n";
+// std::cout << "PART OF BOUNDARY minus:\n";
+// for (auto edge : mesh_ptr->Entities(1)){
+//     if(boundary_minus_edge(*edge)){
+//         std::cout << mesh_ptr->Index(*edge) << " ";
+//     }
+// }
+// std::cout << "\n";
 
-std::cout << "PART OF BOUNDARY plus:\n";
-for (auto edge : mesh_ptr->Entities(1)){
-    if(boundary_plus_edge(*edge)){
-        std::cout << mesh_ptr->Index(*edge) << " ";
-    }
-}
-std::cout << "\n";
+// std::cout << "PART OF BOUNDARY plus:\n";
+// for (auto edge : mesh_ptr->Entities(1)){
+//     if(boundary_plus_edge(*edge)){
+//         std::cout << mesh_ptr->Index(*edge) << " ";
+//     }
+// }
+// std::cout << "\n";
 
     
 //----------------------END PREPARE BOUNDARY EDGE SETS------------------------
@@ -185,9 +185,9 @@ lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
 //calculate with mesh function error function
 double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dgfe_mesh_function), decltype(m_true)>(dgfe_mesh_function, m_true, mesh_ptr, 30);
 
-std::cout << "\n";
-std::cout << "Mesh Function error: " << mesh_func_l2_error;
-std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << " run with " << mesh_ptr->NumEntities(0) << " cells" << "\n\n";
+// std::cout << "\n";
+// std::cout << "Mesh Function error: " << mesh_func_l2_error;
+// std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << " run with " << mesh_ptr->NumEntities(0) << " cells" << "\n\n";
 //----------------------END MESH FUNCTION AND ERROR CALCULATION------------------------
 
 
@@ -213,6 +213,7 @@ if (file.is_open()){
     std::cout << "Unable to open file \n";
 }
 //----------------------END WRITE ERROR TO FILE------------------------
+return mesh_func_l2_error;
 
 } //end templated function
 
