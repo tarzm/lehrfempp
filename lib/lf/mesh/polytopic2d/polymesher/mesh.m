@@ -3,7 +3,7 @@ addpath '.\matlab_out'
 
 output_folder = 'matlab_out/';
 
-mesh_sizes = [10 20 40 100 200 400 800 1000 1200 1400 1600 2000 3000 4000];
+mesh_sizes = [4 8 16 32 64 128 256 512 1024 2048 4096];
 
 disp(size(mesh_sizes));
 

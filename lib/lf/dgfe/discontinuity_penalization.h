@@ -22,7 +22,7 @@ using scalar_t = double;
  * such that the first value in the vector is the area of the triangle 
  * made up by endpoint_0, endpoint_1, and the next node of the polygon in counterclockwise direction
  * 
- * @note this only works for convex polygons!
+ * @note only works for convex polygons!
  */
 std::vector<scalar_t> simplexAreas(const lf::mesh::Entity &cell, size_type egde_loc_idx);
 

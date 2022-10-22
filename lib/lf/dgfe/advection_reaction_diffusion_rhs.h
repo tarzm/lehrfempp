@@ -72,7 +72,7 @@ public:
 
 
         //!!!!!!!!!!!!! FIRST TERM !!!!!!!!!!!!!!
-        //     f * w   over all cells
+        //     f * v   over all cells
 
         //quadrule setup
         const lf::quad::QuadRule qr_t = qr_cache_.Get(lf::base::RefEl::kTria(), integration_degree_);
@@ -104,6 +104,7 @@ public:
                 }
             }
         }
+        std::cout << "First term of rhs evaluated\n";
         //!!!!!!!!!!!!! END FIRST TERM !!!!!!!!!!!!!!
 
         //quadrule setup
@@ -170,6 +171,15 @@ public:
                 SCALAR A_F = A_F_mat.lpNorm<Eigen::Infinity>();
                 A_F = A_F * A_F;
 
+                ///////calculate AF new
+                //get midpoint of edge
+                // auto corners = lf::geometry::Corners(*(edge->Geometry()));
+                // auto midpoint = (corners.col(0) + corners.col(1)) * 0.5;
+                // // evaluate a at midpoint
+                // auto a_eval_sqrt_n = a_coeff_(cell, midpoint)[0].sqrt() * normal;
+                // double A_F_sqrt = std::max(a_eval_sqrt_n[0], a_eval_sqrt_n[1]);
+                // double A_F = A_F_sqrt * A_F_sqrt;
+
                 //loop over basis functions in test space
                 for(int basis_test = 0; basis_test < n_basis; basis_test++){
                     //sum over qr points
@@ -181,7 +191,7 @@ public:
                                                                      - disc_pen_(*edge, A_F) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) )
                                                 * w_ref_s[i] * gram_dets_s[i];
                     }
-                }                    
+                }                
             }
             //!!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!!
 

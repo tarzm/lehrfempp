@@ -372,8 +372,8 @@ for (size_type level = 0; level < L; ++level) {
     //     }
     // }
 
-    double c_inv = 0.5;
-    double c_sigma = 20.0;
+    double c_inv = 0.1;
+    double c_sigma = 100.0;
 
     auto error_l2_poly = run_convergence(c_inv, c_sigma, 5, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
 

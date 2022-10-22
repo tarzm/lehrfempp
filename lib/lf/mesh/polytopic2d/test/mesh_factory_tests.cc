@@ -159,5 +159,41 @@ TEST(lf_mesh_factory, flagEntitiesOnBoundary){
     }
 }
 
+TEST(lf_mesh_factory, polytopicFromHybrid2d){
+
+    auto hybrid_ptr = lf::mesh::test_utils::GenerateHybrid2DTestMesh(0,1);
+    auto polytopic_ptr = lf::mesh::polytopic2d::polytopicFromHybrid2D(hybrid_ptr);
+
+    //check polygon 5
+    std::vector<unsigned> pol_5;
+    std::vector<unsigned> quad_5;
+    for (auto point : hybrid_ptr->Entities(0)[5]->SubEntities(2)){
+        quad_5.push_back(hybrid_ptr->Index(*point));
+    }
+    for (auto point : polytopic_ptr->Entities(0)[5]->SubEntities(2)){
+        pol_5.push_back(hybrid_ptr->Index(*point));
+    }
+    EXPECT_EQ(pol_5, quad_5);
+
+    //check boundary edges
+    auto bd_flags = lf::mesh::utils::flagEntitiesOnBoundary(polytopic_ptr, 1);
+    lf::mesh::utils::CodimMeshDataSet<bool> bd_check(polytopic_ptr, 1, false);
+
+
+    bd_check(*(polytopic_ptr->Entities(1)[1])) = true;
+    bd_check(*(polytopic_ptr->Entities(1)[13])) = true;
+    bd_check(*(polytopic_ptr->Entities(1)[3])) = true;
+    bd_check(*(polytopic_ptr->Entities(1)[8])) = true;
+    bd_check(*(polytopic_ptr->Entities(1)[10])) = true;
+    bd_check(*(polytopic_ptr->Entities(1)[14])) = true;
+    bd_check(*(polytopic_ptr->Entities(1)[17])) = true;
+
+    //loop over edges
+    for (auto edge : polytopic_ptr->Entities(1)){
+        EXPECT_EQ(bd_flags(*edge), bd_check(*edge)) << polytopic_ptr->Index(*edge) << "\n";
+    }
+
+}
+
 
 }   //  namespace lf::mesh::polytopic2d

@@ -18,47 +18,58 @@
 
 #include "lf/mesh/test_utils/test_meshes.h"
 
+
+#include <Eigen/Eigen>
+
+
 int main(int argc, char *argv[]){
 
+// Eigen::VectorXd some_vec(2);
+// some_vec << 4.0, 9.0;
+// Eigen::Vector2d sqrt_vec = sqrt(some_vec);
+// std::cout << "Sqrt vec: " << sqrt_vec[0] << " , " << sqrt_vec[1] << "\n";
+
+
+
 //prepare list of number of cells
-std::vector<int> n_cells_list;
-for (int i = 2; i < 13; i++){
-    n_cells_list.push_back(std::pow(2,i));
-}
+// std::vector<int> n_cells_list;
+// for (int i = 2; i < 13; i++){
+//     n_cells_list.push_back(std::pow(2,i));
+// }
 
-//loop over meshes
-for (int i : n_cells_list){
+// //loop over meshes
+// for (int i : n_cells_list){
 
-    std::string num_cells = std::to_string(i);
+//     std::string num_cells = std::to_string(i);
 
-    //get mesh
-    std::filesystem::path here = __FILE__;
-    auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_" + num_cells + "_cells.vtk";
-    lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
-    auto mesh_ptr = reader.mesh();
+//     //get mesh
+//     std::filesystem::path here = __FILE__;
+//     auto mesh_file = here.parent_path().string() + "/msh_files/unit_square_voronoi_" + num_cells + "_cells.vtk";
+//     lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
+//     auto mesh_ptr = reader.mesh();
 
-    //calculate h
+//     //calculate h
 
-    double h = 0.0;
-    for (auto cell : mesh_ptr->Entities(0)){
-        auto corners = lf::mesh::polytopic2d::Corners(cell);
-        auto n_nodes = corners.cols();
-        for (int idx_0 = 0; idx_0 < n_nodes; idx_0++){
-            for (int idx_1 = 0; idx_1 < n_nodes; idx_1++){
+//     double h = 0.0;
+//     for (auto cell : mesh_ptr->Entities(0)){
+//         auto corners = lf::mesh::polytopic2d::Corners(cell);
+//         auto n_nodes = corners.cols();
+//         for (int idx_0 = 0; idx_0 < n_nodes; idx_0++){
+//             for (int idx_1 = 0; idx_1 < n_nodes; idx_1++){
 
-                double norm = (corners.col(idx_0)- corners.col(idx_1)).norm();
-                if (norm > h){
-                    h = norm;
-                }
-            }
-        }
-    }
+//                 double norm = (corners.col(idx_0)- corners.col(idx_1)).norm();
+//                 if (norm > h){
+//                     h = norm;
+//                 }
+//             }
+//         }
+//     }
 
-    std::cout << h  << ", ";
+//     std::cout << h  << ", ";
 
-}
+// }
 
-    std::cout << "\n";
+std::cout << "\n";
 
 
 return 0;
