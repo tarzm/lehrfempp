@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 plt.rcParams['figure.figsize'] = [20, 20]
 
 if len(argv) < 2:
-    print('usage: python plot_mesh.py mesh.csv')
+    print('usage: python plot_mesh.py mesh.csv outputfilename')
     exit(-1)
 
 vertices = []
@@ -114,7 +114,7 @@ plot_cells(polygons)
 
 plt.axis('off')
 
-out_file = "polytopicTestMesh2.png"
+out_file = f"{argv[2]}.png"
 
 #plt.show()
 plt.savefig(out_file, bbox_inches='tight')

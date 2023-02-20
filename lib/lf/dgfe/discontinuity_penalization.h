@@ -27,7 +27,10 @@ using scalar_t = double;
 std::vector<scalar_t> simplexAreas(const lf::mesh::Entity &cell, size_type egde_loc_idx);
 
 
-
+/**
+ * @brief implementation of the Symmetric Interior Penalty
+ * 
+ */
 class DiscontinuityPenalization{
     
     public:

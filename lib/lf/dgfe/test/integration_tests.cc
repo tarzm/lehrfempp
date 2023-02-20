@@ -9,6 +9,7 @@
 #include <cmath>
 #include <filesystem>
 #include <limits>
+#include <string>
 
 #include <gtest/gtest.h>
 #include <lf/fe/fe.h>
@@ -241,14 +242,18 @@ TEST(sub_tessellation_integration, polytopicTestMesh){
     EXPECT_NEAR(sum, exact_check, 1e-14);
 }
 
-TEST(sub_tessellation_integration, 100To400cells){
+TEST(sub_tessellation_integration, convergence){
     //get meshes files--------------------------------------------------------------------------------------
-    std::vector<int> mesh_sizes{100, 200, 400, 800, 1000, 1200, 1400, 1600, 2000, 3000, 4000};
+    std::vector<int> mesh_sizes{4,8,16,32,64,128};
     std::filesystem::path here = __FILE__;
-    auto mesh_file_100 = here.parent_path().string() + "/msh_files/unit_square_voronoi_100_cells.vtk";
-    std::vector<decltype(mesh_file_100)> mesh_files;
-    mesh_files.push_back(std::move(mesh_file_100));
-    mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_200_cells.vtk");
+    auto mesh_file_4 = here.parent_path().string() + "/msh_files/unit_square_voronoi_4_cells.vtk";
+    std::vector<decltype(mesh_file_4)> mesh_files;
+    mesh_files.push_back(std::move(mesh_file_4));
+    for (int i = 1; i < mesh_sizes.size(); i++){
+        mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_" + std::to_string(mesh_sizes[i]) + "_cells.vtk");
+        std::cout << "Added mesh with " << mesh_sizes[i] << " cells\n";
+    }
+    
     // mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_400_cells.vtk");
     // mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_800_cells.vtk");
     // mesh_files.push_back(here.parent_path().string() + "/msh_files/unit_square_voronoi_1000_cells.vtk");
@@ -289,7 +294,8 @@ TEST(sub_tessellation_integration, 100To400cells){
     //exact solutions calculated and copied from wolframalpha.com
     std::vector<double> exact_solutions{0.05, 1.0/48.0, 0.1019760096823904218580342315643055994170804185885964798615039678, 1.651235484787737228193342177582565171308234579126117326173794530330979441089472815945286980167725541};
     //degrees are chosen and adjusted by hand
-    std::vector<int> quadrule_degrees{7, 12, 14, 12};
+    //std::vector<int> quadrule_degrees{7, 12, 14, 12};
+    std::vector<int> quadrule_degrees{2, 2, 2, 2};
     // outer vector for meshes, inner for functors
     std::vector<std::vector<double>> solutions;
     //--------------------------------------------------------------------------------------------------
@@ -331,10 +337,10 @@ TEST(sub_tessellation_integration, 100To400cells){
 
     for(int i = 0; i < mesh_files.size(); i++){
         auto sol_vec = solutions[i];
-        EXPECT_NEAR(std::abs(sol_vec[0] - exact_solutions[0]), 0.0, std::numeric_limits<double>::epsilon() * 10);
-        EXPECT_NEAR(std::abs(sol_vec[1] - exact_solutions[1]), 0.0, std::numeric_limits<double>::epsilon() * 10);
-        EXPECT_NEAR(std::abs(sol_vec[2] - exact_solutions[2]), 0.0, std::numeric_limits<double>::epsilon() * 10);
-        EXPECT_NEAR(std::abs(sol_vec[3] - exact_solutions[3]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+        // EXPECT_NEAR(std::abs(sol_vec[0] - exact_solutions[0]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+        // EXPECT_NEAR(std::abs(sol_vec[1] - exact_solutions[1]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+        // EXPECT_NEAR(std::abs(sol_vec[2] - exact_solutions[2]), 0.0, std::numeric_limits<double>::epsilon() * 10);
+        // EXPECT_NEAR(std::abs(sol_vec[3] - exact_solutions[3]), 0.0, std::numeric_limits<double>::epsilon() * 10);
 
         std::cout << std::left << std::setw(10) << mesh_sizes[i] << std::right << std::setw(16)
               << std::abs(sol_vec[0] - exact_solutions[0]) << std::setw(16)

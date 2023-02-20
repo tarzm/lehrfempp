@@ -92,7 +92,7 @@ class Polygon : public mesh::Entity {
         std::vector<const mesh::hybrid2d::Segment*> edges_{};       // edges of the cells
         std::vector<lf::mesh::Orientation> edge_ori_{};             // orientation of edges (set in constructor)
         Entity* this_ = nullptr;                                    // needed for SubEntity()
-        Eigen::MatrixXd corners_;
+        Eigen::MatrixXd corners_;                                   // coordinates of the nodes of the polygon in their respective order, stored in a 2x(#nodes) matrix
 };
 
 /**

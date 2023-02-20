@@ -71,7 +71,7 @@ using coord_t = Eigen::Vector2d;
 
   // 2x2 diffusion tensor A(x)
   auto alpha = [](Eigen::Vector2d x) -> Eigen::Matrix<double, 2, 2> {
-    return (Eigen::Matrix<double, 2, 2>() << 1.0, 0, 0 ,1.0)
+    return (Eigen::Matrix<double, 2, 2>() << 1.0, 0.0, 0.0 , 1.0)
         .finished();
   };
   // Wrap diffusion coefficient into a MeshFunction
@@ -90,7 +90,7 @@ using coord_t = Eigen::Vector2d;
   /* SAM_LISTING_BEGIN_1 */
   // Exact solution u
   auto u = [](Eigen::Vector2d x) -> double {
-    return 1.0 + x[0] + x[1] * x[1];
+    return 1 + x[0] + x[1]*x[1];
   };
   // Has to be wrapped into a mesh function for error computation
   lf::mesh::utils::MeshFunctionGlobal mf_u{u};
@@ -98,7 +98,7 @@ using coord_t = Eigen::Vector2d;
   // Gradient of exact solution
   auto grad_u = [](Eigen::Vector2d x) -> Eigen::Vector2d {
     double den = x[0] * x[0] + x[1] + 1.0;
-    return ((Eigen::Vector2d() << 0.0, 0.0).finished());
+    return ((Eigen::Vector2d() << 1.0, 1.0).finished());
   };
   // Convert into mesh function to use for error computation
   lf::mesh::utils::MeshFunctionGlobal mf_grad_u{grad_u};
@@ -191,7 +191,7 @@ using coord_t = Eigen::Vector2d;
 
 
 // Obtain a pointer to a hierarchy of nested meshes
-const int reflevels = 2;
+const int reflevels = 4;
 std::shared_ptr<lf::refinement::MeshHierarchy> multi_mesh_p =
     lf::refinement::GenerateMeshHierarchyByUniformRefinemnt(mesh_p,
                                                             reflevels);
@@ -207,6 +207,9 @@ std::vector<std::tuple<size_type, double, double>> errs{};
 // Vector for keeping polytopic error norms
 std::vector<std::tuple<size_type, double, double>> errs_poly{};
 
+//define parameters
+double c_inv = 0.5;
+double c_sigma = 40.0;
 
 
 // ############################LEVEL LOOP: Do computations on all levels
@@ -338,7 +341,10 @@ for (size_type level = 0; level < L; ++level) {
     //############################ START POLYTOPIC
 
     //mesh
-    auto poly_mesh_ptr = lf::mesh::polytopic2d::polytopicFromHybrid2D(mesh_p);
+    auto poly_mesh_ptr = lf::mesh::polytopic2d::PolytopicFromHybrid2D(mesh_p);
+
+    //write mesh for python drawing
+    //lf::io::writeMatplotlib(*poly_mesh_ptr, "./csvs/" + std::to_string(poly_mesh_ptr->NumEntities(0)) + ".csv");
 
     //dgfe space
     lf::dgfe::DGFESpace dgfe_space(poly_mesh_ptr, 1);
@@ -372,8 +378,7 @@ for (size_type level = 0; level < L; ++level) {
     //     }
     // }
 
-    double c_inv = 0.1;
-    double c_sigma = 100.0;
+    
 
     auto error_l2_poly = run_convergence(c_inv, c_sigma, 5, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
 
@@ -405,7 +410,7 @@ std::cout << std::left << std::setw(10) << N << std::left << std::setw(16)
 }
 
 //############POLYTOPIC
-std::cout << "\n\nPOLYTOPIC\n";
+std::cout << "\n\nPOLYTOPIC with C_sigma = " << c_sigma << " and C_INV = " << c_inv << "\n" ;
 std::cout << std::left << std::setw(10) << "N cells" << std::right << std::setw(16)
         << "L2 error" << std::setw(16) << "H1 error" << std::endl;
 std::cout << "---------------------------------------------" << std::endl;

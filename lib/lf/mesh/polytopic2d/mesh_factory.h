@@ -32,10 +32,13 @@ class MeshFactory : public mesh::MeshFactory{
          * codimension `codim>0` is a subentity of at least one entity with
          * codimension `codim-1`. If `check_completeness = true` and the mesh is not
          * complete, an assert will fail.
-         * @param unit_square If set to true, the MeshFactory will "clean" the mesh from coordinates that are very close to 1 and 0
-         * but not exactly. It will make them exactly 0 and 1. This problem is coming from PolyMesher, which collepses small edges
-         * into a single point. After that, the polygons do not make up exactly a unit square anymore but form a slightly curved boundary,
-         * which causes errors of integration over the mesh to rise significantly (up to 7 orders of magnitude observed for a polynomial integrand).
+         * @param unit_square If set to true, the MeshFactory will "clean" the mesh from
+         * coordinates that are very close to 1 and 0
+         * but not exactly. It will make them exactly 0 and 1. This problem is caused by
+         * PolyMesher, which collapses small edges
+         * into a single point. After that, the polygons do not make up exactly a unit square
+         * anymore but form a slightly curved boundary,
+         * which causes errors of integration over the mesh to rise significantly.
          */
         explicit MeshFactory(dim_t dim_world, bool check_completeness = true, bool unit_square = true)
             : dim_world_(dim_world), check_completeness_(check_completeness), unit_square_(unit_square) {}
@@ -71,6 +74,7 @@ class MeshFactory : public mesh::MeshFactory{
         // If set to true, the Build() method will check whether all sub-entities
         // belong to at least one entity */
         bool check_completeness_;
+        //bool to wether MeshFactory should "clean" the mesh from leftovers of the edge collapsing of PolyMesher
         bool unit_square_;
 
 
@@ -80,9 +84,8 @@ class MeshFactory : public mesh::MeshFactory{
 /**
  * @brief returns a polytopic 2D mesh from a hybrid 2D mesh
  * 
- * @return lf::mesh::polytopic2d::Mesh 
  */
-std::shared_ptr<lf::mesh::Mesh> polytopicFromHybrid2D(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr);
+std::shared_ptr<lf::mesh::Mesh> PolytopicFromHybrid2D(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr);
 
 } //namespace lf::mesh::polytoppic2d
 

@@ -24,6 +24,10 @@ using scalar_t = double;
 
 class BoundingBox {
     public:
+        /**
+         * @brief Construct a new axis-aligned bounding box object
+         *        from a polygonal cell
+         */
         BoundingBox(const lf::mesh::Entity &entity);
         /**
          * @brief maps from reference bounding box to the cell's bounding box
@@ -41,6 +45,9 @@ class BoundingBox {
          */
         Eigen::MatrixXd inverseMap(const Eigen::MatrixXd corners);
 
+        /**
+         * @brief returns determinant of the jacobi matrix
+         */
         scalar_t det();
 
         /**

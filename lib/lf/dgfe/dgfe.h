@@ -34,12 +34,8 @@
  * galerkin finite element methods
  *
  * This namespace contains a number of classes/functions which
- * can be used to solve boundary vlaue problems with discontinuous galerkin finite .
- * This means that the shape functions must be scalar valued, but the shape
- * functions of a given approximation space may depend on the location in
- * the mesh instead of only the corresponding reference element. The
- * `lf::uscalfe` namespace is a specialization of this namespace to uniform
- * scalar finite elements. (Mainly Lagrangian FE).
+ * can be used to solve boundary value problems with discontinuous galerkin finite 
+ * methods.
  *
  * Examples of approximation spaces that the methodsclasses in this namespace
  * can represent/handle are:

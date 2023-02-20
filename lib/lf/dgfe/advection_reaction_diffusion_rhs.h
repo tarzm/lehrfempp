@@ -104,7 +104,6 @@ public:
                 }
             }
         }
-        std::cout << "First term of rhs evaluated\n";
         //!!!!!!!!!!!!! END FIRST TERM !!!!!!!!!!!!!!
 
         //quadrule setup
@@ -170,15 +169,6 @@ public:
                 }
                 SCALAR A_F = A_F_mat.lpNorm<Eigen::Infinity>();
                 A_F = A_F * A_F;
-
-                ///////calculate AF new
-                //get midpoint of edge
-                // auto corners = lf::geometry::Corners(*(edge->Geometry()));
-                // auto midpoint = (corners.col(0) + corners.col(1)) * 0.5;
-                // // evaluate a at midpoint
-                // auto a_eval_sqrt_n = a_coeff_(cell, midpoint)[0].sqrt() * normal;
-                // double A_F_sqrt = std::max(a_eval_sqrt_n[0], a_eval_sqrt_n[1]);
-                // double A_F = A_F_sqrt * A_F_sqrt;
 
                 //loop over basis functions in test space
                 for(int basis_test = 0; basis_test < n_basis; basis_test++){

@@ -76,7 +76,7 @@ std::shared_ptr<mesh::Mesh> MeshFactory::Build(){
 }
 
 
-std::shared_ptr<lf::mesh::Mesh> polytopicFromHybrid2D(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr){
+std::shared_ptr<lf::mesh::Mesh> PolytopicFromHybrid2D(std::shared_ptr<const lf::mesh::Mesh> mesh_ptr){
     using coord_t = Eigen::Vector2d;
     using size_type = lf::mesh::Mesh::size_type;
 

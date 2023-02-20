@@ -67,8 +67,8 @@ scalar_t legendre_polynomial_2D_dy(size_type degree_x, size_type degree_y, const
  * @brief returns 2D basis function at coordinate defined on reference bounding box
  * 
  * @param n nth basis function of
- * @param max_degree maximum degree of 1D legendre polnynomials present in basis
- * 
+ * @param max_degree maximum polynomial degree of 1D legendre polnynomials present in basis
+ * @param coord point for which the polynomial is evaluated
  */
 scalar_t legendre_basis(size_type n, size_type max_degree, const Eigen::Vector2d &coord);
 
@@ -79,7 +79,7 @@ scalar_t legendre_basis(size_type n, size_type max_degree, const Eigen::Vector2d
  * 
  * @param n nth basis function of
  * @param max_degree maximum degree of 1D legendre polnynomials present in basis
- * 
+ * @param coord point for which the polynomial is evaluated
  */
 scalar_t legendre_basis_dx(size_type n, size_type max_degree, const Eigen::Vector2d &coord);
 

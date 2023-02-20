@@ -159,10 +159,10 @@ TEST(lf_mesh_factory, flagEntitiesOnBoundary){
     }
 }
 
-TEST(lf_mesh_factory, polytopicFromHybrid2d){
+TEST(lf_mesh_factory, PolytopicFromHybrid2d){
 
     auto hybrid_ptr = lf::mesh::test_utils::GenerateHybrid2DTestMesh(0,1);
-    auto polytopic_ptr = lf::mesh::polytopic2d::polytopicFromHybrid2D(hybrid_ptr);
+    auto polytopic_ptr = lf::mesh::polytopic2d::PolytopicFromHybrid2D(hybrid_ptr);
 
     //check polygon 5
     std::vector<unsigned> pol_5;

@@ -23,6 +23,10 @@
 
 namespace lf::dgfe {
 
+/**
+ * @brief returns the L^2-projection of sqrt(a) * nabla v for all basis functions v
+ */
+
 template<typename SCALAR, typename MESH_FUNCTION>
 std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>, std::vector<lf::dgfe::MeshFunctionDGFE<SCALAR>>> L2ProjectionSqrtANablaBasis(
             std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, MESH_FUNCTION m_a_coeff, unsigned max_integration_degree){
