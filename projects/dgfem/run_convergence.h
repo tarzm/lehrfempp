@@ -153,7 +153,10 @@ lf::dgfe::DiffusionMatrixAssembler<decltype(A), double, decltype(m_a), decltype(
 
 //assemble galerkin matrix
 //lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), advectionReactionProvider, A);
-diffusionAssembler.assemble(A); 
+diffusionAssembler.assemble(A);
+
+
+
 //----------------------END ASSEMBLE GALERKIN MATRIX------------------------
 
 
@@ -171,6 +174,13 @@ lf::assemble::AssembleVectorLocally(0, dgfe_space_ptr->LocGlobMap(), advectionRe
 
 //----------------------SOLVE LSE------------------------
 Eigen::SparseMatrix<double> A_crs = A.makeSparse();
+
+
+//Show Galerkin Matrix
+//get dense matrix
+auto dense_A = Eigen::MatrixXd(A_crs);
+std::cout << "\n\n \t \t Galerkin Matrix: \n " << dense_A << "\n";
+
 Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
 solver.compute(A_crs);
 LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");

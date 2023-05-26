@@ -53,17 +53,21 @@ scalar_t DiscontinuityPenalization::operator()(const lf::mesh::Entity &edge, sca
     auto simplex_areas_0 = simplexAreas(*polygon_0, polygon_pair.first.second);
     scalar_t polygon_area_0 = lf::dgfe::integrate(lf::mesh::polytopic2d::Corners(polygon_0), 0, 0);
     auto max_legendre_degree = dgfe_space_ptr_->MaxLegendreDegree();
-    //constant appearing in the term -> degree of the basis functions (max_legendre_degree^2) to the power of 2
-    double p_k_2d_1 = max_legendre_degree * max_legendre_degree * max_legendre_degree * max_legendre_degree;
+    //constant appearing in the term p^(2*(d-1)), p is a constant appearing in the definition of shape-regularity
+    double p_2d_1 = 4;
     //volume of the edge
     scalar_t edge_volume = lf::geometry::Volume(*(edge.Geometry()));
 
     if (polygon_1 == nullptr){ //edge is on boundary
         scalar_t max_simplex_area = *std::max_element(simplex_areas_0.begin(), simplex_areas_0.end());
 
-        scalar_t c_inv = c_inv_const_ * std::min(polygon_area_0 / max_simplex_area, p_k_2d_1);
+        scalar_t c_inv = c_inv_const_ * std::min(polygon_area_0 / max_simplex_area, p_2d_1);
 
-        return A_f * c_sigma_const_ * c_inv * p_k_2d_1 * edge_volume / polygon_area_0;
+        std::cout << "\nBoundary edge. AF = " << A_f << "   p_k_power2 = " << (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree)
+                        << "       edge volume = " << edge_volume << "     polygon area = " << polygon_area_0 << "       ALles = "
+                        << A_f * c_sigma_const_ * c_inv * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume / polygon_area_0 << "\n";
+
+        return A_f * c_sigma_const_ * c_inv * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume / polygon_area_0;
 
     } else {
         scalar_t max_simplex_area_0 = *std::max_element(simplex_areas_0.begin(), simplex_areas_0.end());
@@ -72,10 +76,14 @@ scalar_t DiscontinuityPenalization::operator()(const lf::mesh::Entity &edge, sca
         scalar_t max_simplex_area_1 = *std::max_element(simplex_areas_1.begin(), simplex_areas_1.end());
         scalar_t polygon_area_1 = lf::dgfe::integrate(lf::mesh::polytopic2d::Corners(polygon_1), 0, 0);
 
-        scalar_t c_inv_0 = c_inv_const_ * std::min(polygon_area_0 / max_simplex_area_0, p_k_2d_1);
-        scalar_t c_inv_1 = c_inv_const_ * std::min(polygon_area_1 / max_simplex_area_1, p_k_2d_1);
+        scalar_t c_inv_0 = c_inv_const_ * std::min(polygon_area_0 / max_simplex_area_0, p_2d_1);
+        scalar_t c_inv_1 = c_inv_const_ * std::min(polygon_area_1 / max_simplex_area_1, p_2d_1);
 
-        return A_f * c_sigma_const_ * p_k_2d_1 * edge_volume * std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1);
+        std::cout << "\nInterior edge. AF = " << A_f << "   p_k_power2 = " << (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree)
+                        << "       edge volume = " << edge_volume << "     max thingy = " << std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1) << "     Alles= "
+                        << A_f * c_sigma_const_ * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume * std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1) << "\n";
+
+        return A_f * c_sigma_const_ * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume * std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1);
     }
 }
 
