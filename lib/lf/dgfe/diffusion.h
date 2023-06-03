@@ -242,8 +242,8 @@ public:
     }
 
     void assemble(TMPMATRIX &matrix){
-        //FIRST PART => LOOP OVER CELLS FOR VOLUME PART
-        //!!!!!!!!!!!!! FIRST TERM !!!!!!!!!!!!!!
+        
+        
         //     a * nabla(w) * nabla(v)  over all cells
         const unsigned n_basis = (max_legendre_degree_ == 1) ? 4 : 9;
         //initialize element matrix
@@ -260,9 +260,11 @@ public:
         
         //loop over cells
         for (const lf::mesh::Entity *cell : dgfe_space_ptr_->Mesh()->Entities(0)){
-            
-            //reset element matrix
-            elem_mat.setZero();
+
+            //!!!!!!!!!!!!! FIRST TERM !!!!!!!!!!!!!!
+
+            //dof info
+            nonstd::span<const Eigen::Index> dofs_cell(dofhandler.GlobalDofIndices(*cell));
 
             //local - global mapping
             lf::dgfe::BoundingBox box(*cell);
@@ -271,7 +273,7 @@ public:
             
             //loop over triangles in the sub-tessellation
             for(auto& tria_geo_ptr : sub_tessellation){
-                // qr points mapped to triangle
+                //qr points mapped to triangle
                 Eigen::MatrixXd zeta_global_t{tria_geo_ptr->Global(zeta_ref_t)};
                 // qr points mapped back into reference bounding box to retrieve values
                 Eigen::MatrixXd zeta_box_t{box.inverseMap(zeta_global_t)};
@@ -286,6 +288,7 @@ public:
                     //loop over basis functions in test space
                     for(int basis_test = 0; basis_test < n_basis; basis_test++){
                         //sum over qr points
+                        SCALAR sum = 0;
                         for (int i = 0; i < gram_dets_t.size(); i++){
 
                             Eigen::Vector2d nabla_w{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0),
@@ -293,23 +296,12 @@ public:
                             Eigen::Vector2d nabla_v{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0),
                                                     legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(1)};
 
-                            elem_mat(basis_trial, basis_test) += (a[i] * nabla_w).dot(nabla_v) * w_ref_t[i] * gram_dets_t[i];
+                            sum += (a[i] * nabla_w).dot(nabla_v) * w_ref_t[i] * gram_dets_t[i];
                         }
+                        matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], sum);
                     }
                 }
             }
-            // row indices of for contributions of cells
-            nonstd::span<const Eigen::Index> row_idx(dofhandler.GlobalDofIndices(*cell));
-            // Column indices of for contributions of cells
-            nonstd::span<const Eigen::Index> col_idx(dofhandler.GlobalDofIndices(*cell));
-            //assembly double loop
-            for (int i = 0; i < n_basis; i++) {
-                for (int j = 0; j < n_basis; j++) {
-                // Add the element at position (i,j) of the local matrix
-                // to the entry at (row_idx[i], col_idx[j]) of the global matrix
-                matrix.AddToEntry(row_idx[i], col_idx[j], elem_mat(i, j));
-                }
-            }  // end assembly local double loop
         }
         //!!!!!!!!!!!!! END FIRST TERM !!!!!!!!!!!!!!
 
@@ -481,7 +473,7 @@ public:
                             sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -491,7 +483,7 @@ public:
                             sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -501,7 +493,7 @@ public:
                             sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -511,7 +503,7 @@ public:
                             sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], -0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
 
                         //Second part {{a * v}} * [[w]]
                         ////////////////////////////////////////////////////
@@ -523,7 +515,7 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_trial], dof_plus[basis_test], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_trial], dof_plus[basis_test], - 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -533,7 +525,7 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_trial], dof_plus[basis_test], -0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_trial], dof_plus[basis_test], 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -543,7 +535,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_trial], dof_minus[basis_test], 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_trial], dof_minus[basis_test], - 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -553,7 +545,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_trial], dof_minus[basis_test], -0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_trial], dof_minus[basis_test], 0.5 * sum);
                     }
                 }
             }
@@ -588,12 +580,9 @@ public:
                     }
                 }
             }
-                
-
-
+            
+            //!!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!!
         }
-
-
     }
 
 private:
