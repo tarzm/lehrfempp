@@ -74,6 +74,42 @@ TEST(L2ErrorSubTessellation, twoGlobalMeshFunctions){
 
 }
 
+TEST(L2ErrorSubTessellation, DGFEandGlobalMeshFunction){
+
+    //retrieve mesh
+    auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
+
+    //dgfe space
+    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 1);
+    auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
+    //dofhandler
+    auto dof_handler = dgfe_space_ptr->LocGlobMap();
+
+    //create dof vector by hand => Mesh Funtion is constant 2.5
+    auto n_dofs = dof_handler.NumDofs();
+    Eigen::VectorXd dof_vec(n_dofs);
+    dof_vec.setZero();
+    for (int i = 0; i < n_dofs; i += 4){
+        dof_vec[i] = 2.5;
+    }
+
+    //Mesh_function
+    lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, dof_vec);
+
+    auto sin_lambda = [](Eigen::Vector2d x) -> double {
+        return sin(x[0] * x[1] * M_PI);
+    };
+    lf::dgfe::MeshFunctionGlobalDGFE m_sin{sin_lambda};
+
+    //calculated via https://www.wolframalpha.com/input?i=integrate%5B+%28+2.5+-+sin%28x*y*PI%29%29%5E2%2C+%7Bx%2C+0%2C+1%7D%2C+%7By%2C+0%2C+1%7D%5D
+    double check = 4.013831745425869723500183307733026855967725529923528045789347059812650762131396931799738047219165127;
+
+    double l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dgfe_mesh_function), decltype(m_sin)>(dgfe_mesh_function, m_sin, mesh_ptr, 20);
+
+    EXPECT_NEAR( l2_error, check, std::numeric_limits<double>::epsilon());
+
+}
+
 TEST(L2ErrorSubTessellation, twoGlobalMeshFunctionsGrad){
 
     //retrieve mesh
