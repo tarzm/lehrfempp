@@ -138,7 +138,7 @@ public:
                 lf::dgfe::BoundingBox box_other(*other_polygon);
                 Eigen::MatrixXd zeta_box_other{box_other.inverseMap(zeta_global_s)};
                 Eigen::Vector2d normal_other = normal *= -1.0;
-
+ 
                 //calculate A_F
                 Eigen::MatrixXd A_F_mat = Eigen::MatrixXd::Zero(2, gram_dets_s.size());
                 for (int i = 0; i < gram_dets_s.size(); i++){
@@ -374,35 +374,35 @@ public:
 
                 //loop over basis functions in trial space
                 for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
-                    //loop over bsis functions in test space
+                    //loop over basis functions in test space
                     for(int basis_test = 0; basis_test < n_basis; basis_test++){
                         
-                        //First, test functions on plus side are nonzero
                         SCALAR sum = 0.0;
-                        //plus side trial dofs
+                        //First part wi+ * vi+
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum * disc_pen);
+                        
                         sum = 0.0;
-                        //minus side trial dofs
-                        for (int i = 0; i < gram_dets_s.size(); i++){
-                            sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i))
-                                    * w_ref_s[i] * gram_dets_s[i];
-                        }
-                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -sum * disc_pen);
-
-                        //Second, test functions on minus side are nonzero
-                        sum = 0.0;
-                        //plus side trial dofs
+                        //Second part - wi+ * vj+
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -sum * disc_pen);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -sum * disc_pen);
+
                         sum = 0.0;
-                        //minus side trial dofs
+                        //Third part - wj+ * vi+
+                        for (int i = 0; i < gram_dets_s.size(); i++){
+                            sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i))
+                                    * w_ref_s[i] * gram_dets_s[i];
+                        }
+                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -sum * disc_pen);
+
+                        sum = 0.0;
+                        //Third part + wj+ * vj+
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
