@@ -63,9 +63,9 @@ scalar_t DiscontinuityPenalization::operator()(const lf::mesh::Entity &edge, sca
 
         scalar_t c_inv = c_inv_const_ * std::min(polygon_area_0 / max_simplex_area, p_2d_1);
 
-        std::cout << "\nBoundary edge. AF = " << A_f << "   p_k_power2 = " << (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree)
-                        << "       edge volume = " << edge_volume << "     polygon area = " << polygon_area_0 << "       ALles = "
-                        << A_f * c_sigma_const_ * c_inv * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume / polygon_area_0 << "\n";
+        // std::cout << "\nBoundary edge. AF = " << A_f << "   p_k_power2 = " << (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree)
+        //                 << "       edge volume = " << edge_volume << "     polygon area = " << polygon_area_0 << "       ALles = "
+        //                 << A_f * c_sigma_const_ * c_inv * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume / polygon_area_0 << "\n";
 
         return A_f * c_sigma_const_ * c_inv * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume / polygon_area_0;
 
@@ -79,9 +79,9 @@ scalar_t DiscontinuityPenalization::operator()(const lf::mesh::Entity &edge, sca
         scalar_t c_inv_0 = c_inv_const_ * std::min(polygon_area_0 / max_simplex_area_0, p_2d_1);
         scalar_t c_inv_1 = c_inv_const_ * std::min(polygon_area_1 / max_simplex_area_1, p_2d_1);
 
-        std::cout << "\nInterior edge. AF = " << A_f << "   p_k_power2 = " << (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree)
-                        << "       edge volume = " << edge_volume << "     max thingy = " << std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1) << "     Alles= "
-                        << A_f * c_sigma_const_ * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume * std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1) << "\n";
+        // std::cout << "\nInterior edge. AF = " << A_f << "   p_k_power2 = " << (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree)
+        //                 << "       edge volume = " << edge_volume << "     max thingy = " << std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1) << "     Alles= "
+        //                 << A_f * c_sigma_const_ * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume * std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1) << "\n";
 
         return A_f * c_sigma_const_ * (max_legendre_degree + max_legendre_degree) * (max_legendre_degree + max_legendre_degree) * edge_volume * std::max(c_inv_0 / polygon_area_0, c_inv_1 / polygon_area_1);
     }
