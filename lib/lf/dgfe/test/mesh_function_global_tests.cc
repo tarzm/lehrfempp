@@ -74,7 +74,7 @@ TEST(L2ErrorSubTessellation, twoGlobalMeshFunctions){
 
 }
 
-TEST(L2ErrorSubTessellation, DGFEandGlobalMeshFunction){
+TEST(L2ErrorSubTessellation, DGFEandGlobalMeshFunction1){
 
     //retrieve mesh
     auto mesh_ptr = lf::mesh::test_utils::GeneratePolytopic2DTestMesh(0,1);
@@ -102,13 +102,14 @@ TEST(L2ErrorSubTessellation, DGFEandGlobalMeshFunction){
     lf::dgfe::MeshFunctionGlobalDGFE m_sin{sin_lambda};
 
     //calculated via https://www.wolframalpha.com/input?i=integrate%5B+%28+2.5+-+sin%28x*y*PI%29%29%5E2%2C+%7Bx%2C+0%2C+1%7D%2C+%7By%2C+0%2C+1%7D%5D
-    double check = 4.013831745425869723500183307733026855967725529923528045789347059812650762131396931799738047219165127;
+    double check = std::sqrt(4.013831745425869723500183307733026855967725529923528045789347059812650762131396931799738047219165127);
 
     double l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dgfe_mesh_function), decltype(m_sin)>(dgfe_mesh_function, m_sin, mesh_ptr, 20);
 
     EXPECT_NEAR( l2_error, check, std::numeric_limits<double>::epsilon());
 
 }
+
 
 TEST(L2ErrorSubTessellation, twoGlobalMeshFunctionsGrad){
 

@@ -515,7 +515,7 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_trial], dof_plus[basis_test], - 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], - 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -525,7 +525,7 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_trial], dof_plus[basis_test], 0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -535,7 +535,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_plus[basis_trial], dof_minus[basis_test], - 0.5 * sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], - 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -545,7 +545,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        matrix.AddToEntry(dof_minus[basis_trial], dof_minus[basis_test], 0.5 * sum);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
                     }
                 }
             }

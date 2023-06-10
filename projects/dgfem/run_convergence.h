@@ -183,15 +183,17 @@ RHSAssembler.assemble(rhs);
 //----------------------SOLVE LSE------------------------
 Eigen::SparseMatrix<double> A_crs = A.makeSparse();
 
+if (A_crs.rows() < 20){
+    //Show Galerkin Matrix
+    //get dense matrix
+    auto dense_A = Eigen::MatrixXd(A_crs);
+    std::cout << "\n\n \t \t Galerkin Matrix: \n " << dense_A << "\n\n";
 
-//Show Galerkin Matrix
-//get dense matrix
-auto dense_A = Eigen::MatrixXd(A_crs);
-std::cout << "\n\n \t \t Galerkin Matrix: \n " << dense_A << "\n\n";
+    //Show RHS vec
+    //get dense matrix
+    std::cout << "\n\n \t \t RHS Vec: \n " << rhs << "\n\n";
+}
 
-//Show RHS vec
-//get dense matrix
-std::cout << "\n\n \t \t RHS Vec: \n " << rhs << "\n\n";
 
 Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
 solver.compute(A_crs);

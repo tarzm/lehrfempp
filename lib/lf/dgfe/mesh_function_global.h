@@ -97,7 +97,7 @@ SCALAR L2ErrorSubTessellation(MESH_FUNC_1 g, MESH_FUNC_2 f, std::shared_ptr<cons
             //sum over qr points
             for (int i = 0; i < gram_dets_t.size(); i++){
                 error += (dgfe_sol[i] - true_sol[i]) * (dgfe_sol[i] - true_sol[i]) * w_ref_t[i] * gram_dets_t[i];
-                std::cout << "DGFE sol evaluates to " << dgfe_sol[i] << "\n";
+                //std::cout << "DGFE sol evaluates to " << dgfe_sol[i] << "\n";
             }
         }
     }
