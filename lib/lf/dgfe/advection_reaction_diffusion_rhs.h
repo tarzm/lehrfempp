@@ -411,8 +411,7 @@ public:
                                                                         - disc_penalty * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) )
                                                 * w_ref_s[i] * gram_dets_s[i];
                     }
-                }
-                std::cout << "Coooocoooooooo\n";               
+                }             
             }
             //!!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!!
 
