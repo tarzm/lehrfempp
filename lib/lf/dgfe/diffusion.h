@@ -51,15 +51,15 @@ public:
 
         //lambda for debugging
         auto galerkin_debug = [&dof_plus, &dof_minus, &basis_trial, &basis_test](int row, int col, double value, bool test_plus, bool trial_plus,
-                                std::string additional = "", double additional_value = 0.0) -> void {
+                                std::string additional = "", double additional_value = 0) -> void {
             
             int dof_row = test_plus ? dof_plus[basis_test] : dof_minus[basis_test];
             int dof_col = trial_plus ? dof_plus[basis_trial] : dof_minus[basis_trial];
 
             if (row == dof_row && col == dof_col && !(additional == "")){
-                std::cout << "Added " << value << " to G(" << row << " , " << col << ") with" << additional << " = \n\t\t\t" << additional_value << "\n";
+                std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ") with" << additional << " = \n\t\t\t" << additional_value << "\n";
             } else if(row == dof_row && col == dof_col){
-                std::cout << "Added " << value << " to G(" << row << " , " << col << ")\n";
+                std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ")\n";
             }
         };
         
@@ -84,7 +84,7 @@ public:
             //!!!!!!!!!!!!! FIRST TERM !!!!!!!!!!!!!!
 
             auto cell_global_idx = dgfe_space_ptr_->Mesh()->Index(*cell);
-            std::cout << "Cell " << cell_global_idx << " in term 1\n";
+            std::cout << "\nCell " << cell_global_idx << " in term 1\n";
 
             //dof info
             dof_plus = dofhandler.GlobalDofIndices(*cell);
@@ -122,7 +122,7 @@ public:
                             sum += (a[i] * nabla_w).dot(nabla_v) * w_ref_t[i] * gram_dets_t[i];
                         }
                         //DEBUG
-                        galerkin_debug(1, 3, sum, 1, 1);
+                        galerkin_debug(2, 6, sum, 1, 1);
                         //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum);
                     }
@@ -174,7 +174,7 @@ public:
             if (!boundary_edge_(*edge)){ //interior edge
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "Edge " << edge_global_idx << " in term 2\n";
+                std::cout << "\nEdge " << edge_global_idx << " in term 2\n";
                 
                 //pointers to adjacent polygons and the edge's local index in those
                 auto polygon_plus = polygon_pair.first.first;
@@ -208,6 +208,9 @@ public:
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
+                        //DEBUG
+                        galerkin_debug(2, 6, sum*disc_pen, 1, 1);
+                        //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum * disc_pen);
                         
                         sum = 0.0;
@@ -216,6 +219,9 @@ public:
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
+                        //DEBUG
+                        galerkin_debug(2, 6, -sum*disc_pen, 0, 1);
+                        //DEBUG
                         matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -sum * disc_pen);
 
                         sum = 0.0;
@@ -224,6 +230,9 @@ public:
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
+                        //DEBUG
+                        galerkin_debug(2, 6, -sum*disc_pen, 1, 0);
+                        //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -sum * disc_pen);
 
                         sum = 0.0;
@@ -232,6 +241,9 @@ public:
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
+                        //DEBUG
+                        galerkin_debug(2, 6, sum*disc_pen, 0, 0);
+                        //DEBUG
                         matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], sum * disc_pen);
                     }
                 }
@@ -240,7 +252,7 @@ public:
             if (boundary_d_edge_(*edge)){
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "Edge " << edge_global_idx << " in term 2\n";
+                std::cout << "\nEdge " << edge_global_idx << " in term 2\n";
 
                 auto polygon_plus = polygon_pair.first.first;
                 //dof info
@@ -257,6 +269,9 @@ public:
                             sum += legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
+                        //DEBUG
+                        galerkin_debug(2, 6, sum*disc_pen, 1, 1);
+                        //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum * disc_pen);
                     }
                 }
@@ -274,7 +289,7 @@ public:
             if (!boundary_edge_(*edge)){
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "Edge " << edge_global_idx << " in term 3\n";
+                std::cout << "\nEdge " << edge_global_idx << " in term 3\n";
 
 
                 
@@ -317,17 +332,11 @@ public:
                             Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
                                                              legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
-                            if (basis_trial == 2 && basis_test == 0){
-                                std::cout << "Nabla_basis_trial = \n" << nabla_trial_plus << "\n";
-                            }
-
-
-
                             sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(0, 2, -0.5*sum, 1, 1);
+                        galerkin_debug(2, 6, -0.5*sum, 1, 1);
                         //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -0.5 * sum);
  
@@ -339,7 +348,7 @@ public:
                             sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(0, 2, 0.5*sum, 0, 1);
+                        galerkin_debug(2, 6, 0.5*sum, 0, 1);
                         matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], 0.5 * sum);
 
                         sum = 0.0;
@@ -350,7 +359,7 @@ public:
                             sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(0, 2, -0.5*sum, 1, 0);
+                        galerkin_debug(2, 6, -0.5*sum, 1, 0, " Here 1", 1);
                         matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
@@ -362,7 +371,7 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(0, 2, 0.5*sum, 0, 0);
+                        galerkin_debug(2, 6, 0.5*sum, 0, 0);
                         //DEBUG
                         matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
 
@@ -376,19 +385,19 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(0, 2, -0.5*sum, 1, 1);
+                        galerkin_debug(2, 6, -0.5*sum, 1, 1);
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], - 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             Eigen::Vector2d nabla_test_plus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
-                                                              legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
+                                                            legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(0, 2, 0.5*sum, 0, 1);
-                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], - 0.5 * sum);
+                        galerkin_debug(2, 6, 0.5*sum, 0, 1, "Here 2", 2);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], 0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -398,8 +407,8 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(0, 2, -0.5*sum, 1, 0);
-                        matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial],  0.5 * sum);
+                        galerkin_debug(2, 6, -0.5*sum, 1, 0);
+                        matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial],  -0.5 * sum);
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
@@ -409,7 +418,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(0, 2, 0.5*sum, 0, 0);
+                        galerkin_debug(2, 6, 0.5*sum, 0, 0);
                         matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
                     }
                 }
@@ -419,7 +428,7 @@ public:
             if (boundary_d_edge_(*edge)){
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "Edge " << edge_global_idx << " in term 3\n";
+                std::cout << "\nEdge " << edge_global_idx << " in term 3\n";
 
                 auto polygon_plus = polygon_pair.first.first;
                 //dof info
@@ -464,7 +473,7 @@ public:
                                     +   (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(0, 2, -sum, 1, 1);
+                        galerkin_debug(2, 6, -sum, 1, 1);
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -sum);
                     }
                 }

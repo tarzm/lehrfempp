@@ -166,8 +166,8 @@ Eigen::VectorXd rhs(n_dofs);
 rhs.setZero();
 
 //initialization of element vector provider
-lf::dgfe::AdvectionReactionDiffusionRHS<double, decltype(m_a), decltype(m_b), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_gN)>
-                        advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_gN, m_a, m_b, boundary_minus_edge, boundary_d_edge, boundary_n_edge, integration_degree, disc_pen, l2_projection);
+//lf::dgfe::AdvectionReactionDiffusionRHS<double, decltype(m_a), decltype(m_b), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_gN)>
+                        //advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_gN, m_a, m_b, boundary_minus_edge, boundary_d_edge, boundary_n_edge, integration_degree, disc_pen, l2_projection);
 
 //initialization of RHS Assembler
 lf::dgfe::AdvectionReactionDiffusionRHSAssembler<double, decltype(m_a), decltype(m_b), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_gN), decltype(rhs)>
