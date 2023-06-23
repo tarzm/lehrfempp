@@ -169,7 +169,7 @@ using coord_t = Eigen::Vector2d;
 
 
 // Obtain a pointer to a hierarchy of nested meshes
-const int reflevels = 2;
+const int reflevels = 1;
 std::shared_ptr<lf::refinement::MeshHierarchy> multi_mesh_p =
     lf::refinement::GenerateMeshHierarchyByUniformRefinemnt(mesh_p,
                                                             reflevels);
@@ -321,6 +321,10 @@ for (size_type level = 0; level < L; ++level) {
     //mesh
     auto poly_mesh_ptr = lf::mesh::polytopic2d::PolytopicFromHybrid2D(mesh_p);
 
+    if (level == 1){
+        lf::io::writeMatplotlib(*poly_mesh_ptr, "8_cells_mesh");
+    }
+
 
     //write mesh for python drawing
     //lf::io::writeMatplotlib(*poly_mesh_ptr, "./csvs/" + std::to_string(poly_mesh_ptr->NumEntities(0)) + ".csv");
@@ -378,6 +382,13 @@ for (size_type level = 0; level < L; ++level) {
     // auto error_l2_poly = run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
 
     errs_poly.emplace_back(n_cells, error_l2_poly, error_l2_poly);
+
+    // if (level == 1){
+    //     auto  adjacency = lf::mesh::polytopic2d::EdgePolygonAdjacency(poly_mesh_ptr);
+    //     auto cell_plus = adjacency(*(poly_mesh_ptr->Entities(1)[14])).first.first;
+    //     auto cell_plus_idx = poly_mesh_ptr->Index(*cell_plus);
+    //     std::cout << "\nINDEX of PLUS CELL is " << cell_plus_idx << "\n\n";
+    // }
 
 
 }

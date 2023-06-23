@@ -183,7 +183,7 @@ RHSAssembler.assemble(rhs);
 //----------------------SOLVE LSE------------------------
 Eigen::SparseMatrix<double> A_crs = A.makeSparse();
 
-if (A_crs.rows() < 20){
+if (A_crs.rows() == 32){
     //Show Galerkin Matrix
     //get dense matrix
     auto dense_A = Eigen::MatrixXd(A_crs);

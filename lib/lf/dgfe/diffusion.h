@@ -122,7 +122,7 @@ public:
                             sum += (a[i] * nabla_w).dot(nabla_v) * w_ref_t[i] * gram_dets_t[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, sum, 1, 1);
+                        galerkin_debug(18, 30, sum, 1, 1);
                         //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum);
                     }
@@ -150,13 +150,34 @@ public:
             //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
             normal *= (int) (cell.RelativeOrientations()[polygon_pair.first.second]);
 
+            
+
+
             lf::dgfe::BoundingBox box(cell);
             // qr points mapped to segment
             Eigen::MatrixXd zeta_global_s{edge->Geometry()->Global(zeta_ref_s)};
+            //std::cout << "Zeta Global S:\n\t\t" << zeta_global_s << "\n";
             // qr points mapped back into reference bounding box to retrieve values
             Eigen::MatrixXd zeta_box_s{box.inverseMap(zeta_global_s)};
             //gramian determinants
             Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
+
+
+            //CHECK ORIENTATION INTAGRATION
+            //coordinates of nodes
+            auto node_0 = edge->SubEntities(1)[0];
+            auto node_1 = edge->SubEntities(1)[1];
+            auto corners_0 = lf::geometry::Corners(*(node_0->Geometry()));
+            auto corners_1 = lf::geometry::Corners(*(node_1->Geometry()));
+
+            auto distance_0 = (zeta_global_s.col(0)-corners_0).norm();
+            auto distance_1 = (zeta_global_s.col(0)-corners_1).norm();
+            if (distance_0 < distance_1){
+                std::cout << "RIGHT\n";
+            } else {
+                std::cout << "WRONG\n";
+            }
+            //CHECK ORIENTATION INTAGRATION
 
             //calculate A_F
             Eigen::MatrixXd A_F_mat = Eigen::MatrixXd::Zero(2, gram_dets_s.size());
@@ -209,7 +230,7 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, sum*disc_pen, 1, 1);
+                        galerkin_debug(18, 30, sum*disc_pen, 1, 1);
                         //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum * disc_pen);
                         
@@ -220,7 +241,7 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, -sum*disc_pen, 0, 1);
+                        galerkin_debug(18, 30, -sum*disc_pen, 0, 1);
                         //DEBUG
                         matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], -sum * disc_pen);
 
@@ -231,7 +252,7 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, -sum*disc_pen, 1, 0);
+                        galerkin_debug(18, 30, -sum*disc_pen, 1, 0);
                         //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -sum * disc_pen);
 
@@ -242,7 +263,7 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, sum*disc_pen, 0, 0);
+                        galerkin_debug(18, 30, sum*disc_pen, 0, 0);
                         //DEBUG
                         matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], sum * disc_pen);
                     }
@@ -270,7 +291,7 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, sum*disc_pen, 1, 1);
+                        galerkin_debug(18, 30, sum*disc_pen, 1, 1);
                         //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum * disc_pen);
                     }
@@ -336,19 +357,19 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, -0.5*sum, 1, 1);
+                        galerkin_debug(18, 30, -0.5*sum, 1, 1);
                         //DEBUG
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -0.5 * sum);
  
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
-                                                            legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
+                                                             legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
                             sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(2, 6, 0.5*sum, 0, 1);
+                        galerkin_debug(18, 30, 0.5*sum, 0, 1);
                         matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial], 0.5 * sum);
 
                         sum = 0.0;
@@ -359,7 +380,7 @@ public:
                             sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(2, 6, -0.5*sum, 1, 0, " Here 1", 1);
+                        galerkin_debug(18, 30, -0.5*sum, 1, 0, " Here 1", 1);
                         matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -0.5 * sum);
 
                         sum = 0.0;
@@ -371,7 +392,7 @@ public:
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
-                        galerkin_debug(2, 6, 0.5*sum, 0, 0);
+                        galerkin_debug(18, 30, 0.5*sum, 0, 0);
                         //DEBUG
                         matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
 
@@ -380,12 +401,12 @@ public:
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             Eigen::Vector2d nabla_test_plus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
-                                                             legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
+                                                            legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(2, 6, -0.5*sum, 1, 1);
+                        galerkin_debug(18, 30, -0.5*sum, 1, 1);
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], - 0.5 * sum);
 
                         sum = 0.0;
@@ -396,7 +417,7 @@ public:
                             sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(2, 6, 0.5*sum, 0, 1, "Here 2", 2);
+                        galerkin_debug(18, 30, 0.5*sum, 0, 1, "Here 2", 2);
                         matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], 0.5 * sum);
 
                         sum = 0.0;
@@ -407,7 +428,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(2, 6, -0.5*sum, 1, 0);
+                        galerkin_debug(18, 30, -0.5*sum, 1, 0);
                         matrix.AddToEntry(dof_minus[basis_test], dof_plus[basis_trial],  -0.5 * sum);
 
                         sum = 0.0;
@@ -418,7 +439,7 @@ public:
                             sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(2, 6, 0.5*sum, 0, 0);
+                        galerkin_debug(18, 30, 0.5*sum, 0, 0);
                         matrix.AddToEntry(dof_minus[basis_test], dof_minus[basis_trial], 0.5 * sum);
                     }
                 }
@@ -473,7 +494,7 @@ public:
                                     +   (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
-                        galerkin_debug(2, 6, -sum, 1, 1);
+                        galerkin_debug(18, 30, -sum, 1, 1);
                         matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -sum);
                     }
                 }
