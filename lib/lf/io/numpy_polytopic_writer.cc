@@ -9,10 +9,6 @@
 
 namespace lf::io{
 
-NumpyPolytopicWriter::NumpyPolytopicWriter(std::shared_ptr<lf::mesh::Mesh> &mesh) : mesh_(mesh) {}
-
-
-
-
+NumpyPolytopicWriter::NumpyPolytopicWriter(std::shared_ptr<const lf::mesh::Mesh> &mesh) : mesh_(mesh) {}
 
 } //namespace lf::io

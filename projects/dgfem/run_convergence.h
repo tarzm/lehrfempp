@@ -183,6 +183,17 @@ RHSAssembler.assemble(rhs);
 //----------------------SOLVE LSE------------------------
 Eigen::SparseMatrix<double> A_crs = A.makeSparse();
 
+
+
+
+Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+solver.compute(A_crs);
+LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");
+Eigen::VectorXd sol_vec = solver.solve(rhs);
+LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
+
+
+
 if (A_crs.rows() == 32){
     //Show Galerkin Matrix
     //get dense matrix
@@ -192,14 +203,11 @@ if (A_crs.rows() == 32){
     //Show RHS vec
     //get dense matrix
     std::cout << "\n\n \t \t RHS Vec: \n " << rhs << "\n\n";
+
+
+    //Show solution dof vector
+    std::cout << "\n\n \t \t SOL Vec: \n " << sol_vec << "\n\n";
 }
-
-
-Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-solver.compute(A_crs);
-LF_VERIFY_MSG(solver.info() == Eigen::Success, "LU decomposition failed");
-Eigen::VectorXd sol_vec = solver.solve(rhs);
-LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
 //----------------------END SOLVE LSE------------------------
 
 
@@ -213,6 +221,46 @@ double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dg
 // std::cout << "Mesh Function error: " << mesh_func_l2_error;
 // std::cout << " with C_inv: " << c_inv << " and C_sigma: " << c_sigma << " run with " << mesh_ptr->NumEntities(0) << " cells" << "\n\n";
 //----------------------END MESH FUNCTION AND ERROR CALCULATION------------------------
+
+//----------------------Show Mesh info------------------------
+if (n_cells == 8){
+    int counter = 0;
+    for (auto cell : mesh_ptr->Entities(0)){
+        auto corners = lf::mesh::polytopic2d::Corners(cell);
+        std::cout << "Cell " << counter << " has coordinates \n" << corners << "\n";
+        counter++;
+    }
+
+    std::cout << "NORMALS:\n\n";
+
+    for (auto cell : mesh_ptr->Entities(0)){
+        std::cout << "CELL " << mesh_ptr->Index(*cell) << ":\n";
+        int edge_count = 0;
+        for (auto edge : cell->SubEntities(1)){
+            //normal n
+            auto normal = lf::dgfe::outwardNormal(lf::geometry::Corners(*(edge->Geometry())));
+            //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
+            normal *= (int) (cell->RelativeOrientations()[edge_count]);
+            std::cout << "Edge " << edge_count << " has coordinates and normal \n";
+            std::cout << lf::geometry::Corners(*(edge->Geometry())) << " and\n" << normal << "\n";
+            edge_count++;
+        }
+    }
+}
+//----------------------END Show Mesh info------------------------
+
+
+//----------------------PLOT FUNCTIONS------------------------
+//output solution mesh function and true sol.
+auto mesh_writer = lf::io::NumpyPolytopicWriter(mesh_ptr);
+std::string meshfunc_file = "functions/problem_solution" + std::to_string(n_cells) + ".txt";
+std::string truefunc_file = "functions/true_solution" + std::to_string(n_cells) + ".txt";
+mesh_writer.writeSimple<decltype(dgfe_mesh_function)>(dgfe_mesh_function, meshfunc_file);
+mesh_writer.writeSimple<decltype(m_true)>(m_true, truefunc_file);
+//----------------------END PLOT FUNCTIONS------------------------
+
+
+
 
 
 //----------------------WRITE ERROR TO FILE------------------------

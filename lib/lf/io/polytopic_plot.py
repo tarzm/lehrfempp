@@ -27,10 +27,12 @@ z = input[:,2]
 
 X, Y = np.meshgrid(x,y)
 
+png_name = filename[:-3]
+
 ax = fig.add_subplot(1,1,1, projection='3d')
-ax.plot_trisurf(y, x, z, cmap=cm.coolwarm)
+ax.plot_trisurf(x, y, z, cmap=cm.coolwarm)
 ax.set_title(r'Global mesh function')
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
 
-plt.savefig("global mesh fucntion", bbox_inches='tight')
+plt.savefig(png_name, bbox_inches='tight')
