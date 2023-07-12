@@ -82,13 +82,16 @@ for (auto edge : mesh_ptr->Entities(1)){
 }
 //assemble boundary d and boundary n
 for (auto edge : mesh_ptr->Entities(1)){
-    if (boundary_0_edge(*edge)){
-        auto corners = lf::geometry::Corners(*(edge->Geometry()));
-        if (corners(0,0) == 1.0 && corners(0,1) == 1.0){
-            boundary_n_edge(*edge) = true;
-        } else {
-            boundary_d_edge(*edge) = true;
-        }
+    // if (boundary_0_edge(*edge)){
+    //     auto corners = lf::geometry::Corners(*(edge->Geometry()));
+    //     if (corners(0,0) == 1.0 && corners(0,1) == 1.0){
+    //         boundary_n_edge(*edge) = true;
+    //     } else {
+    //         boundary_d_edge(*edge) = true;
+    //     }
+    // }
+    if (boundary_edge(*edge)){
+        boundary_d_edge(*edge) = true;
     }
 }
 
@@ -223,7 +226,8 @@ double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dg
 //----------------------END MESH FUNCTION AND ERROR CALCULATION------------------------
 
 //----------------------Show Mesh info------------------------
-if (n_cells == 8){
+
+if (false){
     int counter = 0;
     for (auto cell : mesh_ptr->Entities(0)){
         auto corners = lf::mesh::polytopic2d::Corners(cell);
@@ -245,6 +249,23 @@ if (n_cells == 8){
             std::cout << lf::geometry::Corners(*(edge->Geometry())) << " and\n" << normal << "\n";
             edge_count++;
         }
+    }
+
+
+    std::cout << "MAPPINGS:\n\n";
+
+    for (auto cell : mesh_ptr->Entities(0)){
+        std::cout << "CELL " << mesh_ptr->Index(*cell) << ":\n";
+
+        lf::dgfe::BoundingBox box(*cell);
+        Eigen::MatrixXd reference = Eigen::MatrixXd::Zero(2,1);
+        reference(0,0) = .8125;
+        reference(1,0) = .875;
+
+        auto mapped = box.inverseMap(reference);
+        std::cout << "CELL " << mesh_ptr->Index(*cell) << "\n";
+        std::cout << "mapping maps to \n";
+        std::cout << mapped << "\n";
     }
 }
 //----------------------END Show Mesh info------------------------

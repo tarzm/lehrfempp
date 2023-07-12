@@ -169,7 +169,7 @@ using coord_t = Eigen::Vector2d;
 
 
 // Obtain a pointer to a hierarchy of nested meshes
-const int reflevels = 1;
+const int reflevels = 4;
 std::shared_ptr<lf::refinement::MeshHierarchy> multi_mesh_p =
     lf::refinement::GenerateMeshHierarchyByUniformRefinemnt(mesh_p,
                                                             reflevels);
