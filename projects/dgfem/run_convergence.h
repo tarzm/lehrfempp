@@ -197,7 +197,7 @@ LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
 
 
 
-if (A_crs.rows() == 32){
+if (A_crs.rows() == 32 || A_crs.rows() == 8){
     //Show Galerkin Matrix
     //get dense matrix
     auto dense_A = Eigen::MatrixXd(A_crs);

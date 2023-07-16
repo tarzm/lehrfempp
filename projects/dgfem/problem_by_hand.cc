@@ -90,7 +90,7 @@ using coord_t = Eigen::Vector2d;
   /* SAM_LISTING_BEGIN_1 */
   // Exact solution u
   auto u = [](Eigen::Vector2d x) -> double {
-    return 1 + x[0] + x[1]*x[1];
+    return  1 + x[0];
   };
   // Has to be wrapped into a mesh function for error computation
   lf::mesh::utils::MeshFunctionGlobal mf_u{u};
@@ -105,7 +105,7 @@ using coord_t = Eigen::Vector2d;
 
   // Right-hand side source function f
   auto f = [&gamma, &u](Eigen::Vector2d x) -> double {
-    return -2.0;
+    return 0.0;
   };
   lf::mesh::utils::MeshFunctionGlobal mf_f{f};
 
@@ -169,7 +169,7 @@ using coord_t = Eigen::Vector2d;
 
 
 // Obtain a pointer to a hierarchy of nested meshes
-const int reflevels = 4;
+const int reflevels = 1;
 std::shared_ptr<lf::refinement::MeshHierarchy> multi_mesh_p =
     lf::refinement::GenerateMeshHierarchyByUniformRefinemnt(mesh_p,
                                                             reflevels);
@@ -186,8 +186,8 @@ std::vector<std::tuple<size_type, double, double>> errs{};
 std::vector<std::tuple<size_type, double, double>> errs_poly{};
 
 //define parameters
-double c_inv = 0.5;
-double c_sigma = 20.0;
+double c_inv = 0.1;
+double c_sigma = 100.0;
 
 
 // ############################LEVEL LOOP: Do computations on all levels
@@ -390,8 +390,17 @@ for (size_type level = 0; level < L; ++level) {
     //     std::cout << "\nINDEX of PLUS CELL is " << cell_plus_idx << "\n\n";
     // }
 
-    
+    auto mesh_ptr = dgfe_space_ptr->Mesh();
+    auto boundary_edge = lf::mesh::utils::flagEntitiesOnBoundary(mesh_ptr, 1);
 
+    int counter = 0;
+    for (auto edge : mesh_ptr->Entities(1)){
+        if (boundary_edge(*edge)){
+            counter++;
+        }
+    }
+
+    std::cout << "Mesh with " << n_cells << " has " << counter << " boundary edges\n";
 
 }
 // ############################ END LEVEL LOOP: Do computations on all levels

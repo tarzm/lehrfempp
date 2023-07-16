@@ -49,20 +49,24 @@ public:
         int basis_test;
         int basis_trial;
 
+        //DEBUG SETUP
         int row = 23;
         int col = 22;
+        bool debug = false;
 
         //lambda for debugging
-        auto galerkin_debug = [row, col, &dof_plus, &dof_minus, &basis_trial, &basis_test](double value, bool test_plus, bool trial_plus,
+        auto galerkin_debug = [debug, row, col, &dof_plus, &dof_minus, &basis_trial, &basis_test](double value, bool test_plus, bool trial_plus,
                                 std::string additional = "", double additional_value = 0) -> void {
             
             int dof_row = test_plus ? dof_plus[basis_test] : dof_minus[basis_test];
             int dof_col = trial_plus ? dof_plus[basis_trial] : dof_minus[basis_trial];
 
-            if (row == dof_row && col == dof_col && !(additional == "")){
-                std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ") with" << additional << " = \n\t\t\t" << additional_value << "\n";
-            } else if(row == dof_row && col == dof_col){
-                std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ")\n";
+            if (debug){
+                if (row == dof_row && col == dof_col && !(additional == "")){
+                    std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ") with" << additional << " = \n\t\t\t" << additional_value << "\n";
+                } else if(row == dof_row && col == dof_col){
+                    std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ")\n";
+                }
             }
         };
         
@@ -87,7 +91,7 @@ public:
             //!!!!!!!!!!!!! FIRST TERM !!!!!!!!!!!!!!
 
             auto cell_global_idx = dgfe_space_ptr_->Mesh()->Index(*cell);
-            std::cout << "\nCell " << cell_global_idx << " in term 1\n";
+            if (debug) std::cout << "\nCell " << cell_global_idx << " in term 1\n";
 
             //dof info
             dof_plus = dofhandler.GlobalDofIndices(*cell);
@@ -181,7 +185,7 @@ public:
             if (!boundary_edge_(*edge)){ //interior edge
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "\nEdge " << edge_global_idx << " in term 2\n";
+                if (debug) std::cout << "\nEdge " << edge_global_idx << " in term 2\n";
                 
                 //pointers to adjacent polygons and the edge's local index in those
                 auto polygon_plus = polygon_pair.first.first;
@@ -259,7 +263,7 @@ public:
             if (boundary_d_edge_(*edge)){
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "\nEdge " << edge_global_idx << " in term 2\n";
+                if (debug) std::cout << "\nEdge " << edge_global_idx << " in term 2\n";
 
                 auto polygon_plus = polygon_pair.first.first;
                 //dof info
@@ -296,7 +300,7 @@ public:
             if (!boundary_edge_(*edge)){
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "\nEdge " << edge_global_idx << " in term 3\n";
+                if (debug) std::cout << "\nEdge " << edge_global_idx << " in term 3\n";
 
 
                 
@@ -435,7 +439,7 @@ public:
             if (boundary_d_edge_(*edge)){
 
                 auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
-                std::cout << "\nEdge " << edge_global_idx << " in term 3\n";
+                if (debug) std::cout << "\nEdge " << edge_global_idx << " in term 3\n";
 
                 auto polygon_plus = polygon_pair.first.first;
                 //dof info
