@@ -95,7 +95,7 @@ for (int i = 4; i < argc; i++){
     std::ofstream out_file(out_file_name);
     out_file << l2_error;
 
-    std::cout << "Error for " << n_cells << " cells is " << l2_error << "\n";
+    std::cout << "Error for " << num_cells << " cells is " << l2_error << "\n";
 
 }
 
