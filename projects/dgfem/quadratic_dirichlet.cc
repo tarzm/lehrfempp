@@ -90,7 +90,7 @@ for (int i = 4; i < argc; i++){
     auto l2_error = run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
 
     //error file
-    std::string out_file_name = "measurements/" + run_name + "_" + std::to_string(num_cells) + "_" + std::to_string(c_inv)
+    std::string out_file_name = "measurements/" + run_name + "_" + num_cells + "_" + std::to_string(c_inv)
                                  + "_" + std::to_string(c_sigma) + ".txt";
     std::ofstream out_file(out_file_name);
     out_file << l2_error;
