@@ -49,18 +49,18 @@ lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
 //----------------------PREPARE PRESCRIBED FUNCTIONS------------------------
 // Scalar valued prescribed function gD
 auto gD_lambda = [](Eigen::Vector2d x) -> double {
-    return 1 + x[0] * x[0] + 2 * x[1] * x[1];
+    return 1 + x[0] + x[1] * x[1];
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_gD{gD_lambda};
 
 auto gN_lambda = [](Eigen::Vector2d x) -> double {
-    return 1 + x[0] * x[0] + 2 * x[1] * x[1];
+    return 0.0;
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_gN{gN_lambda};
 
 // Scalar valued prescribed function f
 auto f_lambda = [](Eigen::Vector2d x) -> double {
-    return -6.0;
+    return -2.0;
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_f{f_lambda};
 //----------------------END PREPARE PRESCRIBED FUNCTIONS------------------------
@@ -87,7 +87,15 @@ for (int i = 4; i < argc; i++){
     auto l2_projection = lf::dgfe::L2ProjectionSqrtANablaBasis<double>(dgfe_space_ptr, m_a_coeff, 20);
 
     //run it
-    run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
+    auto l2_error = run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
+
+    //error file
+    std::string out_file_name = "measurements/" + run_name + "_" + std::to_string(num_cells) + "_" + std::to_string(c_inv)
+                                 + "_" + std::to_string(c_sigma) + ".txt";
+    std::ofstream out_file(out_file_name);
+    out_file << l2_error;
+
+    std::cout << "Error for " << n_cells << " cells is " << l2_error << "\n";
 
 }
 
