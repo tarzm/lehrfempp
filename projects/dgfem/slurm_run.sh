@@ -11,10 +11,10 @@
 
 ##### options setup ####################
 
-EXEC_NAME="projects.dgfem.quadratic_dirichlet_$EXEC_NUM"
+EXEC_NAME="projects.dgfem.dirichlet_$EXEC_NUM"
 
 N_CELLS="4 8 16 32"
 
-echo "./${EXEC_NAME} $RUN_NAME $INV $SIGMA $N_CELLS"
+echo "command: ./${EXEC_NAME} $RUN_NAME $INV $SIGMA $N_CELLS"
 
 ./${EXEC_NAME} $RUN_NAME $INV $SIGMA $N_CELLS
