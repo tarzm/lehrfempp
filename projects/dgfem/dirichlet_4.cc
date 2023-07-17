@@ -25,8 +25,9 @@ void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_c
     auto c_inv_str = std::to_string(c_inv);
     c_inv_str.resize(4);
     auto c_sigma_str = std::to_string(c_sigma);
-    std::string out_file_name = "./measurements/" + run_name + "/" + std::to_string(num_cells) + "_" + c_inv_str
+    std::string out_file_name = "measurements/" + run_name + "/" + std::to_string(num_cells) + "_" + c_inv_str
                                  + "_" + c_sigma_str + "_" + error_type + ".txt";
+    std::cout << "Trying to write to " << out_file_name << "\n";
     std::ofstream out_file(out_file_name);
     out_file << error;
     out_file.close();
