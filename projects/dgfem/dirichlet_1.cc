@@ -61,7 +61,7 @@ lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
 //----------------------END PREPARE COEFFICIENTS------------------------
 
 //----------------------PREPARE PRESCRIBED FUNCTIONS------------------------
-// Scalar valued prescribed function gD
+// Scalar valued prescribed function gD => true
 auto gD_lambda = [](Eigen::Vector2d x) -> double {
     return 1 + x[0] + x[1] * x[1];
 };

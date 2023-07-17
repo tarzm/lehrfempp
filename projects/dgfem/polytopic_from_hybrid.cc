@@ -39,7 +39,7 @@ void write_error_to_file(unsigned n_cells, double error, std::string run_name){
     c_sigma_stream << c_sigma;
     std::string c_sigma_string = c_sigma_stream.str();
 
-    std::string output_file = "measurements/" + run_name + "/" + c_inv_string + "_" + c_sigma_string + "_" + std::to_string(n_cells) + "_L2_hybrid.txt";
+    std::string output_file = "./measurements/" + run_name + "/" + c_inv_string + "_" + c_sigma_string + "_" + std::to_string(n_cells) + "_L2_hybrid.txt";
     std::ofstream file (output_file);
     if (file.is_open()){
         file << std::to_string(error);
