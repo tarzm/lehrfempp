@@ -74,7 +74,7 @@ lf::dgfe::MeshFunctionGlobalDGFE m_gN{gN_lambda};
 
 // Scalar valued prescribed function f
 auto f_lambda = [](Eigen::Vector2d x) -> double {
-    return 9.0 * std:sin(3.0 * x[0]);
+    return 9.0 * std::sin(3.0 * x[0]);
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_f{f_lambda};
 //----------------------END PREPARE PRESCRIBED FUNCTIONS------------------------
