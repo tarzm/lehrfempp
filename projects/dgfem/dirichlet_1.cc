@@ -23,31 +23,17 @@
 #include <iomanip>
 #include <string>
 
-void write_error_to_file(unsigned n_cells, double error, std::string run_name){
-    //----------------------WRITE ERROR TO FILE------------------------
-    int c_inv = 1;
-    int c_sigma = 1;
-    std::ostringstream c_inv_stream;
-    c_inv_stream << std::fixed;
-    c_inv_stream << std::setprecision(2);
-    c_inv_stream << c_inv;
-    std::string c_inv_string = c_inv_stream.str();
-
-    std::ostringstream c_sigma_stream;
-    c_sigma_stream << std::fixed;
-    c_sigma_stream << std::setprecision(2);
-    c_sigma_stream << c_sigma;
-    std::string c_sigma_string = c_sigma_stream.str();
-
-    std::string output_file = "measurements/" + run_name + "/" + c_inv_string + "_" + c_sigma_string + "_" + std::to_string(n_cells) + "_L2_hybrid.txt";
-    std::ofstream file (output_file);
-    if (file.is_open()){
-        file << std::to_string(error);
-        file.close();
-    } else {
-        std::cout << "Unable to open file \n";
-    }
-    //----------------------END WRITE ERROR TO FILE------------------------
+void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_cells, std::string error_type, double error){
+    //error file
+    auto c_inv_str = std::to_string(c_inv);
+    c_inv_str.resize(4);
+    auto c_sigma_str = std::to_string(c_sigma);
+    std::string out_file_name = "measurements/" + run_name + "/" + std::to_string(num_cells) + "_" + c_inv_str
+                                 + "_" + c_sigma_str + "_" + error_type + ".txt";
+    std::cout << "Trying to write to " << out_file_name << "\n";
+    std::ofstream out_file(out_file_name);
+    out_file << error;
+    out_file.close();
 }
 
 int main(int argc, char* argv[]) {
@@ -388,6 +374,11 @@ for (size_type level = 0; level < L; ++level) {
     // auto error_l2_poly = run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
 
     errs_poly.emplace_back(n_cells, error_l2_poly, error_l2_poly);
+
+    auto num_cells = poly_mesh_ptr->NumEntities(0);
+    write_error_file(run_name, c_inv, c_sigma, num_cells, "L2_poly", error_l2_poly);
+    write_error_file(run_name, c_inv, c_sigma, num_cells, "L2_hybrid", L2err);
+
 
 
 }

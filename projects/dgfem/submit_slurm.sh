@@ -11,10 +11,7 @@ do
 
 RUN_NAME="${1}_$EXEC_NUM"
 
-DIR_MEAS=measurements
-DIR_RUN=${DIR_MEAS}/$RUN_NAME
-DIR_OUT=outputs
-DIR_OUT_RUN=outputs/$RUN_NAME/output
+DIR_MEAS="measurements/$RUN_NAME"
 
 INV=$2
 SIGMA=$3
