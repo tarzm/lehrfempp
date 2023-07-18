@@ -5,7 +5,7 @@ set(SOURCES
   #manifactured_solution.cc
   )
 
-set(DIRICHLET 3 4 5 6 7 8 9)
+set(DIRICHLET 1 2 3 4 5 6 7 8 9 10)
 
 # Define executable
 #add_executable(projects.dgfem.meshes fe_experiments ${SOURCES})
