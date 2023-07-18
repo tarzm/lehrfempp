@@ -285,26 +285,26 @@ mesh_writer.writeSimple<decltype(m_true)>(m_true, truefunc_file);
 
 
 //----------------------WRITE ERROR TO FILE------------------------
-std::ostringstream c_inv_stream;
-c_inv_stream << std::fixed;
-c_inv_stream << std::setprecision(2);
-c_inv_stream << c_inv;
-std::string c_inv_string = c_inv_stream.str();
+// std::ostringstream c_inv_stream;
+// c_inv_stream << std::fixed;
+// c_inv_stream << std::setprecision(2);
+// c_inv_stream << c_inv;
+// std::string c_inv_string = c_inv_stream.str();
 
-std::ostringstream c_sigma_stream;
-c_sigma_stream << std::fixed;
-c_sigma_stream << std::setprecision(2);
-c_sigma_stream << c_sigma;
-std::string c_sigma_string = c_sigma_stream.str();
+// std::ostringstream c_sigma_stream;
+// c_sigma_stream << std::fixed;
+// c_sigma_stream << std::setprecision(2);
+// c_sigma_stream << c_sigma;
+// std::string c_sigma_string = c_sigma_stream.str();
 
-std::string output_file = "measurements/" + run_name + "/" + c_inv_string + "_" + c_sigma_string + "_" + std::to_string(n_cells) + "_L2.txt";
-std::ofstream file (output_file);
-if (file.is_open()){
-    file << std::to_string(mesh_func_l2_error);
-    file.close();
-} else {
-    std::cout << "Unable to open file \n";
-}
+// std::string output_file = "measurements/" + run_name + "/" + c_inv_string + "_" + c_sigma_string + "_" + std::to_string(n_cells) + "_L2.txt";
+// std::ofstream file (output_file);
+// if (file.is_open()){
+//     file << std::to_string(mesh_func_l2_error);
+//     file.close();
+// } else {
+//     std::cout << "Unable to open file \n";
+// }
 //----------------------END WRITE ERROR TO FILE------------------------
 return mesh_func_l2_error;
 
