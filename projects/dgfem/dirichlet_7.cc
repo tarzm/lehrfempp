@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 
 #include <lf/mesh/polytopic2d/polytopic2d.h>
@@ -22,6 +23,7 @@
 
 void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_cells, std::string error_type, double error){
     //error file
+    std::setprecision(17);
     auto c_inv_str = std::to_string(c_inv);
     c_inv_str.resize(4);
     auto c_sigma_str = std::to_string(c_sigma);

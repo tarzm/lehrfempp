@@ -25,6 +25,7 @@
 
 void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_cells, std::string error_type, double error){
     //error file
+    std::setprecision(17);
     auto c_inv_str = std::to_string(c_inv);
     c_inv_str.resize(4);
     auto c_sigma_str = std::to_string(c_sigma);
@@ -177,7 +178,7 @@ using coord_t = Eigen::Vector2d;
 
 
 // Obtain a pointer to a hierarchy of nested meshes
-const int reflevels = 4;
+const int reflevels = 6;
 std::shared_ptr<lf::refinement::MeshHierarchy> multi_mesh_p =
     lf::refinement::GenerateMeshHierarchyByUniformRefinemnt(mesh_p,
                                                             reflevels);
