@@ -321,7 +321,7 @@ for (size_type level = 0; level < L; ++level) {
     //write error
     auto n_cells = mesh_p->Entities(0).size();
     errs.emplace_back(n_cells, L2err, H1serr);
-    write_error_to_file(n_cells, L2err, run_name);
+    //write_error_to_file(n_cells, L2err, run_name);
 
     //############################ END HYBRID
 
