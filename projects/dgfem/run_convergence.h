@@ -158,7 +158,7 @@ lf::dgfe::AdvectionReactionMatrixAssembler<decltype(A), decltype(m_b), decltype(
 
 //assemble matrix
 diffusionAssembler.assemble(A);
-advectionReactionAssembler(A);
+advectionReactionAssembler.assemble(A);
 //----------------------END ASSEMBLE GALERKIN MATRIX------------------------
 
 
