@@ -47,17 +47,18 @@ std::cout << "C_inv: " << c_inv << " and C_sigma: " << c_sigma << "\n";
 //----------------------PREPARE COEFFICIENTS------------------------
 // Scalar valued reaction coefficient c
 auto c_coeff_lambda = [](Eigen::Vector2d x) -> double {
-    return 1.0;
+    return (1 + x[0]) * (1 + x[1]) * (1 + x[1]);
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_c_coeff{c_coeff_lambda};
 //Vector valued advection coefficient b
 auto b_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Vector2d {
-    return (Eigen::Vector2d{1, 1});
+    return (Eigen::Vector2d{ 2-(x[1]* x[1]) , 2 - x[0]});
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_b_coeff{b_coeff_lambda};
 // 2x2 diffusion tensor A(x)
 auto a_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Matrix<double, 2, 2> {
-    return (Eigen::Matrix<double, 2, 2>() << 1.0, 0.0, 0.0, 1.0).finished();
+    double entry = std::exp(-20 * std::sqrt(x[0] * x[0] + x[1] * x[1]))
+    return (Eigen::Matrix<double, 2, 2>() << entry, 0.0, 0.0, entry).finished();
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
 //----------------------END PREPARE COEFFICIENTS------------------------
@@ -96,7 +97,7 @@ for (int i = 4; i < argc; i++){
     auto mesh_ptr = reader.mesh();
 
     //dgfe space
-    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 1);
+    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
     auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
 
     //Setup l2 projection of sqrt(A) * nabla(basis)

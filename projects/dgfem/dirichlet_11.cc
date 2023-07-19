@@ -96,7 +96,7 @@ for (int i = 4; i < argc; i++){
     auto mesh_ptr = reader.mesh();
 
     //dgfe space
-    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 1);
+    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
     auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
 
     //Setup l2 projection of sqrt(A) * nabla(basis)

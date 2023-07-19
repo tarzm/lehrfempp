@@ -142,9 +142,7 @@ for (auto edge : mesh_ptr->Entities(1)){
 //----------------------ASSEMBLE GALERKIN MATRIX------------------------
 lf::dgfe::DiscontinuityPenalization disc_pen(dgfe_space_ptr, c_inv, c_sigma);
 unsigned n_dofs = dgfe_space_ptr->LocGlobMap().NumDofs();
-//initialization of advection reaction element matrix provider
-lf::dgfe::AdvectionReactionElementMatrixProvider<double, decltype(m_b), decltype(m_c), decltype(boundary_edge)>
-                advectionReactionProvider(dgfe_space_ptr, m_b, m_c, boundary_edge, boundary_d_edge, boundary_minus_edge, integration_degree);
+
 
 //galerkin matrix initialization
 lf::assemble::COOMatrix<double> A(n_dofs, n_dofs);
@@ -154,12 +152,13 @@ A.setZero();
 lf::dgfe::DiffusionMatrixAssembler<decltype(A), double, decltype(m_a), decltype(boundary_edge)>
                 diffusionAssembler(dgfe_space_ptr, m_a, boundary_edge, boundary_d_edge, integration_degree, disc_pen, l2_projection);
 
-//assemble galerkin matrix
-//lf::assemble::AssembleMatrixLocally(0, dgfe_space_ptr->LocGlobMap(), dgfe_space_ptr->LocGlobMap(), advectionReactionProvider, A);
+//initialization of advection reaction matrix assembler
+lf::dgfe::AdvectionReactionMatrixAssembler<decltypy(A), decltype(m_b), decltype(m_c), decltype(boundary_edge)>
+                advectionReactionAssembler(dgfe_space_ptr, m_b, m_c, boundary_edge, boundary_d_edge, boundary_minus_edge, integration_degree);
+
+//assemble matrix
 diffusionAssembler.assemble(A);
-
-
-
+advectionReactionAssembler(A);
 //----------------------END ASSEMBLE GALERKIN MATRIX------------------------
 
 
@@ -197,20 +196,20 @@ LF_VERIFY_MSG(solver.info() == Eigen::Success, "Solving LSE failed");
 
 
 
-if (A_crs.rows() == 32 || A_crs.rows() == 8){
-    //Show Galerkin Matrix
-    //get dense matrix
-    auto dense_A = Eigen::MatrixXd(A_crs);
-    std::cout << "\n\n \t \t Galerkin Matrix: \n " << dense_A << "\n\n";
+// if (A_crs.rows() == 32 || A_crs.rows() == 8){
+//     //Show Galerkin Matrix
+//     //get dense matrix
+//     auto dense_A = Eigen::MatrixXd(A_crs);
+//     std::cout << "\n\n \t \t Galerkin Matrix: \n " << dense_A << "\n\n";
 
-    //Show RHS vec
-    //get dense matrix
-    std::cout << "\n\n \t \t RHS Vec: \n " << rhs << "\n\n";
+//     //Show RHS vec
+//     //get dense matrix
+//     std::cout << "\n\n \t \t RHS Vec: \n " << rhs << "\n\n";
 
 
-    //Show solution dof vector
-    std::cout << "\n\n \t \t SOL Vec: \n " << sol_vec << "\n\n";
-}
+//     //Show solution dof vector
+//     std::cout << "\n\n \t \t SOL Vec: \n " << sol_vec << "\n\n";
+// }
 //----------------------END SOLVE LSE------------------------
 
 

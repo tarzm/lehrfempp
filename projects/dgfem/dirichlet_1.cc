@@ -377,8 +377,8 @@ for (size_type level = 0; level < L; ++level) {
     errs_poly.emplace_back(n_cells, error_l2_poly, error_l2_poly);
 
     auto num_cells = poly_mesh_ptr->NumEntities(0);
-    write_error_file(run_name, c_inv, c_sigma, num_cells, "L2_poly", error_l2_poly);
-    write_error_file(run_name, c_inv, c_sigma, num_cells, "L2_hybrid", L2err);
+    write_error_file(run_name, c_inv, c_sigma, num_cells, "L2poly", error_l2_poly);
+    write_error_file(run_name, c_inv, c_sigma, num_cells, "L2hybrid", L2err);
 
 
 
