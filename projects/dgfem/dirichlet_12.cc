@@ -37,6 +37,8 @@ void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_c
 
 int main(int argc, char *argv[]){
 
+const double E = 2.7182818284590452353602874713526624977572470936999595749669676277;
+
 std::string run_name = argv[1];
 double c_inv = std::stod(argv[2]);
 double c_sigma = std::stod(argv[3]);
@@ -66,7 +68,7 @@ lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
 //----------------------PREPARE PRESCRIBED FUNCTIONS------------------------
 // Scalar valued prescribed function gD
 auto gD_lambda = [](Eigen::Vector2d x) -> double {
-    return 0.8 + std::sin(3*x[0]);
+    return 1.0 + std::sin(M_PI * (1.0 + x[0]) * (1.0 + x[1]) * (1.0 + x[1]) * 0.125);
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_gD{gD_lambda};
 
@@ -77,7 +79,14 @@ lf::dgfe::MeshFunctionGlobalDGFE m_gN{gN_lambda};
 
 // Scalar valued prescribed function f
 auto f_lambda = [](Eigen::Vector2d x) -> double {
-    return 0.8 + 3.0 * std::cos(3*x[0]) + 10.0 * std::sin(3*x[0]);
+    return (-0.7853981633974483*(1 + x[0])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
+   0.7853981633974483*(2 - x[0])*(1 + x[0])*(1 + x[1])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)) + 
+   0.39269908169872414*std::pow(1 + x[1],2)*(2 - std::pow(x[1],2))*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)) + 
+   (15.707963267948966*(1 + x[0])*x[1]*(1 + x[1])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/(std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2)))*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
+   (7.853981633974483*x[0]*std::pow(1 + x[1],2)*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/(std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2)))*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
+   (0.6168502750680849*std::pow(1 + x[0],2)*std::pow(1 + x[1],2)*sdt(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
+   (0.15421256876702122*std::pow(1 + x[1],4)*std::sin(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
+   (1 + x[0])*std::pow(1 + x[1],2)*(1 + std::sin(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)));
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_f{f_lambda};
 //----------------------END PREPARE PRESCRIBED FUNCTIONS------------------------
