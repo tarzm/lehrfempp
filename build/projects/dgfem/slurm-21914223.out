@@ -1,1 +1,13 @@
 command: ./projects.dgfem.dirichlet_5 july_18_euler_run1_5 0.5 20 4 8 16 32 64 128 256 512 1024 2048 4096
+C_inv: 0.5 and C_sigma: 20
+Trying to write to measurements/july_18_euler_run1_5/4_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/8_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/16_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/32_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/64_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/128_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/256_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/512_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/1024_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/2048_0.50_20_L2.txt
+Trying to write to measurements/july_18_euler_run1_5/4096_0.50_20_L2.txt
