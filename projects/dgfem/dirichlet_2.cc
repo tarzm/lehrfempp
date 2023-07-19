@@ -195,8 +195,8 @@ std::vector<std::tuple<size_type, double, double>> errs{};
 std::vector<std::tuple<size_type, double, double>> errs_poly{};
 
 //define parameters
-double c_inv = 0.5;
-double c_sigma = 40.0;
+double c_inv = std::stod(argv[2]);
+double c_sigma = std::stod(argv[3]);
 
 
 // ############################LEVEL LOOP: Do computations on all levels
@@ -342,7 +342,7 @@ for (size_type level = 0; level < L; ++level) {
     lf::dgfe::MeshFunctionGlobalDGFE m_b_coeff{beta};
     lf::dgfe::MeshFunctionGlobalDGFE m_c_coeff{gamma};
     lf::dgfe::MeshFunctionGlobalDGFE m_f{f};
-    lf::dgfe::MeshFunctionGlobalDGFE m_gD{f};
+    lf::dgfe::MeshFunctionGlobalDGFE m_gD{u};
     lf::dgfe::MeshFunctionGlobalDGFE m_gN{f};
 
 
