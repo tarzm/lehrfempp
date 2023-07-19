@@ -100,7 +100,7 @@ for (int i = 4; i < argc; i++){
     auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
 
     //Setup l2 projection of sqrt(A) * nabla(basis)
-    auto l2_projection = lf::dgfe::L2ProjectionSqrtANablaBasis<double>(dgfe_space_ptr, m_a_coeff, 20);
+    auto l2_projection = lf::dgfe::L2ProjectionSqrtANablaBasis<double>(dgfe_space_ptr, m_a_coeff, 10);
 
     //run it
     auto l2_error = run_convergence(c_inv, c_sigma, 10, run_name, dgfe_space_ptr, l2_projection, m_a_coeff, m_b_coeff, m_c_coeff, m_gD, m_gN, m_f, m_gD);
