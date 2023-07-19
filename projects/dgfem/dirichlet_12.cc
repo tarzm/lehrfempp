@@ -57,7 +57,7 @@ auto b_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Vector2d {
 lf::dgfe::MeshFunctionGlobalDGFE m_b_coeff{b_coeff_lambda};
 // 2x2 diffusion tensor A(x)
 auto a_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Matrix<double, 2, 2> {
-    double entry = std::exp(-20 * std::sqrt(x[0] * x[0] + x[1] * x[1]))
+    double entry = std::exp(-20 * std::sqrt(x[0] * x[0] + x[1] * x[1]));
     return (Eigen::Matrix<double, 2, 2>() << entry, 0.0, 0.0, entry).finished();
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
@@ -66,7 +66,7 @@ lf::dgfe::MeshFunctionGlobalDGFE m_a_coeff{a_coeff_lambda};
 //----------------------PREPARE PRESCRIBED FUNCTIONS------------------------
 // Scalar valued prescribed function gD
 auto gD_lambda = [](Eigen::Vector2d x) -> double {
-    return 0.8 + std::sin(3*X[0]);
+    return 0.8 + std::sin(3*x[0]);
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_gD{gD_lambda};
 

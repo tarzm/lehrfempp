@@ -73,8 +73,8 @@ public:
                 //gramian determinants
                 Eigen::VectorXd gram_dets_t{tria_geo_ptr->IntegrationElement(zeta_ref_t)};
                 //evaluation of the coefficient functions at qr points
-                auto b = b_coeff_(cell, zeta_box_t);
-                auto c = c_coeff_(cell, zeta_box_t);
+                auto b = b_coeff_(*cell, zeta_box_t);
+                auto c = c_coeff_(*cell, zeta_box_t);
 
                 //loop over basis functions in trial space
                 for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
@@ -134,7 +134,7 @@ public:
                 Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
                 
                 //coefficient evaluated at qr points
-                auto b = b_coeff_(cell, zeta_box_s);
+                auto b = b_coeff_(*cell, zeta_box_s);
 
                 //check wether weigthed sum of qr points satisfies
                 //    (b(x) * n(x) < 0)
