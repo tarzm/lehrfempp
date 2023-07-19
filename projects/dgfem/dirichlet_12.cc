@@ -84,7 +84,7 @@ auto f_lambda = [](Eigen::Vector2d x) -> double {
    0.39269908169872414*std::pow(1 + x[1],2)*(2 - std::pow(x[1],2))*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)) + 
    (15.707963267948966*(1 + x[0])*x[1]*(1 + x[1])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/(std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2)))*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
    (7.853981633974483*x[0]*std::pow(1 + x[1],2)*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/(std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2)))*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
-   (0.6168502750680849*std::pow(1 + x[0],2)*std::pow(1 + x[1],2)*sdt(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
+   (0.6168502750680849*std::pow(1 + x[0],2)*std::pow(1 + x[1],2)*std::sin(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
    (0.15421256876702122*std::pow(1 + x[1],4)*std::sin(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
    (1 + x[0])*std::pow(1 + x[1],2)*(1 + std::sin(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)));
 };
