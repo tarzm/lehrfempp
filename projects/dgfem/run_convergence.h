@@ -153,7 +153,7 @@ lf::dgfe::DiffusionMatrixAssembler<decltype(A), double, decltype(m_a), decltype(
                 diffusionAssembler(dgfe_space_ptr, m_a, boundary_edge, boundary_d_edge, integration_degree, disc_pen, l2_projection);
 
 //initialization of advection reaction matrix assembler
-lf::dgfe::AdvectionReactionMatrixAssembler<decltypy(A), decltype(m_b), decltype(m_c), decltype(boundary_edge)>
+lf::dgfe::AdvectionReactionMatrixAssembler<decltype(A), decltype(m_b), decltype(m_c), decltype(boundary_edge)>
                 advectionReactionAssembler(dgfe_space_ptr, m_b, m_c, boundary_edge, boundary_d_edge, boundary_minus_edge, integration_degree);
 
 //assemble matrix
