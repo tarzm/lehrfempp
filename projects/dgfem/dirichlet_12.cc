@@ -78,7 +78,7 @@ auto gN_lambda = [](Eigen::Vector2d x) -> double {
 lf::dgfe::MeshFunctionGlobalDGFE m_gN{gN_lambda};
 
 // Scalar valued prescribed function f
-auto f_lambda = [](Eigen::Vector2d x) -> double {
+auto f_lambda = [E](Eigen::Vector2d x) -> double {
     return (-0.7853981633974483*(1 + x[0])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
    0.7853981633974483*(2 - x[0])*(1 + x[0])*(1 + x[1])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)) + 
    0.39269908169872414*std::pow(1 + x[1],2)*(2 - std::pow(x[1],2))*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)) + 

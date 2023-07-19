@@ -37,6 +37,8 @@ void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_c
 
 int main(int argc, char *argv[]){
 
+const double E = 2.7182818284590452353602874713526624977572470936999595749669676277;
+
 std::string run_name = argv[1];
 double c_inv = std::stod(argv[2]);
 double c_sigma = std::stod(argv[3]);
@@ -76,7 +78,7 @@ auto gN_lambda = [](Eigen::Vector2d x) -> double {
 lf::dgfe::MeshFunctionGlobalDGFE m_gN{gN_lambda};
 
 // Scalar valued prescribed function f
-auto f_lambda = [](Eigen::Vector2d x) -> double {
+auto f_lambda = [E](Eigen::Vector2d x) -> double {
     return (-0.7853981633974483*(1 + x[0])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)))/std::pow(E,20.0*std::sqrt(std::pow(x[0],2) + std::pow(x[1],2))) + 
    0.7853981633974483*(2 - x[0])*(1 + x[0])*(1 + x[1])*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)) + 
    0.39269908169872414*std::pow(1 + x[1],2)*(2 - std::pow(x[1],2))*std::cos(0.39269908169872414*(1 + x[0])*std::pow(1 + x[1],2)) + 
