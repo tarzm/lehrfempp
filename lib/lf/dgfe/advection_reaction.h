@@ -136,19 +136,17 @@ public:
                 //coefficient evaluated at qr points
                 auto b = b_coeff_(*cell, zeta_box_s);
 
-                //check wether weigthed sum of qr points satisfies
-                //    (b(x) * n(x) < 0)
-                //=> if so, edge belongs to the delta_minus_k set
-                double sum = 0.0;
+                //does edge belong do delta_minus_kappa
+                SCALAR result_delta_minus_kappa = 0.0;
                 for (int i = 0; i < gram_dets_s.size(); i++){
-                    sum += b[i].dot(normal) * w_ref_s[i] * gram_dets_s[i];
+                    result_delta_minus_kappa += b[i].dot(normal) * w_ref_s[i] * gram_dets_s[i];
                 }
-                bool delta_minus_k = (sum < 0) ? true : false;
+                bool delta_minus_kappa = result_delta_minus_kappa < 0 ? true : false;
 
                 // !!!!!!!!!!!!! SECOND TERM !!!!!!!!!!!!!
                 //    - ( b * n ) * upwind_jump[w] * v^+   over all edges which are not on boundary and belong to delta_minus_k
 
-                if (!(boundary_edge_(*edge)) && delta_minus_k){    // edge must not be on boundary and belong to delta_minus_k
+                if (!(boundary_edge_(*edge)) && delta_minus_kappa){    // edge must not be on boundary and belong to delta_minus_k
 
                     //get pointer to polygon on other side of edge
                     auto polygon_pair = dgfe_space_ptr_->AdjacentPolygons(edge);
@@ -194,7 +192,7 @@ public:
                 // !!!!!!!!!!!!! THIRD TERM !!!!!!!!!!!!!
                 elem_mat.setZero();
                 //    - ( b * n ) * w^+ * v^+   over delta_minus_k and (boundary_d_edge or boundary_minus_edge)
-                if (delta_minus_k && (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge))){
+                if (delta_minus_kappa && (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge))){
                     //loop over basis functions in trial space
                     for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
                         //loop over bsis functions in test space

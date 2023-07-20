@@ -19,6 +19,7 @@
 #include <iomanip>
 
 #include <lf/mesh/polytopic2d/polytopic2d.h>
+#include <lf/quad/quad.h>
 #include <lf/mesh/hybrid2d/hybrid2d.h>
 #include <lf/mesh/mesh.h>
 #include <lf/io/io.h>
@@ -39,7 +40,6 @@ auto n_cells = dgfe_space_ptr->Mesh()->NumEntities(0);
 auto mesh_ptr = dgfe_space_ptr->Mesh();
 
 
-
 //----------------------PREPARE BOUNDARY EDGE SETS------------------------
 auto boundary_edge = lf::mesh::utils::flagEntitiesOnBoundary(mesh_ptr, 1);
 //boundary_N_edge
@@ -53,87 +53,105 @@ lf::mesh::utils::CodimMeshDataSet<bool> boundary_minus_edge(mesh_ptr, 1, false);
 //boundary_plus_edge
 lf::mesh::utils::CodimMeshDataSet<bool> boundary_plus_edge(mesh_ptr, 1, false);
 
-//assemble boundary_0_edge
-for (auto edge : mesh_ptr->Entities(1)){
-    if (boundary_edge(*edge)){
-        auto corners = lf::geometry::Corners(*(edge->Geometry()));
-        auto normal = lf::dgfe::outwardNormal(corners);
-        auto avg_corners = corners.rowwise().mean();
-        auto a = m_a.lambda()(avg_corners);
-        if (normal.dot(a * normal) > 0.0){
-            boundary_0_edge(*edge) = true;
+
+//setup qr rule for segments
+const lf::quad::QuadRule qr_s = lf::quad::make_QuadRule(lf::base::RefEl::kSegment(), integration_degree);
+// qr points
+const Eigen::MatrixXd zeta_ref_s{qr_s.Points()};
+//weights
+Eigen::VectorXd w_ref_s{qr_s.Weights()};
+
+//BOUNDARY SETS ASSEMBLY
+for (auto cell : mesh_ptr->Entities(0)){
+    for (auto edge : cell->SubEntities(1)){
+        if (boundary_edge(*edge)){
+            
+            //normal n
+            auto polygon_pair = dgfe_space_ptr->AdjacentPolygons(edge);
+            auto normal = lf::dgfe::outwardNormal(lf::geometry::Corners(*(edge->Geometry())));
+            //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
+            normal *= (int) (cell->RelativeOrientations()[polygon_pair.first.second]);
+
+            lf::dgfe::BoundingBox box(*cell);
+            // qr points mapped to segment
+            Eigen::MatrixXd zeta_global_s{edge->Geometry()->Global(zeta_ref_s)};
+            // qr points mapped back into reference bounding box to retrieve values
+            Eigen::MatrixXd zeta_box_s{box.inverseMap(zeta_global_s)};
+            //gramian determinants
+            Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
+
+            auto a_evaluated = m_a(*cell, zeta_box_s);
+            double boundary_0_sum = 0.0;
+
+            for (int i = 0; i < gram_dets_s.size(); i++){
+                boundary_0_sum += normal.dot(a_evaluated[i] * normal) * gram_dets_s[i] * w_ref_s[i];
+            }
+
+            //BOUNDARY 0 #############
+            if (boundary_0_sum > 0){
+                boundary_0_edge(*edge) = true;
+
+                //HERE DIRICHLET AND NEUMANN################
+                boundary_d_edge(*edge) = true;
+
+            } else { //BOUNDARY_plus and BOUNDARY_minus ###############
+
+                auto b_evaluated = m_b(*cell, zeta_box_s);
+                double boundary_plus_sum = 0.0;
+                for (int i = 0; i < gram_dets_s.size(); i++){
+                    boundary_0_sum += b_evaluated[i].dot(normal) * gram_dets_s[i] * w_ref_s[i];
+                }
+
+                if (boundary_plus_sum < 0){
+                    boundary_minus_edge(*edge) = true;
+                } else {
+                    boundary_plus_edge(*edge) = true;
+                }
+            }
         }
     }
 }
-//assemble minus and plus boundary
+//END BOUNDARY SETS ASSEMBLY
+
+std::cout << "PART OF BOUNDARY 0:\n";
 for (auto edge : mesh_ptr->Entities(1)){
-    if (boundary_edge(*edge) && !boundary_0_edge(*edge)){
-        //normal n
-        auto corners = lf::geometry::Corners(*(edge->Geometry()));
-        auto normal = lf::dgfe::outwardNormal(corners);
-        auto avg_corners = corners.rowwise().mean();
-        auto b = m_b.lambda()(avg_corners);
-        if(b.dot(normal) < 0){
-            boundary_minus_edge(*edge) = true;
-        } else {
-            boundary_plus_edge(*edge) = true;
-        }
+    if(boundary_0_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
     }
 }
-//assemble boundary d and boundary n
+std::cout << "\n";
+
+std::cout << "PART OF BOUNDARY D:\n";
 for (auto edge : mesh_ptr->Entities(1)){
-    // if (boundary_0_edge(*edge)){
-    //     auto corners = lf::geometry::Corners(*(edge->Geometry()));
-    //     if (corners(0,0) == 1.0 && corners(0,1) == 1.0){
-    //         boundary_n_edge(*edge) = true;
-    //     } else {
-    //         boundary_d_edge(*edge) = true;
-    //     }
-    // }
-    if (boundary_edge(*edge)){
-        boundary_d_edge(*edge) = true;
+    if(boundary_d_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
     }
 }
+std::cout << "\n";
 
-// std::cout << "PART OF BOUNDARY 0:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_0_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY N:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_n_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
-// std::cout << "PART OF BOUNDARY D:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_d_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY minus:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_minus_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
-// std::cout << "PART OF BOUNDARY N:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_n_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
-
-// std::cout << "PART OF BOUNDARY minus:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_minus_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
-
-// std::cout << "PART OF BOUNDARY plus:\n";
-// for (auto edge : mesh_ptr->Entities(1)){
-//     if(boundary_plus_edge(*edge)){
-//         std::cout << mesh_ptr->Index(*edge) << " ";
-//     }
-// }
-// std::cout << "\n";
+std::cout << "PART OF BOUNDARY plus:\n";
+for (auto edge : mesh_ptr->Entities(1)){
+    if(boundary_plus_edge(*edge)){
+        std::cout << mesh_ptr->Index(*edge) << " ";
+    }
+}
+std::cout << "\n";
 
     
 //----------------------END PREPARE BOUNDARY EDGE SETS------------------------

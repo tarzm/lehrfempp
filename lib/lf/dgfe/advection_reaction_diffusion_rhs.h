@@ -162,10 +162,18 @@ public:
                 Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
 
                 auto b = b_coeff_(*cell, zeta_box_s);
-                auto gD_evaluated = gD_(*cell, zeta_box_s);
+
+                //does edge belong do delta_minus_kappa
+                SCALAR result_delta_minus_kappa = 0.0;
+                for (int i = 0; i < gram_dets_s.size(); i++){
+                    result_delta_minus_kappa += b[i].dot(normal) * w_ref_s[i] * gram_dets_s[i];
+                }
+                bool delta_minus_kappa = result_delta_minus_kappa < 0 ? true : false; 
 
                 //    - ( b * n ) * gD * v^+   over all edges which are either on boundary_D or boundary_minus and belong to delta_minus_k of the cell
-                if (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge)){
+                if (delta_minus_kappa && (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge))){
+
+                    auto gD_evaluated = gD_(*cell, zeta_box_s);
                     
                     //loop over bsis functions in test space
                     for(basis_test = 0; basis_test < n_basis; basis_test++){
