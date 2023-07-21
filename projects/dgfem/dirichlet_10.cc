@@ -52,7 +52,7 @@ auto c_coeff_lambda = [](Eigen::Vector2d x) -> double {
 lf::dgfe::MeshFunctionGlobalDGFE m_c_coeff{c_coeff_lambda};
 //Vector valued advection coefficient b
 auto b_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Vector2d {
-    return (Eigen::Vector2d{1, 1});
+    return (Eigen::Vector2d{1.0, 1.0});
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_b_coeff{b_coeff_lambda};
 // 2x2 diffusion tensor A(x)

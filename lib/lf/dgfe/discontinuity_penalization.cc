@@ -53,8 +53,8 @@ scalar_t DiscontinuityPenalization::operator()(const lf::mesh::Entity &edge, sca
     auto simplex_areas_0 = simplexAreas(*polygon_0, polygon_pair.first.second);
     scalar_t polygon_area_0 = lf::dgfe::integrate(lf::mesh::polytopic2d::Corners(polygon_0), 0, 0);
     auto max_legendre_degree = dgfe_space_ptr_->MaxLegendreDegree();
-    //constant appearing in the term p^(2*(d-1)), p is a constant appearing in the definition of shape-regularity
-    double p_2d_1 = 4;
+    //constant appearing in the term p^(2*(d-1)), p is a constant appearing in the definition of shape-regularity => polynomial degrees (one-dimensionel legendre)
+    double p_2d_1 = (max_legendre_degree_ == 1) ? 1 : 4;
     //volume of the edge
     scalar_t edge_volume = lf::geometry::Volume(*(edge.Geometry()));
 
