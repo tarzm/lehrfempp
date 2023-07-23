@@ -155,7 +155,7 @@ public:
                     lf::dgfe::BoundingBox box_other(*other_polygon);
                     Eigen::MatrixXd zeta_box_other{box_other.inverseMap(zeta_global_s)};
                     //get global dof indices of other polygon
-                    nonstd::span<const Eigen::Index> other_dof_idx(dofhandler.GlobalDofIndices(*cell));
+                    nonstd::span<const Eigen::Index> other_dof_idx(dofhandler.GlobalDofIndices(*other_polygon));
 
                     //loop over basis functions in trial space on this polygon
                     for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
@@ -167,23 +167,23 @@ public:
                                 //FIRST contribution to this polygon's dof
                                 //sum over qr points
                                 for (int i = 0; i < gram_dets_s.size(); i++){
-                                    sum -= (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) 
+                                    sum += (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) 
                                                                 * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
                                                                 * w_ref_s[i] * gram_dets_s[i];
                                 }
                                 //add entry to galerkin matrix
-                                matrix.AddToEntry(row_idx[basis_test], col_idx[basis_trial], sum);
+                                matrix.AddToEntry(row_idx[basis_test], col_idx[basis_trial], -sum);
 
                                 //SECOND contribution to other polygon's dof
                                 sum = 0.0;
                                 //sum over qr points
                                 for (int i = 0; i < gram_dets_s.size(); i++){
-                                    sum += (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) 
+                                    sum -= (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) 
                                                                 * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
                                                                 * w_ref_s[i] * gram_dets_s[i];
                                 }
                                 //add entry to galerkin matrix
-                                matrix.AddToEntry(row_idx[basis_test], other_dof_idx[basis_trial], sum);
+                                matrix.AddToEntry(row_idx[basis_test], other_dof_idx[basis_trial], -sum);
                         }
                     }
                 }
@@ -219,9 +219,9 @@ public:
                     }  // end assembly local double loop
                 }
                 // !!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!
+                edge_sub_idx++;
             }
-            edge_sub_idx++;
-        }
+            
     } // end assemble function
 
 
