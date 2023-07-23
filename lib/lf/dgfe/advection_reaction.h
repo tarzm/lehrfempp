@@ -221,6 +221,7 @@ public:
                 // !!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!
                 edge_sub_idx++;
             }
+        }
             
     } // end assemble function
 
