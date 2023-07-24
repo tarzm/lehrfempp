@@ -39,8 +39,6 @@ public:
     void assemble (TMPMATRIX &matrix){
 
         const unsigned n_basis = (max_legendre_degree_ == 1) ? 4 : 9;
-        //initialize element matrix
-        Eigen::Matrix<SCALAR, Eigen::Dynamic, Eigen::Dynamic> elem_mat(n_basis, n_basis);
 
         //quadrule setup
         const lf::quad::QuadRule qr_t = qr_cache_.Get(lf::base::RefEl::kTria(), integration_degree_);
@@ -64,8 +62,6 @@ public:
             nonstd::span<const Eigen::Index> dofs_cell(dofhandler.GlobalDofIndices(*cell));
 
 
-            elem_mat.setZero();
-
             //local - global mapping
             lf::dgfe::BoundingBox box(*cell);
             //get sub-tessellation
@@ -87,17 +83,17 @@ public:
                 for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
                     //loop over basis functions in test space
                     for(int basis_test = 0; basis_test < n_basis; basis_test++){
-                        
+
                         //sum over qr points
                         SCALAR sum = 0.0;
 
                         for (int i = 0; i < gram_dets_t.size(); i++){
                             //first part [nabla (b * w) + c*w] * v
                             sum += ( b[i][0] * legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0)
-                                                                + b[i][1] * legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(1)
-                                                                + c[i] * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) )
-                                                                * legendre_basis(basis_test, max_legendre_degree_, zeta_box_t.col(i))
-                                                                * w_ref_t[i] * gram_dets_t[i];
+                                        + b[i][1] * legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(1)
+                                        + c[i] * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) )
+                                        * legendre_basis(basis_test, max_legendre_degree_, zeta_box_t.col(i))
+                                        * w_ref_t[i] * gram_dets_t[i];
                         }
                         matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], sum);
                     }
@@ -171,7 +167,7 @@ public:
                                                                 * w_ref_s[i] * gram_dets_s[i];
                                 }
                                 //add entry to galerkin matrix
-                                matrix.AddToEntry(row_idx[basis_test], col_idx[basis_trial], -sum);
+                                matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], -sum);
 
                                 //SECOND contribution to other polygon's dof
                                 sum = 0.0;
@@ -182,40 +178,31 @@ public:
                                                                 * w_ref_s[i] * gram_dets_s[i];
                                 }
                                 //add entry to galerkin matrix
-                                matrix.AddToEntry(row_idx[basis_test], other_dof_idx[basis_trial], -sum);
+                                matrix.AddToEntry(dofs_cell[basis_test], other_dof_idx[basis_trial], -sum);
                         }
                     }
                 }
                 // !!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!
 
                 // !!!!!!!!!!!!! THIRD TERM !!!!!!!!!!!!!
-                elem_mat.setZero();
                 //    - ( b * n ) * w^+ * v^+   over delta_minus_k and (boundary_d_edge or boundary_minus_edge)
                 if (delta_minus_kappa && (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge))){
                     //loop over basis functions in trial space
                     for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
                         //loop over bsis functions in test space
                         for(int basis_test = 0; basis_test < n_basis; basis_test++){
-
+                            
+                            SCALAR sum = 0.0;
                             //sum over qr points
                             for (int i = 0; i < gram_dets_s.size(); i++){
-                                elem_mat(basis_trial, basis_test) -= (b[i].dot(normal))
-                                                                    * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i))
-                                                                    * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
-                                                                    * w_ref_s[i] * gram_dets_s[i];
+                                sum += (b[i].dot(normal)) * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i))
+                                        * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
+                                        * w_ref_s[i] * gram_dets_s[i];
                         
                             }
+                            matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], -sum);
                         }
                     }
-
-                    //assembly double loop
-                    for (int i = 0; i < n_basis; i++) {
-                        for (int j = 0; j < n_basis; j++) {
-                        // Add the element at position (i,j) of the local matrix
-                        // to the entry at (row_idx[i], col_idx[j]) of the global matrix
-                        matrix.AddToEntry(row_idx[i], col_idx[j], elem_mat(i, j));
-                        }
-                    }  // end assembly local double loop
                 }
                 // !!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!
                 edge_sub_idx++;
