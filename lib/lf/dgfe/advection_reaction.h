@@ -51,12 +51,19 @@ public:
 
         //dofhandler
         auto dofhandler = dgfe_space_ptr_->LocGlobMap();
+
+        
         
         //loop over cells
         for (const lf::mesh::Entity *cell : dgfe_space_ptr_->Mesh()->Entities(0)){
         
             //!!!!!!!!!!!!! FIRST TERM !!!!!!!!!!!!!!
             //     [nabla (b * w) + c*w] * v   over all cells
+
+            //dofs of cell
+            nonstd::span<const Eigen::Index> dofs_cell(dofhandler.GlobalDofIndices(*cell));
+
+
             elem_mat.setZero();
 
             //local - global mapping
@@ -80,31 +87,23 @@ public:
                 for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
                     //loop over basis functions in test space
                     for(int basis_test = 0; basis_test < n_basis; basis_test++){
+                        
                         //sum over qr points
+                        SCALAR sum = 0.0;
+
                         for (int i = 0; i < gram_dets_t.size(); i++){
                             //first part [nabla (b * w) + c*w] * v
-                            elem_mat(basis_trial, basis_test) += ( b[i][0] * legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0)
+                            sum += ( b[i][0] * legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0)
                                                                 + b[i][1] * legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(1)
                                                                 + c[i] * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) )
                                                                 * legendre_basis(basis_test, max_legendre_degree_, zeta_box_t.col(i))
                                                                 * w_ref_t[i] * gram_dets_t[i];
                         }
+                        matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], sum);
                     }
                 }
             }
 
-            // row indices of for contributions of cells
-            nonstd::span<const Eigen::Index> row_idx(dofhandler.GlobalDofIndices(*cell));
-            // Column indices of for contributions of cells
-            nonstd::span<const Eigen::Index> col_idx(dofhandler.GlobalDofIndices(*cell));
-            //assembly double loop
-            for (int i = 0; i < n_basis; i++) {
-                for (int j = 0; j < n_basis; j++) {
-                // Add the element at position (i,j) of the local matrix
-                // to the entry at (row_idx[i], col_idx[j]) of the global matrix
-                matrix.AddToEntry(row_idx[i], col_idx[j], elem_mat(i, j));
-                }
-            }  // end assembly local double loop
             //!!!!!!!!!!!!! END FIRST TERM !!!!!!!!!!!!!!
 
 
@@ -222,6 +221,7 @@ public:
                 edge_sub_idx++;
             }
         }
+
             
     } // end assemble function
 
