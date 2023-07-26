@@ -177,17 +177,17 @@ public:
                     
                     //loop over bsis functions in test space
                     for(basis_test = 0; basis_test < n_basis; basis_test++){
-                        //sum over qr points and add if delta_minus_k
-                        scalar_t sum;
+                        //sum over qr points
+                        scalar_t sum = 0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             if (b[i].dot(normal) < 0){
-                                sum -= (b[i].dot(normal)) * gD_evaluated[i]
+                                sum += (b[i].dot(normal)) * gD_evaluated[i]
                                                                     * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
                                                                     * w_ref_s[i] * gram_dets_s[i];
                             }
                         }
                         rhs_debug(1,sum);
-                        rhs_vec[dofs_cell[basis_test]] += sum;
+                        rhs_vec[dofs_cell[basis_test]] += -sum;
                     }
                 }
                 edge_sub_idx++;
@@ -246,12 +246,12 @@ public:
                         Eigen::Vector2d nabla_v{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
                                                 legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
 
-                        sum -= gD_evaluated[i] * ( (a_coeff_(cell, zeta_box_s.col(i))[0] *  nabla_v).dot(normal)
+                        sum += gD_evaluated[i] * ( (a_coeff_(cell, zeta_box_s.col(i))[0] *  nabla_v).dot(normal)
                                                             - disc_penalty * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) )
                                                 * w_ref_s[i] * gram_dets_s[i];
                     }
                     rhs_debug(1,sum);
-                    rhs_vec[dofs_cell[basis_test]] += sum;
+                    rhs_vec[dofs_cell[basis_test]] -= sum;
                 }          
             }
             //!!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!!

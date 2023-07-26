@@ -42,6 +42,7 @@ public:
 
     void assemble(TMPMATRIX &matrix){
 
+
         //declare dof_plus and dof_minus for lambda capture
         nonstd::span<const Eigen::Index> dof_plus;
         nonstd::span<const Eigen::Index> dof_minus;
@@ -50,9 +51,13 @@ public:
         int basis_trial;
 
         //DEBUG SETUP
-        int row = 23;
-        int col = 22;
-        bool debug = false;
+        int row = 100;
+        int col = 100;
+        bool debug = true;
+
+        if(debug){
+            std::cout << "############### DIFFUSION ################\n";
+        }
 
         //lambda for debugging
         auto galerkin_debug = [debug, row, col, &dof_plus, &dof_minus, &basis_trial, &basis_test](double value, bool test_plus, bool trial_plus,

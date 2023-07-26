@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Advection reaction element matrix provider
+ * @brief Advection reaction element matrix assembler
  * @author Tarzis Maurer
  * @date June 22
  * @copyright ETH Zurich
@@ -38,6 +38,38 @@ public:
 
     void assemble (TMPMATRIX &matrix){
 
+        //declare dof_plus and dof_minus for lambda capture
+        nonstd::span<const Eigen::Index> dof_plus;
+        nonstd::span<const Eigen::Index> dof_minus;
+        //declare basis_test and basis_trial for lambda capture
+        int basis_test;
+        int basis_trial;
+
+        //DEBUG SETUP
+        int row = 23;
+        int col = 22;
+        bool debug = true;
+        
+        if(debug){
+            std::cout << "############### ADVECTION REACTION ################\n";
+        }
+
+        //lambda for debugging
+        auto galerkin_debug = [debug, row, col, &dof_plus, &dof_minus, &basis_trial, &basis_test](double value, bool test_plus, bool trial_plus,
+                                std::string additional = "", double additional_value = 0) -> void {
+            
+            int dof_row = test_plus ? dof_plus[basis_test] : dof_minus[basis_test];
+            int dof_col = trial_plus ? dof_plus[basis_trial] : dof_minus[basis_trial];
+
+            if (debug){
+                if (row == dof_row && col == dof_col && !(additional == "")){
+                    std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ") with" << additional << " = \n\t\t\t" << additional_value << "\n";
+                } else if(row == dof_row && col == dof_col){
+                    std::cout << "\tAdded " << value << " to G(" << row << " , " << col << ")\n";
+                }
+            }
+        };
+
         const unsigned n_basis = (max_legendre_degree_ == 1) ? 4 : 9;
 
         //quadrule setup
@@ -58,9 +90,11 @@ public:
             //!!!!!!!!!!!!! FIRST TERM !!!!!!!!!!!!!!
             //     [nabla (b * w) + c*w] * v   over all cells
 
-            //dofs of cell
-            nonstd::span<const Eigen::Index> dofs_cell(dofhandler.GlobalDofIndices(*cell));
+            auto cell_global_idx = dgfe_space_ptr_->Mesh()->Index(*cell);
+            if (debug) std::cout << "\nCell " << cell_global_idx << " in term 1\n";
 
+            //dofs of cell
+            dof_plus = (dofhandler.GlobalDofIndices(*cell));
 
             //local - global mapping
             lf::dgfe::BoundingBox box(*cell);
@@ -69,6 +103,7 @@ public:
 
             //loop over triangles in the sub-tessellation
             for(auto& tria_geo_ptr : sub_tessellation){
+
                 // qr points mapped to global triangle
                 Eigen::MatrixXd zeta_global_t{tria_geo_ptr->Global(zeta_ref_t)};
                 // qr points mapped back into reference bounding box to retrieve values
@@ -80,22 +115,23 @@ public:
                 auto c = c_coeff_(*cell, zeta_box_t);
 
                 //loop over basis functions in trial space
-                for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
+                for (basis_trial = 0; basis_trial < n_basis; basis_trial++){
                     //loop over basis functions in test space
-                    for(int basis_test = 0; basis_test < n_basis; basis_test++){
+                    for(basis_test = 0; basis_test < n_basis; basis_test++){
 
                         //sum over qr points
                         SCALAR sum = 0.0;
 
                         for (int i = 0; i < gram_dets_t.size(); i++){
                             //first part [nabla (b * w) + c*w] * v
-                            sum += ( b[i][0] * legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0)
-                                        + b[i][1] * legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(1)
-                                        + c[i] * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) )
-                                        * legendre_basis(basis_test, max_legendre_degree_, zeta_box_t.col(i))
-                                        * w_ref_t[i] * gram_dets_t[i];
+                            Eigen::Vector2d nabla_w{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0),
+                                                    legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(1)};
+
+                            sum += ( nabla_w.dot(b[i]) + c[i] * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) )
+                                    * legendre_basis(basis_test, max_legendre_degree_, zeta_box_t.col(i))
+                                    * w_ref_t[i] * gram_dets_t[i];
                         }
-                        matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], sum);
+                        matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], sum);
                     }
                 }
             }
@@ -131,7 +167,7 @@ public:
                 //coefficient evaluated at qr points
                 auto b = b_coeff_(*cell, zeta_box_s);
 
-                //does edge belong do delta_minus_kappa
+                //does edge belong do delta_minus_kappa?
                 SCALAR result_delta_minus_kappa = 0.0;
                 for (int i = 0; i < gram_dets_s.size(); i++){
                     result_delta_minus_kappa += b[i].dot(normal) * w_ref_s[i] * gram_dets_s[i];
@@ -143,6 +179,9 @@ public:
 
                 if (!(boundary_edge_(*edge)) && delta_minus_kappa){    // edge must not be on boundary and belong to delta_minus_k
 
+                    auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
+                    if (debug) std::cout << "\nEdge " << edge_global_idx << " in term 2\n";
+
                     //get pointer to polygon on other side of edge
                     auto polygon_pair = dgfe_space_ptr_->AdjacentPolygons(edge);
                     auto other_polygon = (polygon_pair.first.first == cell) ? polygon_pair.second.first : polygon_pair.first.first;
@@ -150,36 +189,36 @@ public:
                     lf::dgfe::BoundingBox box_other(*other_polygon);
                     Eigen::MatrixXd zeta_box_other{box_other.inverseMap(zeta_global_s)};
                     //get global dof indices of other polygon
-                    nonstd::span<const Eigen::Index> other_dof_idx(dofhandler.GlobalDofIndices(*other_polygon));
+                    dof_minus = (dofhandler.GlobalDofIndices(*other_polygon));
 
                     //loop over basis functions in trial space on this polygon
-                    for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
+                    for (basis_trial = 0; basis_trial < n_basis; basis_trial++){
 
-                            //loop over basis functions in test space
-                            for(int basis_test = 0; basis_test < n_basis; basis_test++){
-                                
-                                SCALAR sum = 0.0;
-                                //FIRST contribution to this polygon's dof
-                                //sum over qr points
-                                for (int i = 0; i < gram_dets_s.size(); i++){
-                                    sum += (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) 
-                                                                * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
-                                                                * w_ref_s[i] * gram_dets_s[i];
-                                }
-                                //add entry to galerkin matrix
-                                matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], -sum);
+                        //loop over basis functions in test space
+                        for(basis_test = 0; basis_test < n_basis; basis_test++){
+                            
+                            SCALAR sum = 0.0;
+                            //FIRST contribution to this polygon's dof
+                            //sum over qr points
+                            for (int i = 0; i < gram_dets_s.size(); i++){
+                                sum += (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) 
+                                                            * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
+                                                            * w_ref_s[i] * gram_dets_s[i];
+                            }
+                            //add entry to galerkin matrix
+                            matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -sum);
 
-                                //SECOND contribution to other polygon's dof
-                                sum = 0.0;
-                                //sum over qr points
-                                for (int i = 0; i < gram_dets_s.size(); i++){
-                                    sum -= (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) 
-                                                                * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
-                                                                * w_ref_s[i] * gram_dets_s[i];
-                                }
-                                //add entry to galerkin matrix
-                                matrix.AddToEntry(dofs_cell[basis_test], other_dof_idx[basis_trial], -sum);
-                        }
+                            //SECOND contribution to other polygon's dof
+                            sum = 0.0;
+                            //sum over qr points
+                            for (int i = 0; i < gram_dets_s.size(); i++){
+                                sum -= (b[i].dot(normal))   * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_other.col(i)) 
+                                                            * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
+                                                            * w_ref_s[i] * gram_dets_s[i];
+                            }
+                            //add entry to galerkin matrix
+                            matrix.AddToEntry(dof_plus[basis_test], dof_minus[basis_trial], -sum);
+                        }   
                     }
                 }
                 // !!!!!!!!!!!!! END SECOND TERM !!!!!!!!!!!!!
@@ -187,10 +226,14 @@ public:
                 // !!!!!!!!!!!!! THIRD TERM !!!!!!!!!!!!!
                 //    - ( b * n ) * w^+ * v^+   over delta_minus_k and (boundary_d_edge or boundary_minus_edge)
                 if (delta_minus_kappa && (boundary_d_edge_(*edge) || boundary_minus_edge_(*edge))){
+                    
+                    auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
+                    if (debug) std::cout << "\nEdge " << edge_global_idx << " in term 3\n";
+
                     //loop over basis functions in trial space
-                    for (int basis_trial = 0; basis_trial < n_basis; basis_trial++){
+                    for (basis_trial = 0; basis_trial < n_basis; basis_trial++){
                         //loop over bsis functions in test space
-                        for(int basis_test = 0; basis_test < n_basis; basis_test++){
+                        for(basis_test = 0; basis_test < n_basis; basis_test++){
                             
                             SCALAR sum = 0.0;
                             //sum over qr points
@@ -198,13 +241,16 @@ public:
                                 sum += (b[i].dot(normal)) * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i))
                                         * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
                                         * w_ref_s[i] * gram_dets_s[i];
-                        
                             }
-                            matrix.AddToEntry(dofs_cell[basis_test], dofs_cell[basis_trial], -sum);
+                            matrix.AddToEntry(dof_plus[basis_test], dof_plus[basis_trial], -sum);
                         }
                     }
                 }
                 // !!!!!!!!!!!!! END THIRD TERM !!!!!!!!!!!!!
+                if (debug){
+                    auto edge_global_idx = dgfe_space_ptr_->Mesh()->Index(*edge);
+                    std::cout << "\t Edge " << edge_global_idx << " sub idx is " << edge_sub_idx << "\n";
+                }
                 edge_sub_idx++;
             }
         }
