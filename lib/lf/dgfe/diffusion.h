@@ -53,7 +53,7 @@ public:
         //DEBUG SETUP
         int row = 100;
         int col = 100;
-        bool debug = true;
+        bool debug = false;
 
         if(debug){
             std::cout << "############### DIFFUSION ################\n";

@@ -48,7 +48,7 @@ public:
         //DEBUG SETUP
         int row = 23;
         int col = 22;
-        bool debug = true;
+        bool debug = false;
         
         if(debug){
             std::cout << "############### ADVECTION REACTION ################\n";
