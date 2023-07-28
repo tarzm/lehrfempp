@@ -105,6 +105,48 @@ for (int i = 4; i < argc; i++){
     lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
     auto mesh_ptr = reader.mesh();
 
+    //Mesh info
+    std::cout << "PART OF BOUNDARY 0:\n";
+    for (auto edge : mesh_ptr->Entities(1)){
+        if(boundary_0_edge(*edge)){
+            std::cout << mesh_ptr->Index(*edge) << " ";
+        }
+    }
+    std::cout << "\n";
+
+    std::cout << "PART OF BOUNDARY D:\n";
+    for (auto edge : mesh_ptr->Entities(1)){
+        if(boundary_d_edge(*edge)){
+            std::cout << mesh_ptr->Index(*edge) << " ";
+        }
+    }
+    std::cout << "\n";
+
+    std::cout << "PART OF BOUNDARY N:\n";
+    for (auto edge : mesh_ptr->Entities(1)){
+        if(boundary_n_edge(*edge)){
+            std::cout << mesh_ptr->Index(*edge) << " ";
+        }
+    }
+    std::cout << "\n";
+
+    std::cout << "PART OF BOUNDARY minus:\n";
+    for (auto edge : mesh_ptr->Entities(1)){
+        if(boundary_minus_edge(*edge)){
+            std::cout << mesh_ptr->Index(*edge) << " ";
+        }
+    }
+    std::cout << "\n";
+
+    std::cout << "PART OF BOUNDARY plus:\n";
+    for (auto edge : mesh_ptr->Entities(1)){
+        if(boundary_plus_edge(*edge)){
+            std::cout << mesh_ptr->Index(*edge) << " ";
+        }
+    }
+    std::cout << "\n";
+    //end mesh info
+
     //dgfe space
     lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
     auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);

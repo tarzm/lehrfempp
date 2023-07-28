@@ -289,7 +289,7 @@ public:
                     scalar_t sum = 0;
                     for (int i = 0; i < gram_dets_s.size(); i++){
                         sum += gN_evaluated[i] * legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i))
-                                                            * w_ref_s[i] * gram_dets_s[i];
+                                * w_ref_s[i] * gram_dets_s[i];
                     }
                     rhs_debug(1,sum);
                     rhs_vec[dofs_cell[basis_test]] += sum;
