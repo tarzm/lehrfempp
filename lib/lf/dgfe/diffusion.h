@@ -24,7 +24,7 @@
 
 namespace lf::dgfe {
 
-template<typename TMPMATRIX, typename SCALAR, typename DIFFUSION_COEFF, typename EDGESELECTOR>
+template<typename TMPMATRIX, typename SCALAR, typename DIFFUSION_COEFF, typename EDGESELECTOR, typename DUMMYMESHFUNC>
 class DiffusionMatrixAssembler{
 
 public:
@@ -32,7 +32,7 @@ public:
 
     DiffusionMatrixAssembler(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, DIFFUSION_COEFF a_coeff,
                                     EDGESELECTOR boundary_edge, EDGESELECTOR boundary_d_edge, unsigned integration_degree,
-                                    lf::dgfe::DiscontinuityPenalization disc_pen, l2_proj_sqrt_a_nabla_basis l2_proj)
+                                    lf::dgfe::DiscontinuityPenalization disc_pen, L2ProjectionSqrtAGradBasis<SCALAR, DUMMYMESHFUNC> l2_proj)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
          max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), a_coeff_(a_coeff),
          boundary_edge_(std::move(boundary_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
@@ -333,22 +333,27 @@ public:
                 auto normal_plus = normal;
                 auto normal_minus = -1.0 * normal_plus;
 
+                auto a_eval = a_coeff_(*polygon_plus, zeta_box_plus);
+
+
                 //loop over basis functions in trial space
                 for (basis_trial = 0; basis_trial < n_basis; basis_trial++){
                     //loop over bsis functions in test space
                     for(basis_test = 0; basis_test < n_basis; basis_test++){
+
+                        std::cout << "Length of L2 projection vector: " << l2_projection_.dim0.size() << "\n";
+                        auto l2_proj_w_plus = l2_projection_(*polygon_plus, zeta_box_plus, basis_trial);
+                        // auto l2_proj_v_plus = l2_projection_(*polygon_plus, zeta_box_plus, basis_trial);
+                        // auto l2_proj_w_plus = l2_projection_(*polygon_plus, zeta_box_plus, basis_trial);
+                        // auto l2_proj_w_plus = l2_projection_(*polygon_plus, zeta_box_plus, basis_trial);
                         
-                        //First part {{a * nabla_w}} * [[v]]
+                        //First part {{sqrt(a) * proj(sqrt(a) * nabla_w)}} * [[v]]
                         ///////////////////////////////////////////////
                         SCALAR sum = 0.0;
 
-
-
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
-                                                             legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
-                            sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
+                            sum += (a_eval[i].sqrt() * l2_proj_w_plus[i]).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
@@ -512,7 +517,7 @@ private:
     //used to make sure the second and third term is only evaluated once per edge
     //is true if edge has already been evaluated
     EDGESELECTOR evaluated_edge_;
-    l2_proj_sqrt_a_nabla_basis &l2_projection_;
+    L2ProjectionSqrtAGradBasis<SCALAR, DUMMYMESHFUNC> &l2_projection_;
 
     lf::mesh::utils::CodimMeshDataSet<bool> initialize_evaluated_edge(){
         lf::mesh::utils::CodimMeshDataSet<bool> result(dgfe_space_ptr_->Mesh(), 1, false);

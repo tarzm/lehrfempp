@@ -32,7 +32,7 @@
 using l2_proj_sqrt_a_nabla_basis = std::pair<std::vector<lf::dgfe::MeshFunctionDGFE<double>>, std::vector<lf::dgfe::MeshFunctionDGFE<double>>>;
 
 
-template<typename MESHFUNC_A, typename MESHFUNC_B, typename MESHFUNC_C, typename MESHFUNC_gN, typename MESHFUNC_gD,  typename MESHFUNC_f, typename MESHFUNC_true>
+template<typename MESHFUNC_A, typename MESHFUNC_B, typename MESHFUNC_C, typename MESHFUNC_gN, typename MESHFUNC_gD,  typename MESHFUNC_f, typename MESHFUNC_true, typename dummy_MeshFunc>
 double run_convergence(double c_inv, double c_sigma, unsigned integration_degree, std::string run_name, std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, l2_proj_sqrt_a_nabla_basis l2_projection,
                      MESHFUNC_A &m_a, MESHFUNC_B &m_b, MESHFUNC_C &m_c, MESHFUNC_gD &m_gD, MESHFUNC_gN &m_gN, MESHFUNC_f &m_f, MESHFUNC_true &m_true){
 
@@ -167,7 +167,7 @@ lf::assemble::COOMatrix<double> A(n_dofs, n_dofs);
 A.setZero();
 
 //assembler initialization
-lf::dgfe::DiffusionMatrixAssembler<decltype(A), double, decltype(m_a), decltype(boundary_edge)>
+lf::dgfe::DiffusionMatrixAssembler<decltype(A), double, decltype(m_a), decltype(boundary_edge), dummy_MeshFunc>
                 diffusionAssembler(dgfe_space_ptr, m_a, boundary_edge, boundary_d_edge, integration_degree, disc_pen, l2_projection);
 
 //initialization of advection reaction matrix assembler
@@ -190,7 +190,7 @@ rhs.setZero();
                         //advectionReactionDiffusionRHS(dgfe_space_ptr, m_f, m_gD, m_gN, m_a, m_b, boundary_minus_edge, boundary_d_edge, boundary_n_edge, integration_degree, disc_pen, l2_projection);
 
 //initialization of RHS Assembler
-lf::dgfe::AdvectionReactionDiffusionRHSAssembler<double, decltype(m_a), decltype(m_b), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_gN), decltype(rhs)>
+lf::dgfe::AdvectionReactionDiffusionRHSAssembler<double, decltype(m_a), decltype(m_b), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_gN), decltype(rhs), dummy_MeshFunc>
                         RHSAssembler(dgfe_space_ptr, m_f, m_gD, m_gN, m_a, m_b, boundary_minus_edge,
                         boundary_d_edge, boundary_n_edge, integration_degree, disc_pen, l2_projection);
 
