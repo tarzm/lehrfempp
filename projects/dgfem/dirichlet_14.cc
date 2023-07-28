@@ -170,7 +170,7 @@ for (int i = 4; i < argc; i++){
 
                     //HERE DIRICHLET AND NEUMANN ################
                     auto corners = lf::geometry::Corners(*(edge->Geometry()));
-                    if(std::abs(corners(0,0) - 1.0) 1.0e-16 && std::abs(corners(0,1) - 1.0) 1.0e-16){ //whole edge on side x = 1
+                    if(std::abs(corners(0,0) - 1.0) < 1.0e-16 && std::abs(corners(0,1) - 1.0) < 1.0e-16){ //whole edge on side x = 1
                         boundary_n_edge(*edge) = true;
                     } else {
                         boundary_d_edge(*edge) = true;
