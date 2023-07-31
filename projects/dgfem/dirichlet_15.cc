@@ -18,7 +18,6 @@
 #include <lf/uscalfe/uscalfe.h>
 
 #include "lf/mesh/test_utils/test_meshes.h"
-#include "run_convergence.h"
 
 
 void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_cells, std::string error_type, double error){
@@ -59,6 +58,11 @@ auto b_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Vector2d {
     return (Eigen::Vector2d{ 2-(x[1]* x[1]) , 2 - x[0]});
 };
 lf::dgfe::MeshFunctionGlobalDGFE m_b_coeff{b_coeff_lambda};
+// Scalar valued div of advection coeff
+auto div_b_coeff_lambda = [](Eigen::Vector2d x) -> double {
+    return 0.0;
+};
+lf::dgfe::MeshFunctionGlobalDGFE m_div_b_coeff{div_b_coeff_lambda};
 // 2x2 diffusion tensor A(x)
 auto a_coeff_lambda = [](Eigen::Vector2d x) -> Eigen::Matrix<double, 2, 2> {
     double entry = std::exp(-20 * std::sqrt(x[0] * x[0] + x[1] * x[1]));
@@ -113,9 +117,6 @@ for (int i = 4; i < argc; i++){
     //dgfe space
     lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 1);
     auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
-
-    //Setup l2 projection of sqrt(A) * nabla(basis)
-    auto l2_projection = lf::dgfe::L2ProjectionSqrtANablaBasis<double>(dgfe_space_ptr, m_a_coeff, integration_degree);
 
     //----------------------PREPARE BOUNDARY EDGE SETS------------------------
     auto boundary_edge = lf::mesh::utils::flagEntitiesOnBoundary(mesh_ptr, 1);
@@ -247,10 +248,10 @@ for (int i = 4; i < argc; i++){
     A.setZero();
     //diffusion assembler
     lf::dgfe::DiffusionMatrixAssembler<decltype(A), double, decltype(m_a_coeff), decltype(boundary_edge)>
-                    diffusionAssembler(dgfe_space_ptr, m_a_coeff, boundary_edge, boundary_d_edge, integration_degree, disc_pen, l2_projection);
+                    diffusionAssembler(dgfe_space_ptr, m_a_coeff, boundary_edge, boundary_d_edge, integration_degree, disc_pen);
     //advection reaction matrix assembler
-    lf::dgfe::AdvectionReactionMatrixAssembler<decltype(A), double, decltype(m_b_coeff), decltype(m_c_coeff), decltype(boundary_edge)>
-                    advectionReactionAssembler(dgfe_space_ptr, m_b_coeff, m_c_coeff, boundary_edge, boundary_d_edge, boundary_minus_edge, integration_degree);
+    lf::dgfe::AdvectionReactionMatrixAssembler<decltype(A), double, decltype(m_b_coeff), decltype(m_c_coeff), decltype(boundary_edge), decltype(m_div_b_coeff)>
+                    advectionReactionAssembler(dgfe_space_ptr, m_b_coeff, m_div_b_coeff, m_c_coeff, boundary_edge, boundary_d_edge, boundary_minus_edge, integration_degree);
     //assemble matrix
     diffusionAssembler.assemble(A);
     advectionReactionAssembler.assemble(A);
@@ -259,9 +260,10 @@ for (int i = 4; i < argc; i++){
     Eigen::VectorXd rhs(n_dofs);
     rhs.setZero();
     //RHS Assembler
-    lf::dgfe::AdvectionReactionDiffusionRHSAssembler<double, decltype(m_a_coeff), decltype(m_b_coeff), decltype(boundary_edge), decltype(m_f), decltype(m_gD), decltype(m_gN), decltype(rhs)>
+    lf::dgfe::AdvectionReactionDiffusionRHSAssembler<double, decltype(m_a_coeff), decltype(m_b_coeff), decltype(boundary_edge), decltype(m_f), decltype(m_gD),
+                                                    decltype(m_gN), decltype(rhs)>
                             rhsAssembler(dgfe_space_ptr, m_f, m_gD, m_gN, m_a_coeff, m_b_coeff, boundary_minus_edge,
-                            boundary_d_edge, boundary_n_edge, integration_degree, disc_pen, l2_projection);
+                            boundary_d_edge, boundary_n_edge, integration_degree, disc_pen);
     //assemble rhs vector
     rhsAssembler.assemble(rhs);
     //----------------------END ASSEMBLE GALERKIN MATRIX & RHS------------------------

@@ -21,16 +21,16 @@
 
 namespace lf::dgfe {
 
-template<typename TMPMATRIX, typename SCALAR, typename ADVECTION_COEFF, typename REACTION_COEFF, typename EDGESELECTOR>
+template<typename TMPMATRIX, typename SCALAR, typename ADVECTION_COEFF, typename REACTION_COEFF, typename EDGESELECTOR, typename MESHFUNC_DIVB>
 class AdvectionReactionMatrixAssembler {
 
 public: 
 
-    AdvectionReactionMatrixAssembler(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, ADVECTION_COEFF b_coeff, REACTION_COEFF c_coeff,
+    AdvectionReactionMatrixAssembler(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, ADVECTION_COEFF b_coeff, MESHFUNC_DIVB divB, REACTION_COEFF c_coeff,
                                             EDGESELECTOR boundary_edge, EDGESELECTOR boundary_d_edge,
                                             EDGESELECTOR boundary_minus_edge, unsigned integration_degree)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
-         max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), b_coeff_(b_coeff), c_coeff_(c_coeff),
+         max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), b_coeff_(b_coeff), div_b_(divB), c_coeff_(c_coeff),
          boundary_edge_(std::move(boundary_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
          boundary_minus_edge_(std::move(boundary_minus_edge)) {
             LF_VERIFY_MSG(dgfe_space_ptr_ != nullptr, "No DGFE space defined");
@@ -113,6 +113,7 @@ public:
                 //evaluation of the coefficient functions at qr points
                 auto b = b_coeff_(*cell, zeta_box_t);
                 auto c = c_coeff_(*cell, zeta_box_t);
+                auto div_b_evaluated = div_b_(*cell, zeta_box_t);
 
                 //loop over basis functions in trial space
                 for (basis_trial = 0; basis_trial < n_basis; basis_trial++){
@@ -127,7 +128,9 @@ public:
                             Eigen::Vector2d nabla_w{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(0),
                                                     legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) * box.inverseJacobi(1)};
 
-                            sum += ( nabla_w.dot(b[i]) + c[i] * legendre_basis(basis_trial, max_legendre_degree_, zeta_box_t.col(i)) )
+                            auto w = legendre_basis(basis_trial, max_legendre_degree_, zeta_box_t.col(i));
+
+                            sum += ( nabla_w.dot(b[i]) + div_b_evaluated[i] * w + c[i] * w)
                                     * legendre_basis(basis_test, max_legendre_degree_, zeta_box_t.col(i))
                                     * w_ref_t[i] * gram_dets_t[i];
                         }
@@ -265,11 +268,11 @@ private:
     unsigned max_legendre_degree_;
     lf::quad::QuadRuleCache qr_cache_;
     ADVECTION_COEFF b_coeff_;
+    MESHFUNC_DIVB div_b_;
     REACTION_COEFF c_coeff_;
     EDGESELECTOR boundary_edge_;
     EDGESELECTOR boundary_d_edge_;
     EDGESELECTOR boundary_minus_edge_;
-
 };
 
 } // namespace lf::dgfe
