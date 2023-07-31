@@ -24,7 +24,7 @@
 
 namespace lf::dgfe {
 
-template<typename TMPMATRIX, typename SCALAR, typename DIFFUSION_COEFF, typename EDGESELECTOR, typename DGFE_MESHFUNC>
+template<typename TMPMATRIX, typename SCALAR, typename DIFFUSION_COEFF, typename EDGESELECTOR>
 class DiffusionMatrixAssembler{
 
 public:
@@ -32,7 +32,7 @@ public:
 
     DiffusionMatrixAssembler(std::shared_ptr<const lf::dgfe::DGFESpace> dgfe_space_ptr, DIFFUSION_COEFF a_coeff,
                                     EDGESELECTOR boundary_edge, EDGESELECTOR boundary_d_edge, unsigned integration_degree,
-                                    lf::dgfe::DiscontinuityPenalization disc_pen, lf::dgfe::L2ProjectionSqrtAGradBasis<SCALAR, DGFE_MESHFUNC> &l2_proj)
+                                    lf::dgfe::DiscontinuityPenalization disc_pen, l2_proj_sqrt_a_nabla_basis l2_proj)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
          max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), a_coeff_(a_coeff),
          boundary_edge_(std::move(boundary_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
@@ -162,6 +162,8 @@ public:
             //if orientation of edge in polygon is negative, normal has to be multiplied by -1;
             normal *= (int) (cell.RelativeOrientations()[polygon_pair.first.second]);
 
+            
+
 
             lf::dgfe::BoundingBox box(cell);
             // qr points mapped to segment
@@ -195,6 +197,7 @@ public:
                 auto polygon_minus = polygon_pair.second.first;
                 auto edge_sub_idx_plus = polygon_pair.first.second;
                 auto edge_sub_idx_minus = polygon_pair.second.second;
+
 
 
                 //dof info
@@ -339,19 +342,13 @@ public:
                         ///////////////////////////////////////////////
                         SCALAR sum = 0.0;
 
-                        auto l2_proj_w_plus = l2_projection_(*polygon_plus, zeta_box_plus, basis_trial);
-                        auto l2_proj_w_minus = l2_projection_(*polygon_minus, zeta_box_minus, basis_trial);
-                        auto l2_proj_v_plus = l2_projection_(*polygon_plus, zeta_box_plus, basis_test);
-                        auto l2_proj_v_minus = l2_projection_(*polygon_minus, zeta_box_minus, basis_test);
-
-                        
 
 
                         for (int i = 0; i < gram_dets_s.size(); i++){
+                            Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
+                                                             legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
-                            Eigen::Vector2d a_nabla_trial_plus{a[i].sqrt() * l2_proj_w_plus[i]};
-
-                            sum += a_nabla_trial_plus.dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
@@ -361,10 +358,10 @@ public:
  
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
+                            Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
+                                                             legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
-                            Eigen::Vector2d a_nabla_trial_plus{a[i].sqrt() * l2_proj_w_plus[i]};
-
-                            sum += a_nabla_trial_plus.dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         galerkin_debug(0.5*sum, 0, 1);
@@ -372,10 +369,10 @@ public:
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            
-                            Eigen::Vector2d a_nabla_trial_minus{a[i].sqrt() * l2_proj_w_minus[i]};
+                            Eigen::Vector2d nabla_trial_minus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(0),
+                                                              legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(1)};
 
-                            sum += a_nabla_trial_minus.dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         galerkin_debug(-0.5*sum, 1, 0, " Here 1", 1);
@@ -383,10 +380,10 @@ public:
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
+                            Eigen::Vector2d nabla_trial_minus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(0),
+                                                              legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(1)};
 
-                            Eigen::Vector2d a_nabla_trial_minus{a[i].sqrt() * l2_proj_w_minus[i]};
-
-                            sum += a_nabla_trial_minus.dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_trial_minus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         //DEBUG
@@ -398,10 +395,10 @@ public:
                         ////////////////////////////////////////////////////
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            
-                            Eigen::Vector2d a_nabla_test_plus{a[i].sqrt() * l2_proj_v_plus[i]};
+                            Eigen::Vector2d nabla_test_plus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
+                                                            legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
-                            sum += a_nabla_test_plus.dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         galerkin_debug(-0.5*sum, 1, 1);
@@ -409,10 +406,10 @@ public:
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            
-                            Eigen::Vector2d a_nabla_test_plus{a[i].sqrt() * l2_proj_v_plus[i]};
+                            Eigen::Vector2d nabla_test_plus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(0),
+                                                            legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_plus.col(i)) * box_plus.inverseJacobi(1)};
 
-                            sum += a_nabla_test_plus.dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         galerkin_debug(0.5*sum, 0, 1);
@@ -420,10 +417,10 @@ public:
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            
-                            Eigen::Vector2d a_nabla_test_minus{a[i].sqrt() * l2_proj_v_minus[i]};
+                            Eigen::Vector2d nabla_test_minus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(0),
+                                                              legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(1)};
 
-                            sum += a_nabla_test_minus.dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_plus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         galerkin_debug(-0.5*sum, 1, 0);
@@ -431,10 +428,10 @@ public:
 
                         sum = 0.0;
                         for (int i = 0; i < gram_dets_s.size(); i++){
-                            
-                            Eigen::Vector2d a_nabla_test_minus{a[i].sqrt() * l2_proj_v_minus[i]};
+                            Eigen::Vector2d nabla_test_minus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(0),
+                                                              legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_minus.col(i)) * box_minus.inverseJacobi(1)};
 
-                            sum += a_nabla_test_minus.dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
+                            sum += (a[i] * nabla_test_minus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_minus.col(i)) * normal_plus)
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         galerkin_debug(0.5*sum, 0, 0);
@@ -458,19 +455,19 @@ public:
                     //loop over bsis functions in test space
                     for(basis_test = 0; basis_test < n_basis; basis_test++){
 
-                        auto l2_proj_w_plus = l2_projection_(*polygon_plus, zeta_box_s, basis_trial);
-                        auto l2_proj_v_plus = l2_projection_(*polygon_plus, zeta_box_s, basis_test);
-
                         SCALAR sum = 0.0;
                         //sum over qr points
                         for (int i = 0; i < gram_dets_s.size(); i++){
                             
-                            Eigen::Vector2d a_nabla_trial_plus{a[i].sqrt() * l2_proj_w_plus[i]};
+                            Eigen::Vector2d nabla_trial_plus{legendre_basis_dx(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
+                                                             legendre_basis_dy(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
+
                             // if (basis_trial == 2 && basis_test == 0){
                             //     std::cout << "Nabla_basis_trial = \n" << nabla_trial_plus << "\n";
                             // }
 
-                            Eigen::Vector2d a_nabla_test_plus{a[i].sqrt() * l2_proj_v_plus[i]};
+                            Eigen::Vector2d nabla_test_plus{legendre_basis_dx(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(0),
+                                                            legendre_basis_dy(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * box.inverseJacobi(1)};
 
                             // if (basis_trial == 2 && basis_test == 0){
                             //     std::cout << "Nabla_basis_test = \n" << nabla_test_plus << "\n";
@@ -488,8 +485,8 @@ public:
                             //                         legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal)* w_ref_s[i] * gram_dets_s[i] << "\n";
                             // }   
 
-                            sum +=      (a_nabla_trial_plus.dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * normal)
-                                    +   a_nabla_test_plus.dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal))
+                            sum +=      ((a[i] * nabla_trial_plus).dot(legendre_basis(basis_test, max_legendre_degree_, zeta_box_s.col(i)) * normal)
+                                    +   (a[i] * nabla_test_plus).dot(legendre_basis(basis_trial, max_legendre_degree_, zeta_box_s.col(i)) * normal))
                                     * w_ref_s[i] * gram_dets_s[i];
                         }
                         galerkin_debug(-sum, 1, 1);
@@ -515,7 +512,7 @@ private:
     //used to make sure the second and third term is only evaluated once per edge
     //is true if edge has already been evaluated
     EDGESELECTOR evaluated_edge_;
-    lf::dgfe::L2ProjectionSqrtAGradBasis<SCALAR, DGFE_MESHFUNC> &l2_projection_;
+    l2_proj_sqrt_a_nabla_basis &l2_projection_;
 
     lf::mesh::utils::CodimMeshDataSet<bool> initialize_evaluated_edge(){
         lf::mesh::utils::CodimMeshDataSet<bool> result(dgfe_space_ptr_->Mesh(), 1, false);
