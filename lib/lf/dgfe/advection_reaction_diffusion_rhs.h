@@ -22,6 +22,7 @@
 #include "mesh_function_dgfe.h"
 #include "mesh_function_global.h"
 #include "discontinuity_penalization.h"
+#include "auxiliary_operators.h"
 
 namespace lf::dgfe {
 
@@ -34,7 +35,7 @@ std::string get_shape(const Eigen::EigenBase<Derived>& x)
 }
 
 
-template<typename SCALAR, typename DIFFUSION_COEFF, typename ADVECTION_COEFF, typename EDGESELECTOR, typename MESHFUNC_F, typename MESHFUNC_gD, typename MESHFUNC_gN, typename TMPMATRIX>
+template<typename SCALAR, typename DIFFUSION_COEFF, typename ADVECTION_COEFF, typename EDGESELECTOR, typename MESHFUNC_F, typename MESHFUNC_gD, typename MESHFUNC_gN, typename TMPMATRIX, typename DGFE_MESHFUNC>
 class AdvectionReactionDiffusionRHSAssembler {
 
 public:
@@ -45,7 +46,7 @@ public:
                                     DIFFUSION_COEFF a_coeff, ADVECTION_COEFF b_coeff, 
                                     EDGESELECTOR boundary_minus_edge, EDGESELECTOR boundary_d_edge,
                                     EDGESELECTOR boundary_n_edge, unsigned integration_degree, lf::dgfe::DiscontinuityPenalization disc_pen,
-                                    l2_proj_sqrt_a_nabla_basis &l2_proj)
+                                    lf::dgfe::L2ProjectionSqrtAGradBasis<SCALAR, DGFE_MESHFUNC> &l2_proj)
         : dgfe_space_ptr_(std::move(dgfe_space_ptr)), integration_degree_(integration_degree),
          max_legendre_degree_(dgfe_space_ptr_->MaxLegendreDegree()), b_coeff_(b_coeff), a_coeff_(a_coeff),
          boundary_minus_edge_(std::move(boundary_minus_edge)), boundary_d_edge_(std::move(boundary_d_edge)),
@@ -313,7 +314,7 @@ private:
     EDGESELECTOR boundary_d_edge_;
     EDGESELECTOR boundary_n_edge_;
     lf::dgfe::DiscontinuityPenalization disc_pen_;
-    l2_proj_sqrt_a_nabla_basis &l2_projection_;
+    lf::dgfe::L2ProjectionSqrtAGradBasis<SCALAR, DGFE_MESHFUNC> &l2_projection_;
 };
 
 
