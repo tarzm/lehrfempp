@@ -20,7 +20,6 @@
 #include "bounding_box.h"
 #include "legendre_dgfe.h"
 #include "dgfe_space.h"
-#include "dgfe_providers.h"
 #include "mesh_function_dgfe.h"
 #include "sub_tessellation.h"
 #include "mesh_function_global.h"
