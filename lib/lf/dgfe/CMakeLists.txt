@@ -7,7 +7,6 @@ set(sources
     legendre_dgfe.cc
     dgfe_space.h
     dgfe_space.cc
-    dgfe_providers.h
     mesh_function_dgfe.h
     mesh_function_global.h
     sub_tessellation.h
