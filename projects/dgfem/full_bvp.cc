@@ -6,7 +6,6 @@
 #include <vector>
 #include <iomanip>
 
-
 #include <lf/mesh/polytopic2d/polytopic2d.h>
 #include <lf/mesh/hybrid2d/hybrid2d.h>
 #include <lf/mesh/mesh.h>
@@ -19,7 +18,7 @@
 
 #include "lf/mesh/test_utils/test_meshes.h"
 
-
+//function to write error to a file
 void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_cells, std::string error_type, double error){
     //error file
     std::setprecision(17);
@@ -33,8 +32,18 @@ void write_error_file(std::string run_name, double c_inv, int c_sigma, int num_c
     out_file.close();
 }
 
-
 int main(int argc, char *argv[]){
+
+//############ USAGE of this script in bash #########################
+/*
+
+./projects.dgfem.full_bvp <RUN_NAME> <C_INV> <C_SIGMA> <LIST OF # cells in mesh separated by space>
+
+EXAMPLE:
+
+./projects.dgfem.full_bvp my_run_name 0.5 20 4 8 16 32 64 128 256 512 1024 2048 4096
+
+*/
 
 
 //get run arguments: name and constants for discontinuity penalty
@@ -45,7 +54,6 @@ std::cout << "C_inv: " << c_inv << " and C_sigma: " << c_sigma << "\n";
 
 //set the integration degree used for assembling Galerkin Matrix and RHS
 int integration_degree = 15;
-
 
 //----------------------PREPARE COEFFICIENTS------------------------
 // Scalar valued reaction coefficient c
@@ -116,7 +124,6 @@ auto f_lambda = [](Eigen::Vector2d x) -> double {
 lf::dgfe::MeshFunctionGlobalDGFE m_f{f_lambda};
 //----------------------END PREPARE PRESCRIBED FUNCTIONS------------------------
 
-
 //-----------------------LOOP over Meshes------------------------------------------
 //loop over meshes
 for (int i = 4; i < argc; i++){
@@ -130,6 +137,9 @@ for (int i = 4; i < argc; i++){
     lf::io::VtkPolytopicReader reader(std::make_unique<lf::mesh::polytopic2d::MeshFactory>(2), mesh_file);
     auto mesh_ptr = reader.mesh();
 
+    //write mesh for python drawing
+    //lf::io::writeMatplotlib(*mesh_ptr, "./csvs/" + std::to_string(mesh_ptr->NumEntities(0)) + ".csv");
+
     //dgfe space
     lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 1);
     auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
@@ -140,13 +150,12 @@ for (int i = 4; i < argc; i++){
     lf::mesh::utils::CodimMeshDataSet<bool> boundary_n_edge(mesh_ptr, 1, false);
     //boundary_0_edge
     lf::mesh::utils::CodimMeshDataSet<bool> boundary_0_edge(mesh_ptr, 1, false);
-    //boundary_D_edge is along x axis
+    //boundary_D_edge
     lf::mesh::utils::CodimMeshDataSet<bool> boundary_d_edge(mesh_ptr, 1, false);
     //boundary_minus_edge
     lf::mesh::utils::CodimMeshDataSet<bool> boundary_minus_edge(mesh_ptr, 1, false);
     //boundary_plus_edge
     lf::mesh::utils::CodimMeshDataSet<bool> boundary_plus_edge(mesh_ptr, 1, false);
-
 
     //setup qr rule for segments
     const lf::quad::QuadRule qr_s = lf::quad::make_QuadRule(lf::base::RefEl::kSegment(), integration_degree);
@@ -159,7 +168,6 @@ for (int i = 4; i < argc; i++){
     for (auto cell : mesh_ptr->Entities(0)){
         for (auto edge : cell->SubEntities(1)){
             if (boundary_edge(*edge)){
-                
                 //normal n
                 auto polygon_pair = dgfe_space_ptr->AdjacentPolygons(edge);
                 auto normal = lf::dgfe::outwardNormal(lf::geometry::Corners(*(edge->Geometry())));
@@ -173,18 +181,15 @@ for (int i = 4; i < argc; i++){
                 Eigen::MatrixXd zeta_box_s{box.inverseMap(zeta_global_s)};
                 //gramian determinants
                 Eigen::VectorXd gram_dets_s{edge->Geometry()->IntegrationElement(zeta_ref_s)};
-
                 auto a_evaluated = m_a_coeff(*cell, zeta_box_s);
                 double boundary_0_sum = 0.0;
 
                 for (int i = 0; i < gram_dets_s.size(); i++){
                     boundary_0_sum += normal.dot(a_evaluated[i] * normal) * gram_dets_s[i] * w_ref_s[i];
                 }
-
                 //BOUNDARY 0 #############
                 if (boundary_0_sum > 0){
                     boundary_0_edge(*edge) = true;
-
                     //HERE DIRICHLET AND NEUMANN ################
                     auto corners = lf::geometry::Corners(*(edge->Geometry()));
                     if(corners(0,0) == 1.0 && corners(0,1) == 1.0){ //whole edge on side x = 1
@@ -192,15 +197,12 @@ for (int i = 4; i < argc; i++){
                     } else {
                         boundary_d_edge(*edge) = true;
                     }
-
                 } else { //BOUNDARY_plus and BOUNDARY_minus ###############
-
                     auto b_evaluated = m_b_coeff(*cell, zeta_box_s);
                     double boundary_plus_sum = 0.0;
                     for (int i = 0; i < gram_dets_s.size(); i++){
                         boundary_0_sum += b_evaluated[i].dot(normal) * gram_dets_s[i] * w_ref_s[i];
                     }
-
                     if (boundary_plus_sum < 0){
                         boundary_minus_edge(*edge) = true;
                     } else {
@@ -212,47 +214,6 @@ for (int i = 4; i < argc; i++){
     }
     //----------------------END PREPARE BOUNDARY EDGE SETS------------------------
 
-    //Mesh info
-    std::cout << "PART OF BOUNDARY 0:\n";
-    for (auto edge : mesh_ptr->Entities(1)){
-        if(boundary_0_edge(*edge)){
-            std::cout << mesh_ptr->Index(*edge) << " ";
-        }
-    }
-    std::cout << "\n";
-
-    std::cout << "PART OF BOUNDARY D:\n";
-    for (auto edge : mesh_ptr->Entities(1)){
-        if(boundary_d_edge(*edge)){
-            std::cout << mesh_ptr->Index(*edge) << " ";
-        }
-    }
-    std::cout << "\n";
-
-    std::cout << "PART OF BOUNDARY N:\n";
-    for (auto edge : mesh_ptr->Entities(1)){
-        if(boundary_n_edge(*edge)){
-            std::cout << mesh_ptr->Index(*edge) << " ";
-        }
-    }
-    std::cout << "\n";
-
-    std::cout << "PART OF BOUNDARY minus:\n";
-    for (auto edge : mesh_ptr->Entities(1)){
-        if(boundary_minus_edge(*edge)){
-            std::cout << mesh_ptr->Index(*edge) << " ";
-        }
-    }
-    std::cout << "\n";
-
-    std::cout << "PART OF BOUNDARY plus:\n";
-    for (auto edge : mesh_ptr->Entities(1)){
-        if(boundary_plus_edge(*edge)){
-            std::cout << mesh_ptr->Index(*edge) << " ";
-        }
-    }
-    std::cout << "\n";
-    //end mesh info
 
     //----------------------ASSEMBLE GALERKIN MATRIX & RHS------------------------
     //set up discontinuity penalization
@@ -296,7 +257,7 @@ for (int i = 4; i < argc; i++){
     //----------------------MESH FUNCTION AND ERROR CALCULATION------------------------
     lf::dgfe::MeshFunctionDGFE<double> dgfe_mesh_function(dgfe_space_ptr, sol_vec);
 
-    //calculate L2 error of solution
+    //calculate L2 error of solution with "overkill" QR
     double mesh_func_l2_error = lf::dgfe::L2ErrorSubTessellation<double, decltype(dgfe_mesh_function), decltype(m_gD)>(dgfe_mesh_function, m_gD, mesh_ptr, 30);
     //----------------------END MESH FUNCTION AND ERROR CALCULATION------------------------
 
@@ -304,7 +265,7 @@ for (int i = 4; i < argc; i++){
     write_error_file(run_name, c_inv, c_sigma, std::stoi(num_cells), "L2", mesh_func_l2_error);
 
     std::cout << "L2 Error for " << num_cells << " cells: \t" << mesh_func_l2_error << "\n";
-    //----------------------END MESH FUNCTION AND ERROR CALCULATION------------------------
+    //---------------------END WRITE ERROR TO FILE------------------------
 
 }
 //-----------------------END LOOP over Meshes------------------------------------------
