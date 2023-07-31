@@ -14,7 +14,6 @@
 #include <lf/mesh/polytopic2d/polytopic2d.h>
 
 #include "dgfe_space.h"
-#include "dgfe_providers.h"
 #include "integration.h"
 #include "bounding_box.h"
 #include "legendre_dgfe.h"
