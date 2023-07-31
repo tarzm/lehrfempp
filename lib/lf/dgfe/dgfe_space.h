@@ -14,8 +14,6 @@
 #include <lf/mesh/utils/utils.h>
 #include <lf/assemble/assemble.h>
 
-
-
 #include "legendre_dgfe.h"
 #include "integration.h"
 

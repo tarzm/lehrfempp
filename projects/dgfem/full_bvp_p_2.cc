@@ -141,7 +141,7 @@ for (int i = 4; i < argc; i++){
     //lf::io::writeMatplotlib(*mesh_ptr, "./csvs/" + std::to_string(mesh_ptr->NumEntities(0)) + ".csv");
 
     //dgfe space p = 2
-    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 1);
+    lf::dgfe::DGFESpace dgfe_space(mesh_ptr, 2);
     auto dgfe_space_ptr = std::make_shared<lf::dgfe::DGFESpace>(dgfe_space);
 
     //----------------------PREPARE BOUNDARY EDGE SETS------------------------
